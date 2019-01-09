@@ -33,10 +33,5 @@ class Symbol(object):
             return self._value == other._value
         return False
 
-    def __ne__(self, other: Any) -> str:
-        if isinstance(other, Symbol):
-            return self._value != other._value
-        return True
-
     def __hash__(self) -> int:
         return hash(self._value)
