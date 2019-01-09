@@ -1,3 +1,6 @@
+from typing import Any
+
+
 class State(object):
     """ A state in a finite automaton
 
@@ -19,21 +22,21 @@ class State(object):
     ----------
     """
 
-    def __init__(self, value):
+    def __init__(self, value: Any):
         self._value = value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self._value)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, State):
             return self._value == other._value
         return False
 
-    def __neq__(self, other):
+    def __ne__(self, other: Any) -> bool:
         if isinstance(other, State):
             return self._value != other._value
         return True
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._value)

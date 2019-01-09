@@ -1,9 +1,7 @@
 import unittest
 
-from pyformlang.finite_automaton import State
-from pyformlang.finite_automaton import Symbol
-from pyformlang.finite_automaton import TransitionFunction
-from pyformlang.finite_automaton import DuplicateTransitionError
+from pyformlang.finite_automaton import State, Symbol, TransitionFunction,\
+    DuplicateTransitionError
 
 
 class TestTransitionFunction(unittest.TestCase):

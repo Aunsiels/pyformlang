@@ -1,3 +1,7 @@
+from .state import State
+from .symbol import Symbol
+
+
 class TransitionFunction(object):
     """ A transition function in a finite automaton.
 
@@ -17,16 +21,16 @@ class TransitionFunction(object):
     def __init__(self):
         self._transitions = dict()
 
-    def add_transition(self, s_from, by, s_to):
+    def add_transition(self, s_from:State, by:Symbol, s_to:State) -> int:
         """ Adds a new transition to the function
 
         Parameters
         ----------
-        s_from : State
+        s_from : :class:`~pyformlang.finite_automaton.State`
             The source state
-        by : Symbol
+        by : :class:`~pyformlang.finite_automaton.Symbol`
             The transition symbol
-        s_to : State
+        s_to : :class:`~pyformlang.finite_automaton.State`
             The destination state
 
 
@@ -54,16 +58,16 @@ class TransitionFunction(object):
             self._transitions[s_from][by] = s_to
         return 1
 
-    def remove_transition(self, s_from, by, s_to):
+    def remove_transition(self, s_from:State, by:Symbol, s_to:State) -> int:
         """ Removes a transition to the function
 
         Parameters
         ----------
-        s_from : State
+        s_from : :class:`~pyformlang.finite_automaton.State`
             The source state
-        by : Symbol
+        by : :class:`~pyformlang.finite_automaton.Symbol`
             The transition symbol
-        s_to : State
+        s_to : :class:`~pyformlang.finite_automaton.State`
             The destination state
 
 
@@ -80,7 +84,7 @@ class TransitionFunction(object):
             return 1
         return 0
 
-    def get_number_transitions(self):
+    def get_number_transitions(self) -> int:
         """ Gives the number of transitions describe by the function
 
         Returns
@@ -94,7 +98,7 @@ class TransitionFunction(object):
             counter += len(self._transitions[s_from])
         return counter
 
-    def __call__(self, s_from, by):
+    def __call__(self, s_from:State, by:Symbol) -> State:
         """ Calls the transition function as a real function
 
         Parameters
@@ -138,7 +142,11 @@ class DuplicateTransitionError(Exception):
 
     """
 
-    def __init__(self, s_from, by, s_to, s_to_old):
+    def __init__(self,
+                 s_from: State,
+                 by: Symbol,
+                 s_to: State,
+                 s_to_old: State):
         self.message = "Transition from " + str(s_from) + " by " + str(by) +\
             " goes to " + str(s_to_old) + " not " + str(s_to)
         self._s_from = s_from

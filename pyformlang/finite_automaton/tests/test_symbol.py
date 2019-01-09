@@ -20,7 +20,9 @@ class TestSymbol(unittest.TestCase):
         s2 = Symbol(1)
         s3 = Symbol("ABC")
         self.assertEqual(s1, s3)
+        self.assertFalse(s2 == 1)
         self.assertNotEqual(s2, s3)
+        self.assertNotEqual(s2, 1)
         self.assertNotEqual(s1, s2)
 
     def test_hash(self):
