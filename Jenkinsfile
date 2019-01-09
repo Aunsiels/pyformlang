@@ -1,7 +1,7 @@
 pipeline {
   agent {
-    dockerfile {
-      filename 'Dockerfile'
+    docker {
+      image 'aunsiels/python3:latest'
     }
 
   }
