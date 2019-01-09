@@ -102,3 +102,11 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+
+# Documentation
+doc/_build
+
+# Code coverage
+coverage/
+.coverage
