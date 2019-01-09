@@ -11,6 +11,10 @@ test-coverage:
 		rm -rf coverage .coverage
 		$(PYTEST) pyformlang --showlocals -v --cov=pyformlang --cov-report=html:coverage
 
+test-coverage-xml:
+		rm -rf reports/coverage.xml
+		$(PYTEST) pyformlang --showlocals -v --cov=pyformlang --cov-report=xml:reports/coverage.xml
+
 doc:
 	$(MAKE) -C doc html
 
