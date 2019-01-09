@@ -1,5 +1,10 @@
+import unittest
+
 from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 
-def test_can_create():
-    assert DeterministicFiniteAutomaton(None, None, None, None, None) \
-        is not None
+
+class TestDeterministicFiniteAutomaton(unittest.TestCase):
+
+    def test_can_create(self):
+        dfa = DeterministicFiniteAutomaton(None, None, None, None, None)
+        self.assertIsNotNone(dfa)

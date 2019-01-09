@@ -54,6 +54,67 @@ class TransitionFunction(object):
             self._transitions[s_from][by] = s_to
         return 1
 
+    def remove_transition(self, s_from, by, s_to):
+        """ Removes a transition to the function
+
+        Parameters
+        ----------
+        s_from : State
+            The source state
+        by : Symbol
+            The transition symbol
+        s_to : State
+            The destination state
+
+
+        Returns
+        --------
+        done : int
+            1 is the transition was found, 0 otherwise
+
+        """
+        if s_from in self._transitions and \
+                by in self._transitions[s_from] and \
+                s_to == self._transitions[s_from][by]:
+            del self._transitions[s_from][by]
+            return 1
+        return 0
+
+    def get_number_transitions(self):
+        """ Gives the number of transitions describe by the function
+
+        Returns
+        ----------
+        n_transitions : int
+            The number of transitions
+
+        """
+        counter = 0
+        for s_from in self._transitions:
+            counter += len(self._transitions[s_from])
+        return counter
+
+    def __call__(self, s_from, by):
+        """ Calls the transition function as a real function
+
+        Parameters
+        ----------
+        s_from : :class:`~pyformlang.finite_automaton.State`
+            The source state
+        by : :class:`~pyformlang.finite_automaton.Symbol`
+            The transition symbol
+
+        Returns
+        ----------
+        s_from : :class:`~pyformlang.finite_automaton.State` or None
+            The destination state or None if it does not exists
+
+        """
+        if s_from in self._transitions:
+            if by in self._transitions[s_from]:
+                return self._transitions[s_from][by]
+        return None
+
 
 
 class DuplicateTransitionError(Exception):

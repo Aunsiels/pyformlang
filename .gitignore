@@ -110,3 +110,6 @@ doc/_build
 # Code coverage
 coverage/
 .coverage
+
+# VIM files
+*swp
