@@ -1,8 +1,14 @@
-FROM ubuntu
+FROM ubuntu:18.04
+  
+RUN apt-get update -yqq && apt-get -y -qq install \
+    python3-setuptools \
+    python3-dev \
+    build-essential \
+    python3-pip \
+&& rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update
-RUN apt-get install -y python3
-RUN apt-get install -y python3-pip
-RUN apt-get install -y python3-dev
+RUN pip3 install --upgrade pip
 
-RUN pip install --upgrade pip
+RUN pip3 install pytest \
+    pytest-cov \
+    numpydoc
