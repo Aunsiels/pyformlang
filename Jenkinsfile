@@ -9,7 +9,7 @@ pipeline {
     stage('Build') {
       steps {
         sh 'virtualenv -p /usr/bin/python3.6 venv'
-        sh 'source venv/bin/activate'
+        sh '/bin/bash venv/bin/activate'
         sh 'pip3 install --user -r requirements.txt'
       }
     }
