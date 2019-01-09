@@ -1,14 +1,14 @@
 pipeline {
   agent {
-    dockerfile {
-      filename 'Dockerfile'
+    docker {
+      image 'aunsiels/python3:latest'
     }
 
   }
   stages {
     stage('Build') {
       steps {
-        sh 'pip3 install --user -r requirements.txt'
+        echo 'Build Stage'
       }
     }
     stage('Test') {
