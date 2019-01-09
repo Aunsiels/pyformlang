@@ -8,6 +8,7 @@ pipeline {
   stages {
     stage('Test') {
       steps {
+        sh 'pip3 install -r requirements.txt'
         sh 'make test-code'
       }
     }
