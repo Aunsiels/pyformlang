@@ -25,7 +25,7 @@ pipeline {
     stage('Static code metrics') {
       steps {
         echo "Code Coverage"
-        sh make test-coverage-xml
+        sh 'make test-coverage-xml'
       }
       post{
         always{
