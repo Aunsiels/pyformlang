@@ -6,9 +6,11 @@ from .deterministic_finite_automaton import DeterministicFiniteAutomaton
 from .state import State
 from .symbol import Symbol
 from .transition_function import TransitionFunction, DuplicateTransitionError
+from .nondeterministic_transition_function import NondeterministicTransitionFunction
 
 __all__ = ["DeterministicFiniteAutomaton",
            "State",
            "Symbol",
            "TransitionFunction",
+           "NondeterministicTransitionFunction",
            "DuplicateTransitionError"]
