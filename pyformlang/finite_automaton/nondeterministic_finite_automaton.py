@@ -20,7 +20,8 @@ class NondeterministicFiniteAutomaton(object):
         A finite set of states
     input_symbols : set of :class:`~pyformlang.finite_automaton.Symbol`, optional
         A finite set of input symbols
-    transition_function : :class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`, optional
+    transition_function : :class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`
+, optional
         Takes as arguments a state and an input symbol and returns a state.
     start_state : :class:`~pyformlang.finite_automaton.State`, optional
         A start state, element of states
@@ -34,17 +35,18 @@ class NondeterministicFiniteAutomaton(object):
                  states: AbstractSet[State] = None,
                  input_symbols: AbstractSet[Symbol] = None,
                  transition_function: NondeterministicTransitionFunction = None,
-                 start_state: State = None,
+                 start_state: AbstractSet[State] = None,
                  final_states: AbstractSet[State] = None):
         self._states = states or set()
         self._input_symbols = input_symbols or set()
         self._transition_function = transition_function or \
             NondeterministicTransitionFunction()
-        self._start_state = start_state
+        self._start_state = start_state or set()
         self._final_states = final_states or set()
-        if start_state is not None and start_state not in self._states:
-            self._states.add(start_state)
         for state in self._final_states:
+            if state is not None and state not in self._states:
+                self._states.add(start_state)
+        for state in self._start_state:
             if state is not None and state not in self._states:
                 self._states.add(start_state)
 
@@ -96,8 +98,8 @@ class NondeterministicFiniteAutomaton(object):
         """
         return len(self._input_symbols)
 
-    def set_initial_state(self, state: State) -> int:
-        """ Set the initial state
+    def add_initial_state(self, state: State) -> int:
+        """ Set an initial state
 
         Parameters
         -----------
@@ -109,9 +111,27 @@ class NondeterministicFiniteAutomaton(object):
         done : int
             1 is correctly added
         """
-        self._start_state = state
+        self._start_state.add(state)
         self._states.add(state)
         return 1
+
+    def remove_initial_state(self, state: State) -> int:
+        """ remove an initial state
+
+        Parameters
+        -----------
+        state : :class:`~pyformlang.finite_automaton.State`
+            The new initial state
+
+        Returns
+        ----------
+        done : int
+            1 is correctly added
+        """
+        if state in self._start_state:
+            self._start_state.remove(state)
+            return 1
+        return 0
 
     def add_final_state(self, state: State) -> int:
         """ Adds a new final state
@@ -176,7 +196,7 @@ class NondeterministicFiniteAutomaton(object):
         is_accepted : bool
             Whether the word is accepted or not
         """
-        current_states = {self._start_state}
+        current_states = self._start_state
         for symbol in word:
             next_states = set()
             for current_state in current_states:

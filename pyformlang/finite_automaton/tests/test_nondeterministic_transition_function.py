@@ -6,8 +6,7 @@ Test the nondeterministic transition functions
 import unittest
 
 from pyformlang.finite_automaton import State, Symbol, \
-    NondeterministicTransitionFunction, \
-    DuplicateTransitionError
+    NondeterministicTransitionFunction
 
 
 class TestNondeterministicTransitionFunction(unittest.TestCase):
@@ -32,6 +31,7 @@ class TestNondeterministicTransitionFunction(unittest.TestCase):
         transition_function.add_transition(s_from, symb_by, s_to)
         transition_function.add_transition(s_from, symb_by, s_to_bis)
         transition_function.add_transition(s_to, symb_by, s_to)
+        self.assertEqual(transition_function.get_number_transitions(), 3)
 
     def test_number_transitions(self):
         """ Tests the number of transitions

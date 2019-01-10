@@ -37,8 +37,46 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                  transition_function: TransitionFunction = None,
                  start_state: State = None,
                  final_states: AbstractSet[State] = None):
-        super().__init__(states, input_symbols, None, start_state, final_states)
+        super().__init__(states, input_symbols, None, None, final_states)
         self._transition_function = transition_function or TransitionFunction()
+        self._start_state = start_state
+        if self._start_state is not None:
+            self._states.add(self._start_state)
+
+    def add_initial_state(self, state: State) -> int:
+        """ Set an initial state
+
+        Parameters
+        -----------
+        state : :class:`~pyformlang.finite_automaton.State`
+            The new initial state
+
+        Returns
+        ----------
+        done : int
+            1 is correctly added
+        """
+        self._start_state = state
+        self._states.add(state)
+        return 1
+
+    def remove_initial_state(self, state: State) -> int:
+        """ remove an initial state
+
+        Parameters
+        -----------
+        state : :class:`~pyformlang.finite_automaton.State`
+            The new initial state
+
+        Returns
+        ----------
+        done : int
+            1 is correctly added
+        """
+        if state == self._start_state:
+            self._start_state = None
+            return 1
+        return 0
 
     def accepts(self, word: Iterable[Symbol]) -> bool:
         """ Checks whether the dfa accepts a given word

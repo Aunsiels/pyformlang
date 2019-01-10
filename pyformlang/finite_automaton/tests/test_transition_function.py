@@ -24,10 +24,10 @@ class TestTransitionFunction(unittest.TestCase):
         """ Tests the addition of transitions
         """
         transition_function = TransitionFunction()
-        s_from = State(0)
-        s_to = State(1)
+        s_from = State(10)
+        s_to = State(11)
         s_to_bis = State(2)
-        symb_by = Symbol("a")
+        symb_by = Symbol("abc")
         transition_function.add_transition(s_from, symb_by, s_to)
         transition_function.add_transition(s_from, symb_by, s_to)
         with self.assertRaises(DuplicateTransitionError) as dte:
@@ -43,15 +43,15 @@ class TestTransitionFunction(unittest.TestCase):
         """
         transition_function = TransitionFunction()
         self.assertEqual(transition_function.get_number_transitions(), 0)
-        s_from = State(0)
-        s_to = State(1)
+        s_from = State(110)
+        s_to = State(12)
         s_to_bis = State(2)
         symb_by = Symbol("a")
-        symb_by2 = Symbol("b")
         transition_function.add_transition(s_from, symb_by, s_to)
         self.assertEqual(transition_function.get_number_transitions(), 1)
         transition_function.add_transition(s_from, symb_by, s_to)
         self.assertEqual(transition_function.get_number_transitions(), 1)
+        symb_by2 = Symbol("bc")
         transition_function.add_transition(s_from, symb_by2, s_to_bis)
         self.assertEqual(transition_function.get_number_transitions(), 2)
         transition_function.add_transition(s_to, symb_by, s_to_bis)
@@ -61,9 +61,9 @@ class TestTransitionFunction(unittest.TestCase):
         """ Tests the removal of transitions
         """
         transition_function = TransitionFunction()
-        s_from = State(0)
-        s_to = State(1)
-        symb_by = Symbol("a")
+        s_from = State(10)
+        s_to = State(11)
+        symb_by = Symbol("abc")
         transition_function.add_transition(s_from, symb_by, s_to)
         self.assertEqual(transition_function.remove_transition(s_from, symb_by, s_to), 1)
         self.assertEqual(transition_function.get_number_transitions(), 0)

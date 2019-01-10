@@ -1,6 +1,7 @@
 PYTHON ?= python3
 PYTEST ?= pytest
 PYLINT ?= pylint
+TWINE ?= twine
 
 test-code:
 	$(PYTEST) --showlocals -v pyformlang
@@ -23,10 +24,11 @@ doc:
 	$(MAKE) -C doc html
 
 build:
-	$(PYTHON) setup.py bdist_wheel
+	$(PYTHON) setup.py sdist bdist_wheel
+	$(TWINE) upload dist/*
 
 clean:
 	rm -rf coverage .coverage
 	$(MAKE) -C doc clean
 
-.PHONY: doc clean
+.PHONY: doc clean build

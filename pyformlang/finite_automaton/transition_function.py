@@ -89,20 +89,6 @@ class TransitionFunction(object):
             return 1
         return 0
 
-    def get_number_transitions(self) -> int:
-        """ Gives the number of transitions describe by the function
-
-        Returns
-        ----------
-        n_transitions : int
-            The number of transitions
-
-        """
-        counter = 0
-        for s_from in self._transitions:
-            counter += len(self._transitions[s_from])
-        return counter
-
     def __call__(self, s_from: State, symb_by: Symbol) -> State:
         """ Calls the transition function as a real function
 
@@ -123,6 +109,20 @@ class TransitionFunction(object):
             if symb_by in self._transitions[s_from]:
                 return self._transitions[s_from][symb_by]
         return None
+
+    def get_number_transitions(self) -> int:
+        """ Gives the number of transitions describe by the deterministic function
+
+        Returns
+        ----------
+        n_transitions : int
+            The number of deterministic transitions
+
+        """
+        counter = 0
+        for s_from in self._transitions:
+            counter += len(self._transitions[s_from])
+        return counter
 
 
 
