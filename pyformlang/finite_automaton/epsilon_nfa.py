@@ -20,7 +20,7 @@ class EpsilonNFA(NondeterministicFiniteAutomaton):
         A finite set of states
     input_symbols : set of :class:`~pyformlang.finite_automaton.Symbol`, optional
         A finite set of input symbols
-    transition_function : :class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`
+    transition_function : :class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`\
 , optional
         Takes as arguments a state and an input symbol and returns a state.
     start_state : :class:`~pyformlang.finite_automaton.State`, optional
@@ -47,11 +47,7 @@ class EpsilonNFA(NondeterministicFiniteAutomaton):
         for symbol in word:
             if symbol == Epsilon():
                 continue
-            next_states = set()
-            for current_state in current_states:
-                next_states_temp = self._transition_function(current_state,
-                                                             symbol)
-                next_states = next_states.union(next_states_temp)
+            next_states = self._get_next_states_iterable(current_states, symbol)
             current_states = self.eclose_iterable(next_states)
         return any([self.is_final_state(x) for x in current_states])
 

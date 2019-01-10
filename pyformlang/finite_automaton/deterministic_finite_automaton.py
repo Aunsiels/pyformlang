@@ -107,3 +107,13 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
            Whether the automaton is deterministic
         """
         return True
+
+    def to_deterministic(self):
+        """ Transforms the nfa into a dfa
+
+        Returns
+        ----------
+        dfa : :class:`~pyformlang.deterministic_finite_automaton.DeterministicFiniteAutomaton`
+            A dfa equivalent to the current nfa
+        """
+        return self

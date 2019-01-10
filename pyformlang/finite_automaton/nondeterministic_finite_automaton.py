@@ -2,7 +2,7 @@
 Representation of a nondeterministic finite automaton
 """
 
-from typing import AbstractSet, Iterable, List, Set
+from typing import AbstractSet, Iterable, Set
 
 from .state import State
 from .symbol import Symbol
@@ -194,6 +194,31 @@ class NondeterministicFiniteAutomaton(object):
         """
         return state in self._final_states
 
+    def _get_next_states_iterable(self,
+                                  current_states: Iterable[State],
+                                  symbol: Symbol) \
+            -> Set[State]:
+        """ Gives the set of next states, starting from a set of states
+
+        Parameters
+        ----------
+        current_states : iterable of :class:`~pyformlang.finite_automaton.State`
+            The considered list of states
+        symbol : Symbol
+            The symbol of the link
+
+        Returns
+        ----------
+        next_states : set of :class:`~pyformlang.finite_automaton.State`
+            The next of resulting states
+        """
+        next_states = set()
+        for current_state in current_states:
+            next_states_temp = self._transition_function(current_state,
+                                                         symbol)
+            next_states = next_states.union(next_states_temp)
+        return next_states
+
     def accepts(self, word: Iterable[Symbol]) -> bool:
         """ Checks whether the nfa accepts a given word
 
@@ -209,12 +234,8 @@ class NondeterministicFiniteAutomaton(object):
         """
         current_states = self._start_state
         for symbol in word:
-            next_states = set()
-            for current_state in current_states:
-                next_states_temp = self._transition_function(current_state,
-                                                             symbol)
-                next_states = next_states.union(next_states_temp)
-            current_states = next_states
+            current_states = self._get_next_states_iterable(current_states,
+                                                            symbol)
         return any([self.is_final_state(x) for x in current_states])
 
     def is_deterministic(self) -> bool:
@@ -236,6 +257,7 @@ class NondeterministicFiniteAutomaton(object):
         dfa : :class:`~pyformlang.deterministic_finite_automaton.DeterministicFiniteAutomaton`
             A dfa equivalent to the current nfa
         """
+        # pylint: disable=cyclic-import
         from .deterministic_finite_automaton import DeterministicFiniteAutomaton
         dfa = DeterministicFiniteAutomaton()
         start_state = to_single_state(self._start_state)

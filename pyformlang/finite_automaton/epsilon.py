@@ -5,7 +5,7 @@ Represents an epsilon transition
 from .symbol import Symbol
 
 
-class Epsilon(Symbol):
+class Epsilon(Symbol): # pylint: disable=too-few-public-methods
     """ An epsilon transition
     """
 
