@@ -48,7 +48,7 @@ class NondeterministicFiniteAutomaton(object):
                 self._states.add(start_state)
         for state in self._start_state:
             if state is not None and state not in self._states:
-                self._states.add(start_state)
+                self._states.add(state)
 
     def add_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
         """ Adds a transition to the nfa

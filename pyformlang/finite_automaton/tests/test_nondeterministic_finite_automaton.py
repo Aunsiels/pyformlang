@@ -19,6 +19,9 @@ class TestNondeterministicFiniteAutomaton(unittest.TestCase):
         """
         nfa = NondeterministicFiniteAutomaton()
         self.assertIsNotNone(nfa)
+        states = [State(x) for x in range(10)]
+        nfa = NondeterministicFiniteAutomaton(start_state=states)
+        self.assertIsNotNone(nfa)
 
     def test_remove_initial(self):
         """ Test the remove of initial state

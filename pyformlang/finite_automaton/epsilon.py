@@ -1,0 +1,21 @@
+"""
+Represents an epsilon transition
+"""
+
+from .symbol import Symbol
+
+
+class Epsilon(Symbol):
+    """ An epsilon transition
+    """
+
+    def __init__(self):
+        super().__init__("epsilon")
+
+    def __hash__(self):
+        return hash("EPSILON TRANSITION")
+
+    def __eq__(self, other):
+        if isinstance(other, Epsilon):
+            return True
+        return False
