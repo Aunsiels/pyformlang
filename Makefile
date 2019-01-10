@@ -22,6 +22,9 @@ style-check:
 doc:
 	$(MAKE) -C doc html
 
+build:
+	$(PYTHON) setup.py bdist_wheel
+
 clean:
 	rm -rf coverage .coverage
 	$(MAKE) -C doc clean
