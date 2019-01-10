@@ -50,13 +50,13 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         self.assertEqual(dfa.get_number_states(), 2)
         self.assertEqual(dfa.get_number_symbols(), 1)
 
-    def test_add_remove_initial_final(self):
+    def test_add_remove_start_final(self):
         """ Tests the addition and removal of initial state and final states
         """
         dfa = DeterministicFiniteAutomaton()
         state0 = State("0")
         state1 = State("1")
-        self.assertEqual(dfa.add_initial_state(state0), 1)
+        self.assertEqual(dfa.add_start_state(state0), 1)
         self.assertEqual(dfa.get_number_states(), 1)
         self.assertEqual(dfa.add_final_state(state1), 1)
         self.assertEqual(dfa.get_number_states(), 2)
@@ -79,7 +79,7 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         symb_b = Symbol("b")
         symb_c = Symbol("c")
         symb_d = Symbol("d")
-        dfa.add_initial_state(state0)
+        dfa.add_start_state(state0)
         dfa.add_final_state(state2)
         dfa.add_final_state(state3)
         dfa.add_transition(state0, symb_a, state1)
@@ -93,7 +93,7 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         self.assertFalse(dfa.accepts([symb_a, symb_c, symb_d]))
         self.assertFalse(dfa.accepts([symb_d, symb_c, symb_d]))
         self.assertFalse(dfa.accepts([]))
-        self.assertEqual(dfa.remove_initial_state(state1), 0)
+        self.assertEqual(dfa.remove_start_state(state1), 0)
         self.assertTrue(dfa.accepts([symb_a, symb_b, symb_c]))
-        self.assertEqual(dfa.remove_initial_state(state0), 1)
+        self.assertEqual(dfa.remove_start_state(state0), 1)
         self.assertFalse(dfa.accepts([symb_a, symb_b, symb_c]))

@@ -2,7 +2,7 @@
 Representation of a nondeterministic finite automaton
 """
 
-from typing import AbstractSet, Iterable
+from typing import AbstractSet, Iterable, List, Set
 
 from .state import State
 from .symbol import Symbol
@@ -88,6 +88,17 @@ class NondeterministicFiniteAutomaton(object):
         """
         return len(self._states)
 
+    def get_number_transitions(self) -> int:
+        """ Gives the number of transitions
+
+        Returns
+        ----------
+        n_transitions : int
+            The number of deterministic transitions
+
+        """
+        return self._transition_function.get_number_transitions()
+
     def get_number_symbols(self) -> int:
         """ Gives the total number of symbols
 
@@ -98,7 +109,7 @@ class NondeterministicFiniteAutomaton(object):
         """
         return len(self._input_symbols)
 
-    def add_initial_state(self, state: State) -> int:
+    def add_start_state(self, state: State) -> int:
         """ Set an initial state
 
         Parameters
@@ -115,7 +126,7 @@ class NondeterministicFiniteAutomaton(object):
         self._states.add(state)
         return 1
 
-    def remove_initial_state(self, state: State) -> int:
+    def remove_start_state(self, state: State) -> int:
         """ remove an initial state
 
         Parameters
@@ -216,3 +227,57 @@ class NondeterministicFiniteAutomaton(object):
         """
         return len(self._start_state) <= 1 and \
             self._transition_function.is_deterministic()
+
+    def to_deterministic(self):
+        """ Transforms the nfa into a dfa
+
+        Returns
+        ----------
+        dfa : :class:`~pyformlang.deterministic_finite_automaton.DeterministicFiniteAutomaton`
+            A dfa equivalent to the current nfa
+        """
+        from .deterministic_finite_automaton import DeterministicFiniteAutomaton
+        dfa = DeterministicFiniteAutomaton()
+        start_state = to_single_state(self._start_state)
+        dfa.add_start_state(start_state)
+        to_process = [self._start_state]
+        processed = {start_state}
+        while to_process:
+            current = to_process.pop()
+            s_from = to_single_state(current)
+            print("Process", s_from)
+            for symb in self._input_symbols:
+                print("SYMB", symb)
+                all_trans = [self._transition_function(x, symb) for x in current]
+                state = set()
+                for trans in all_trans:
+                    state = state.union(trans)
+                state_merged = to_single_state(state)
+                print("Merged", state_merged)
+                dfa.add_transition(s_from, symb, state_merged)
+                if state_merged not in processed:
+                    processed.add(state_merged)
+                    to_process.append(state)
+            for state in current:
+                if state in self._final_states:
+                    dfa.add_final_state(s_from)
+        return dfa
+
+def to_single_state(l_states: Iterable[State]) -> State:
+    """ Merge a list of states
+
+    Parameters
+    ----------
+    l_states : list of :class:`~pyformlang.finite_automaton.State`
+        A list of states
+
+    Returns
+    ----------
+    state : :class:`~pyformlang.finite_automaton.State`
+        The merged state
+    """
+    values = []
+    for state in l_states:
+        values.append(str(state.get_value()))
+    values = sorted(values)
+    return State("; ".join(values))

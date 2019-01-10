@@ -43,7 +43,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         if self._start_state is not None:
             self._states.add(self._start_state)
 
-    def add_initial_state(self, state: State) -> int:
+    def add_start_state(self, state: State) -> int:
         """ Set an initial state
 
         Parameters
@@ -60,7 +60,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         self._states.add(state)
         return 1
 
-    def remove_initial_state(self, state: State) -> int:
+    def remove_start_state(self, state: State) -> int:
         """ remove an initial state
 
         Parameters
@@ -97,3 +97,13 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                 return False
             current_state = self._transition_function(current_state, symbol)
         return current_state is not None and self.is_final_state(current_state)
+
+    def is_deterministic(self) -> bool:
+        """ Checks whether an automaton is deterministic
+
+        Returns
+        ----------
+        is_deterministic : bool
+           Whether the automaton is deterministic
+        """
+        return True
