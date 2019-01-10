@@ -108,3 +108,18 @@ class NondeterministicTransitionFunction(object):
             if symb_by in self._transitions[s_from]:
                 return self._transitions[s_from][symb_by]
         return set()
+
+    def is_deterministic(self):
+        """ Whether the transition function is deterministic
+
+        Returns
+        ----------
+        is_deterministic : bool
+            Whether the function is deterministic
+
+        """
+        for s_from in self._transitions:
+            for symb in self._transitions[s_from]:
+                if len(self._transitions[s_from][symb]) > 1:
+                    return False
+        return True

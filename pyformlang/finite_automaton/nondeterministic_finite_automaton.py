@@ -205,3 +205,14 @@ class NondeterministicFiniteAutomaton(object):
                 next_states = next_states.union(next_states_temp)
             current_states = next_states
         return any([self.is_final_state(x) for x in current_states])
+
+    def is_deterministic(self) -> bool:
+        """ Checks whether an automaton is deterministic
+
+        Returns
+        ----------
+        is_deterministic : bool
+           Whether the automaton is deterministic
+        """
+        return len(self._start_state) <= 1 and \
+            self._transition_function.is_deterministic()
