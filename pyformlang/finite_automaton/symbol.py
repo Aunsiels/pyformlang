@@ -1,7 +1,13 @@
+"""
+This module describe a symbol in a finite automaton.
+"""
+
+
 from typing import Any
+from .finite_automaton_object import FiniteAutomatonObject
 
 
-class Symbol(object):
+class Symbol(FiniteAutomatonObject): # pylint: disable=too-few-public-methods
     """ A symbol in a finite automaton
 
     Parameters
@@ -22,15 +28,9 @@ class Symbol(object):
     ----------
     """
 
-    def __init__(self, value: Any):
-        self._value = value
-
-    def __repr__(self) -> str:
-        return str(self._value)
-
-    def __eq__(self, other: Any) -> str:
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, Symbol):
-            return self._value == other._value
+            return self._value == other.get_value()
         return False
 
     def __hash__(self) -> int:

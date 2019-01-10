@@ -1,3 +1,7 @@
+"""
+Representation of a deterministic finite automaton
+"""
+
 from typing import AbstractSet, Iterable
 
 from .state import State
@@ -25,6 +29,7 @@ class DeterministicFiniteAutomaton(object):
 
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(self,
                  states: AbstractSet[State] = None,
                  input_symbols: AbstractSet[Symbol] = None,
@@ -42,14 +47,14 @@ class DeterministicFiniteAutomaton(object):
             if state is not None and state not in self._states:
                 self._states.add(start_state)
 
-    def add_transition(self, s_from: State, by: Symbol, s_to: State) -> int:
+    def add_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
         """ Adds a transition to the dfa
 
         Parameters
         ----------
         s_from : :class:`~pyformlang.finite_automaton.State`
             The source state
-        by : :class:`~pyformlang.finite_automaton.Symbol`
+        symb_by : :class:`~pyformlang.finite_automaton.Symbol`
             The transition symbol
         s_to : :class:`~pyformlang.finite_automaton.State`
             The destination state
@@ -67,8 +72,8 @@ class DeterministicFiniteAutomaton(object):
         """
         self._states.add(s_from)
         self._states.add(s_to)
-        self._input_symbols.add(by)
-        return self._transition_function.add_transition(s_from, by, s_to)
+        self._input_symbols.add(symb_by)
+        return self._transition_function.add_transition(s_from, symb_by, s_to)
 
     def get_number_states(self) -> int:
         """ Gives the total number of states
@@ -103,7 +108,7 @@ class DeterministicFiniteAutomaton(object):
         done : int
             1 is correctly added
         """
-        self._initial_state = state
+        self._start_state = state
         self._states.add(state)
         return 1
 
@@ -137,12 +142,12 @@ class DeterministicFiniteAutomaton(object):
         done : int
             0 if it was not a final state, 1 otherwise
         """
-        if self._is_final_state(state):
+        if self.is_final_state(state):
             self._final_states.remove(state)
             return 1
         return 0
 
-    def _is_final_state(self, state: State) -> bool:
+    def is_final_state(self, state: State) -> bool:
         """ Checks if a state is final
 
         Parameters
@@ -170,9 +175,9 @@ class DeterministicFiniteAutomaton(object):
         is_accepted : bool
             Whether the word is accepted or not
         """
-        current_state = self._initial_state
+        current_state = self._start_state
         for symbol in word:
             if current_state is None:
                 return False
             current_state = self._transition_function(current_state, symbol)
-        return current_state is not None and self._is_final_state(current_state)
+        return current_state is not None and self.is_final_state(current_state)

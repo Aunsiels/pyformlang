@@ -1,3 +1,8 @@
+"""
+Repretation of a transition function
+"""
+
+
 from .state import State
 from .symbol import Symbol
 
@@ -21,14 +26,14 @@ class TransitionFunction(object):
     def __init__(self):
         self._transitions = dict()
 
-    def add_transition(self, s_from:State, by:Symbol, s_to:State) -> int:
+    def add_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
         """ Adds a new transition to the function
 
         Parameters
         ----------
         s_from : :class:`~pyformlang.finite_automaton.State`
             The source state
-        by : :class:`~pyformlang.finite_automaton.Symbol`
+        symb_by : :class:`~pyformlang.finite_automaton.Symbol`
             The transition symbol
         s_to : :class:`~pyformlang.finite_automaton.State`
             The destination state
@@ -45,27 +50,27 @@ class TransitionFunction(object):
             If the transition already exists
         """
         if s_from in self._transitions:
-            if by in self._transitions[s_from]:
-                if self._transitions[s_from][by] != s_to:
+            if symb_by in self._transitions[s_from]:
+                if self._transitions[s_from][symb_by] != s_to:
                     raise DuplicateTransitionError(s_from,
-                                                   by,
+                                                   symb_by,
                                                    s_to,
-                                                   self._transitions[s_from][by])
+                                                   self._transitions[s_from][symb_by])
             else:
-                self._transitions[s_from][by] = s_to
+                self._transitions[s_from][symb_by] = s_to
         else:
             self._transitions[s_from] = dict()
-            self._transitions[s_from][by] = s_to
+            self._transitions[s_from][symb_by] = s_to
         return 1
 
-    def remove_transition(self, s_from:State, by:Symbol, s_to:State) -> int:
+    def remove_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
         """ Removes a transition to the function
 
         Parameters
         ----------
         s_from : :class:`~pyformlang.finite_automaton.State`
             The source state
-        by : :class:`~pyformlang.finite_automaton.Symbol`
+        symb_by : :class:`~pyformlang.finite_automaton.Symbol`
             The transition symbol
         s_to : :class:`~pyformlang.finite_automaton.State`
             The destination state
@@ -78,9 +83,9 @@ class TransitionFunction(object):
 
         """
         if s_from in self._transitions and \
-                by in self._transitions[s_from] and \
-                s_to == self._transitions[s_from][by]:
-            del self._transitions[s_from][by]
+                symb_by in self._transitions[s_from] and \
+                s_to == self._transitions[s_from][symb_by]:
+            del self._transitions[s_from][symb_by]
             return 1
         return 0
 
@@ -98,14 +103,14 @@ class TransitionFunction(object):
             counter += len(self._transitions[s_from])
         return counter
 
-    def __call__(self, s_from:State, by:Symbol) -> State:
+    def __call__(self, s_from: State, symb_by: Symbol) -> State:
         """ Calls the transition function as a real function
 
         Parameters
         ----------
         s_from : :class:`~pyformlang.finite_automaton.State`
             The source state
-        by : :class:`~pyformlang.finite_automaton.Symbol`
+        symb_by : :class:`~pyformlang.finite_automaton.Symbol`
             The transition symbol
 
         Returns
@@ -115,8 +120,8 @@ class TransitionFunction(object):
 
         """
         if s_from in self._transitions:
-            if by in self._transitions[s_from]:
-                return self._transitions[s_from][by]
+            if symb_by in self._transitions[s_from]:
+                return self._transitions[s_from][symb_by]
         return None
 
 
@@ -128,7 +133,7 @@ class DuplicateTransitionError(Exception):
     ----------
     s_from : :class:`~pyformlang.finite_automaton.State`
         The source state
-    by : :class:`~pyformlang.finite_automaton.Symbol`
+    symb_by : :class:`~pyformlang.finite_automaton.Symbol`
         The transition symbol
     s_to : :class:`~pyformlang.finite_automaton.State`
         The wanted new destination state
@@ -144,12 +149,13 @@ class DuplicateTransitionError(Exception):
 
     def __init__(self,
                  s_from: State,
-                 by: Symbol,
+                 symb_by: Symbol,
                  s_to: State,
                  s_to_old: State):
-        self.message = "Transition from " + str(s_from) + " by " + str(by) +\
-            " goes to " + str(s_to_old) + " not " + str(s_to)
+        super().__init__("Transition from " + str(s_from) + \
+            " by " + str(symb_by) +\
+            " goes to " + str(s_to_old) + " not " + str(s_to))
         self._s_from = s_from
-        self._by = by
+        self._symb_by = symb_by
         self._s_to = s_to
         self._s_to_old = s_to_old

@@ -111,5 +111,8 @@ doc/_build
 coverage/
 .coverage
 
+# reports
+test-reports/
+
 # VIM files
 *swp

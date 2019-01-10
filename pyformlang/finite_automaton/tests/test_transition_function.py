@@ -1,3 +1,8 @@
+"""
+Test the transition functions
+"""
+
+
 import unittest
 
 from pyformlang.finite_automaton import State, Symbol, TransitionFunction,\
@@ -5,60 +10,73 @@ from pyformlang.finite_automaton import State, Symbol, TransitionFunction,\
 
 
 class TestTransitionFunction(unittest.TestCase):
+    """ Tests the transitions functions
+    """
 
     def test_creation(self):
-        tf = TransitionFunction()
-        self.assertIsNotNone(tf)
+        """ Tests the creation of transition functions
+        """
+        transition_function = TransitionFunction()
+        self.assertIsNotNone(transition_function)
 
+    # pylint: disable=protected-access
     def test_add_transitions(self):
-        tf = TransitionFunction()
+        """ Tests the addition of transitions
+        """
+        transition_function = TransitionFunction()
         s_from = State(0)
         s_to = State(1)
         s_to_bis = State(2)
-        by = Symbol("a")
-        tf.add_transition(s_from, by, s_to)
-        tf.add_transition(s_from, by, s_to)
+        symb_by = Symbol("a")
+        transition_function.add_transition(s_from, symb_by, s_to)
+        transition_function.add_transition(s_from, symb_by, s_to)
         with self.assertRaises(DuplicateTransitionError) as dte:
-            tf.add_transition(s_from, by, s_to_bis)
+            transition_function.add_transition(s_from, symb_by, s_to_bis)
         dte = dte.exception
         self.assertEqual(dte._s_from, s_from)
         self.assertEqual(dte._s_to, s_to_bis)
-        self.assertEqual(dte._by, by)
+        self.assertEqual(dte._symb_by, symb_by)
         self.assertEqual(dte._s_to_old, s_to)
 
     def test_number_transitions(self):
-        tf = TransitionFunction()
-        self.assertEqual(tf.get_number_transitions(), 0)
+        """ Tests the number of transitions
+        """
+        transition_function = TransitionFunction()
+        self.assertEqual(transition_function.get_number_transitions(), 0)
         s_from = State(0)
         s_to = State(1)
         s_to_bis = State(2)
-        by = Symbol("a")
-        by2 = Symbol("b")
-        tf.add_transition(s_from, by, s_to)
-        self.assertEqual(tf.get_number_transitions(), 1)
-        tf.add_transition(s_from, by, s_to)
-        self.assertEqual(tf.get_number_transitions(), 1)
-        tf.add_transition(s_from, by2, s_to_bis)
-        self.assertEqual(tf.get_number_transitions(), 2)
-        tf.add_transition(s_to, by, s_to_bis)
-        self.assertEqual(tf.get_number_transitions(), 3)
+        symb_by = Symbol("a")
+        symb_by2 = Symbol("b")
+        transition_function.add_transition(s_from, symb_by, s_to)
+        self.assertEqual(transition_function.get_number_transitions(), 1)
+        transition_function.add_transition(s_from, symb_by, s_to)
+        self.assertEqual(transition_function.get_number_transitions(), 1)
+        transition_function.add_transition(s_from, symb_by2, s_to_bis)
+        self.assertEqual(transition_function.get_number_transitions(), 2)
+        transition_function.add_transition(s_to, symb_by, s_to_bis)
+        self.assertEqual(transition_function.get_number_transitions(), 3)
 
     def test_remove_transitions(self):
-        tf = TransitionFunction()
+        """ Tests the removal of transitions
+        """
+        transition_function = TransitionFunction()
         s_from = State(0)
         s_to = State(1)
-        by = Symbol("a")
-        tf.add_transition(s_from, by, s_to)
-        self.assertEqual(tf.remove_transition(s_from, by, s_to), 1)
-        self.assertEqual(tf.get_number_transitions(), 0)
-        self.assertIsNone(tf(s_to, by))
-        self.assertEqual(tf.remove_transition(s_from, by, s_to), 0)
+        symb_by = Symbol("a")
+        transition_function.add_transition(s_from, symb_by, s_to)
+        self.assertEqual(transition_function.remove_transition(s_from, symb_by, s_to), 1)
+        self.assertEqual(transition_function.get_number_transitions(), 0)
+        self.assertIsNone(transition_function(s_to, symb_by))
+        self.assertEqual(transition_function.remove_transition(s_from, symb_by, s_to), 0)
 
     def test_call(self):
-        tf = TransitionFunction()
+        """ Tests the call of a transition function
+        """
+        transition_function = TransitionFunction()
         s_from = State(0)
         s_to = State(1)
-        by = Symbol("a")
-        tf.add_transition(s_from, by, s_to)
-        self.assertEqual(tf(s_from, by), s_to)
-        self.assertIsNone(tf(s_to, by))
+        symb_by = Symbol("a")
+        transition_function.add_transition(s_from, symb_by, s_to)
+        self.assertEqual(transition_function(s_from, symb_by), s_to)
+        self.assertIsNone(transition_function(s_to, symb_by))

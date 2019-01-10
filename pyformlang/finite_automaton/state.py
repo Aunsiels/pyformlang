@@ -1,7 +1,12 @@
+"""
+Representation of a state in a finite state automaton
+"""
+
 from typing import Any
+from .finite_automaton_object import FiniteAutomatonObject
 
 
-class State(object):
+class State(FiniteAutomatonObject): # pylint: disable=too-few-public-methods
     """ A state in a finite automaton
 
     Parameters
@@ -22,15 +27,9 @@ class State(object):
     ----------
     """
 
-    def __init__(self, value: Any):
-        self._value = value
-
-    def __repr__(self) -> str:
-        return str(self._value)
-
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, State):
-            return self._value == other._value
+            return self._value == other.get_value()
         return False
 
     def __hash__(self) -> int:

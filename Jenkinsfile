@@ -26,6 +26,8 @@ pipeline {
       steps {
         echo "Code Coverage"
         sh 'make test-coverage-xml'
+        echo "Style Check"
+        sh 'make style-check'
       }
       post{
         always{
