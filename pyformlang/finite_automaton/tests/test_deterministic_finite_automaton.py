@@ -2,7 +2,6 @@
 Tests for the deterministic finite automata
 """
 
-
 import unittest
 
 from pyformlang.finite_automaton import DeterministicFiniteAutomaton
