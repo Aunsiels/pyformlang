@@ -34,26 +34,7 @@ class TestEpsilonNFA(unittest.TestCase):
 
     def test_accept(self):
         """ Test the acceptance """
-        epsilon = Epsilon()
-        plus = Symbol("+")
-        minus = Symbol("-")
-        point = Symbol(".")
-        digits = [Symbol(x) for x in range(10)]
-        states = [State("q" + str(x)) for x in range(6)]
-        enfa = EpsilonNFA()
-        enfa.add_start_state(states[0])
-        enfa.add_final_state(states[5])
-        enfa.add_transition(states[0], epsilon, states[1])
-        enfa.add_transition(states[0], plus, states[1])
-        enfa.add_transition(states[0], minus, states[1])
-        for digit in digits:
-            enfa.add_transition(states[1], digit, states[1])
-            enfa.add_transition(states[1], digit, states[4])
-            enfa.add_transition(states[2], digit, states[3])
-            enfa.add_transition(states[3], digit, states[3])
-        enfa.add_transition(states[1], point, states[2])
-        enfa.add_transition(states[4], point, states[3])
-        enfa.add_transition(states[3], epsilon, states[5])
+        enfa, digits, epsilon, plus, minus, point = get_digits_enfa()
         self.assertTrue(enfa.accepts([plus, digits[1], point, digits[9]]))
         self.assertTrue(enfa.accepts([minus, digits[1], point, digits[9]]))
         self.assertTrue(enfa.accepts([digits[1], point, digits[9]]))
@@ -63,3 +44,45 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(enfa.accepts([point]))
         self.assertFalse(enfa.accepts([plus]))
         self.assertFalse(enfa.is_deterministic())
+
+    def test_deterministic(self):
+        """ Tests the transformation to a dfa"""
+        enfa, digits, _, plus, minus, point = get_digits_enfa()
+        dfa = enfa.to_deterministic()
+        self.assertTrue(dfa.is_deterministic())
+        self.assertEqual(dfa.get_number_states(), 6)
+        self.assertEqual(dfa.get_number_transitions(), 65)
+        self.assertEqual(dfa.get_number_final_states(), 2)
+        self.assertTrue(dfa.accepts([plus, digits[1], point, digits[9]]))
+        self.assertTrue(dfa.accepts([minus, digits[1], point, digits[9]]))
+        self.assertTrue(dfa.accepts([digits[1], point, digits[9]]))
+        self.assertTrue(dfa.accepts([digits[1], point]))
+        self.assertTrue(dfa.accepts([digits[1], point]))
+        self.assertTrue(dfa.accepts([point, digits[9]]))
+        self.assertFalse(dfa.accepts([point]))
+        self.assertFalse(dfa.accepts([plus]))
+
+
+def get_digits_enfa():
+    """ An epsilon NFA to recognize digits """
+    epsilon = Epsilon()
+    plus = Symbol("+")
+    minus = Symbol("-")
+    point = Symbol(".")
+    digits = [Symbol(x) for x in range(10)]
+    states = [State("q" + str(x)) for x in range(6)]
+    enfa = EpsilonNFA()
+    enfa.add_start_state(states[0])
+    enfa.add_final_state(states[5])
+    enfa.add_transition(states[0], epsilon, states[1])
+    enfa.add_transition(states[0], plus, states[1])
+    enfa.add_transition(states[0], minus, states[1])
+    for digit in digits:
+        enfa.add_transition(states[1], digit, states[1])
+        enfa.add_transition(states[1], digit, states[4])
+        enfa.add_transition(states[2], digit, states[3])
+        enfa.add_transition(states[3], digit, states[3])
+    enfa.add_transition(states[1], point, states[2])
+    enfa.add_transition(states[4], point, states[3])
+    enfa.add_transition(states[3], epsilon, states[5])
+    return (enfa, digits, epsilon, plus, minus, point)

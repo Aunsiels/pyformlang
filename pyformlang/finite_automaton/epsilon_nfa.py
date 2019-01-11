@@ -4,6 +4,8 @@ Nondeterminsitic Automaton with epsilon transitions
 
 from typing import Set, Iterable, AbstractSet
 
+from pyformlang import finite_automaton
+
 from .epsilon import Epsilon
 from .state import State
 from .symbol import Symbol
@@ -75,7 +77,8 @@ class EpsilonNFA(object):
         """
         self._states.add(s_from)
         self._states.add(s_to)
-        self._input_symbols.add(symb_by)
+        if symb_by != Epsilon():
+            self._input_symbols.add(symb_by)
         return self._transition_function.add_transition(s_from, symb_by, s_to)
 
     def remove_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
@@ -108,6 +111,7 @@ class EpsilonNFA(object):
         number_states : int
             The number of states
         """
+        print(self._states)
         return len(self._states)
 
     def get_number_transitions(self) -> int:
@@ -130,6 +134,16 @@ class EpsilonNFA(object):
             The number of symbols
         """
         return len(self._input_symbols)
+
+    def get_number_final_states(self) -> int:
+        """ Gives the number of final states
+
+        Returns
+        ----------
+        number_final_states : int
+            The number of final states
+        """
+        return len(self._final_states)
 
     def add_start_state(self, state: State) -> int:
         """ Set an initial state
@@ -315,3 +329,78 @@ class EpsilonNFA(object):
         return len(self._start_state) <= 1 and \
             self._transition_function.is_deterministic() and \
             all([{x} == self.eclose(x) for x in self._states])
+
+    def _to_deterministic_internal(self, eclose: bool) -> "DeterministicFiniteAutomaton":
+        """ Transforms the epsilon-nfa into a dfa
+
+        Parameters
+        ----------
+        eclose : bool
+            Whether to use the epsilon closure or not
+
+        Returns
+        ----------
+        dfa : :class:`~pyformlang.deterministic_finite_automaton.DeterministicFiniteAutomaton`
+            A dfa equivalent to the current nfa
+        """
+        dfa = finite_automaton.DeterministicFiniteAutomaton()
+        # Add Eclose
+        if eclose:
+            start_eclose = self.eclose_iterable(self._start_state)
+        else:
+            start_eclose = self._start_state
+        start_state = to_single_state(start_eclose)
+        dfa.add_start_state(start_state)
+        to_process = [start_eclose]
+        processed = {start_state}
+        while to_process:
+            current = to_process.pop()
+            s_from = to_single_state(current)
+            for symb in self._input_symbols:
+                all_trans = [self._transition_function(x, symb) for x in current]
+                state = set()
+                for trans in all_trans:
+                    state = state.union(trans)
+                if not state:
+                    continue
+                # Eclose added
+                if eclose:
+                    state = self.eclose_iterable(state)
+                state_merged = to_single_state(state)
+                dfa.add_transition(s_from, symb, state_merged)
+                if state_merged not in processed:
+                    processed.add(state_merged)
+                    to_process.append(state)
+            for state in current:
+                if state in self._final_states:
+                    dfa.add_final_state(s_from)
+        return dfa
+
+    def to_deterministic(self) -> "DeterministicFiniteAutomaton":
+        """ Transforms the epsilon-nfa into a dfa
+
+        Returns
+        ----------
+        dfa : :class:`~pyformlang.deterministic_finite_automaton.DeterministicFiniteAutomaton`
+            A dfa equivalent to the current nfa
+        """
+        return self._to_deterministic_internal(True)
+
+def to_single_state(l_states: Iterable[State]) -> State:
+    """ Merge a list of states
+
+    Parameters
+    ----------
+    l_states : list of :class:`~pyformlang.finite_automaton.State`
+        A list of states
+
+    Returns
+    ----------
+    state : :class:`~pyformlang.finite_automaton.State`
+        The merged state
+    """
+    values = []
+    for state in l_states:
+        values.append(str(state.get_value()))
+    values = sorted(values)
+    return State("; ".join(values))
