@@ -78,6 +78,28 @@ class EpsilonNFA(object):
         self._input_symbols.add(symb_by)
         return self._transition_function.add_transition(s_from, symb_by, s_to)
 
+    def remove_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
+        """ Remove a transition of the nfa
+
+        Parameters
+        ----------
+        s_from : :class:`~pyformlang.finite_automaton.State`
+            The source state
+        symb_by : :class:`~pyformlang.finite_automaton.Symbol`
+            The transition symbol
+        s_to : :class:`~pyformlang.finite_automaton.State`
+            The destination state
+
+
+        Returns
+        --------
+        done : int
+            1 if the transition existed, 0 otherwise
+        """
+        return self._transition_function.remove_transition(s_from,
+                                                           symb_by,
+                                                           s_to)
+
     def get_number_states(self) -> int:
         """ Gives the total number of states
 
@@ -291,4 +313,5 @@ class EpsilonNFA(object):
            Whether the automaton is deterministic
         """
         return len(self._start_state) <= 1 and \
-            self._transition_function.is_deterministic()
+            self._transition_function.is_deterministic() and \
+            all([{x} == self.eclose(x) for x in self._states])

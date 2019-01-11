@@ -28,6 +28,9 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertEqual(len(enfa.eclose(states[2])), 3)
         self.assertEqual(len(enfa.eclose(states[5])), 2)
         self.assertEqual(len(enfa.eclose(states[6])), 1)
+        self.assertEqual(enfa.remove_transition(states[1], epsilon, states[4]),
+                         1)
+        self.assertFalse(enfa.is_deterministic())
 
     def test_accept(self):
         """ Test the acceptance """
@@ -59,3 +62,4 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(enfa.accepts([point, digits[9]]))
         self.assertFalse(enfa.accepts([point]))
         self.assertFalse(enfa.accepts([plus]))
+        self.assertFalse(enfa.is_deterministic())
