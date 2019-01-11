@@ -24,6 +24,7 @@ doc:
 	$(MAKE) -C doc html
 
 build:
+	rm dist/*
 	$(PYTHON) setup.py sdist bdist_wheel
 	$(TWINE) upload dist/*
 

@@ -4,6 +4,8 @@ Representation of a nondeterministic finite automaton
 
 from typing import AbstractSet, Iterable, Set
 
+from pyformlang import finite_automaton
+
 from .state import State
 from .symbol import Symbol
 from .nondeterministic_transition_function import NondeterministicTransitionFunction
@@ -257,9 +259,7 @@ class NondeterministicFiniteAutomaton(object):
         dfa : :class:`~pyformlang.deterministic_finite_automaton.DeterministicFiniteAutomaton`
             A dfa equivalent to the current nfa
         """
-        # pylint: disable=cyclic-import
-        from .deterministic_finite_automaton import DeterministicFiniteAutomaton
-        dfa = DeterministicFiniteAutomaton()
+        dfa = finite_automaton.DeterministicFiniteAutomaton()
         start_state = to_single_state(self._start_state)
         dfa.add_start_state(start_state)
         to_process = [self._start_state]
