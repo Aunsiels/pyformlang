@@ -111,7 +111,6 @@ class EpsilonNFA(object):
         number_states : int
             The number of states
         """
-        print(self._states)
         return len(self._states)
 
     def get_number_transitions(self) -> int:

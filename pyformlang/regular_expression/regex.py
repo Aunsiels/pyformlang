@@ -5,6 +5,8 @@ Representation of a regular expression
 from typing import Iterable
 import re
 
+from pyformlang import finite_automaton
+
 
 class Regex(object):
     """ Represents a regular expression
@@ -63,8 +65,7 @@ class Regex(object):
         """
         if self._sons:
             return sum([son.get_number_symbols() for son in self._sons])
-        else:
-            return 1
+        return 1
 
     def get_number_operators(self) -> int:
         """ Gives the number of operators in the regex
@@ -76,8 +77,85 @@ class Regex(object):
         """
         if self._sons:
             return 1 + sum([son.get_number_operators() for son in self._sons])
+        return 0
+
+    def to_epsilon_nfa(self):
+        """ Transforms the regular expression into an epsilon NFA
+
+        Returns
+        ----------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            An epsilon NFA equivalent to the regex
+        """
+        enfa = finite_automaton.EpsilonNFA()
+        counter = 0
+        s_initial = finite_automaton.State(counter)
+        counter += 1
+        s_final = finite_automaton.State(counter)
+        counter += 1
+        enfa.add_start_state(s_initial)
+        enfa.add_final_state(s_final)
+        self.process_to_enfa(enfa, s_initial, s_final, counter)
+        return enfa
+
+    def process_to_enfa(self, enfa: finite_automaton.EpsilonNFA,
+                        s_from: finite_automaton.State,
+                        s_to: finite_automaton.State,
+                        counter: int) -> int:
+        """ Internal function to add a regex to a given epsilon NFA
+
+        Parameters
+        ----------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The Epsilon NFA to which we add the regex
+        s_from : :class:`~pyformlang.finite_automaton.State`
+            The source state
+        s_to : :class:`~pyformlang.finite_automaton.State`
+            The destination state
+        counter : int
+            Prevents duplicate states
+        """
+        if self._sons:
+            state0 = finite_automaton.State(counter)
+            counter += 1
+            state1 = finite_automaton.State(counter)
+            counter += 1
+            if isinstance(self._head, Concatenation):
+                print("here")
+                enfa.add_transition(state0, finite_automaton.Epsilon(), state1)
+                counter = self._sons[0].process_to_enfa(enfa, s_from, state0, counter)
+                counter = self._sons[1].process_to_enfa(enfa, state1, s_to, counter)
+            elif isinstance(self._head, Union):
+                state2 = finite_automaton.State(counter)
+                counter += 1
+                state3 = finite_automaton.State(counter)
+                counter += 1
+                enfa.add_transition(s_from, finite_automaton.Epsilon(), state0)
+                enfa.add_transition(s_from, finite_automaton.Epsilon(), state1)
+                enfa.add_transition(state2, finite_automaton.Epsilon(), s_to)
+                enfa.add_transition(state3, finite_automaton.Epsilon(), s_to)
+                counter = self._sons[0].process_to_enfa(enfa, state0, state2, counter)
+                counter = self._sons[1].process_to_enfa(enfa, state1, state3, counter)
+            elif isinstance(self._head, KleeneStar):
+                enfa.add_transition(state1, finite_automaton.Epsilon(), state0)
+                enfa.add_transition(s_from, finite_automaton.Epsilon(), s_to)
+                enfa.add_transition(s_from, finite_automaton.Epsilon(), state0)
+                enfa.add_transition(state1, finite_automaton.Epsilon(), s_to)
+                counter = self._sons[0].process_to_enfa(enfa, state0, state1, counter)
         else:
-            return 0
+            if isinstance(self._head, Epsilon):
+                enfa.add_transition(s_from, finite_automaton.Epsilon(), s_to)
+            elif not isinstance(self._head, Empty):
+                symb = finite_automaton.Symbol(self._head.get_value())
+                enfa.add_transition(s_from, symb, s_to)
+        return counter
+
+    def get_tree_str(self, depth: int = 0) -> str:
+        """ Print the regex as a tree """
+        temp = " " * depth + str(self._head) + "\n"
+        for son in self._sons:
+            temp += son.get_tree_str(depth + 1)
+        return temp
 
 
 class Node(object): # pylint: disable=too-few-public-methods
@@ -91,9 +169,6 @@ class Node(object): # pylint: disable=too-few-public-methods
 
     def __init__(self, value):
         self._value = value
-
-    def __repr__(self):
-        return str(self._value)
 
     def get_value(self):
         """ Give the value of the node
@@ -148,8 +223,6 @@ def remove_extreme_parenthesis(value_l: Iterable[str]) -> Iterable[str]:
 
 def get_end_first_group(value_l: Iterable[str]) -> int:
     """ Gives the end of the first group """
-    if not value_l:
-        return 0
     if value_l[0] == ")":
         raise MisformedRegexError("Wrong parenthesis regex", " ".join(value_l))
     if value_l[0] == "(":
