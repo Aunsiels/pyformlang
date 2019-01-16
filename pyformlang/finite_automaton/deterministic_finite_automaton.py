@@ -108,7 +108,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         """
         return True
 
-    def to_deterministic(self):
+    def to_deterministic(self) -> "DeterministicFiniteAutomaton":
         """ Transforms the nfa into a dfa
 
         Returns
@@ -117,3 +117,22 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             A dfa equivalent to the current nfa
         """
         return self
+
+    def copy(self) -> "DeterministicFiniteAutomaton":
+        """ Copies the current DFA
+
+        Returns
+        ----------
+        enfa : :class:`~pyformlang.finite_automaton.DeterministicFiniteAutomaton`
+            A copy of the current DFA
+        """
+        dfa = DeterministicFiniteAutomaton()
+        dfa.add_start_state(self._start_state)
+        for final in self._final_states:
+            dfa.add_final_state(final)
+        for state in self._states:
+            for symbol in self._input_symbols:
+                state_to = self._transition_function(state, symbol)
+                if state_to is not None:
+                    dfa.add_transition(state, symbol, state_to)
+        return dfa

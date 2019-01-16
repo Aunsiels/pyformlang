@@ -34,7 +34,16 @@ class TestEpsilonNFA(unittest.TestCase):
 
     def test_accept(self):
         """ Test the acceptance """
+        self._perform_tests_digits(False)
+
+    def test_copy(self):
+        """ Tests the copy of enda """
+        self._perform_tests_digits(True)
+
+    def _perform_tests_digits(self, copy=False):
         enfa, digits, epsilon, plus, minus, point = get_digits_enfa()
+        if copy:
+            enfa = enfa.copy()
         self.assertTrue(enfa.accepts([plus, digits[1], point, digits[9]]))
         self.assertTrue(enfa.accepts([minus, digits[1], point, digits[9]]))
         self.assertTrue(enfa.accepts([digits[1], point, digits[9]]))

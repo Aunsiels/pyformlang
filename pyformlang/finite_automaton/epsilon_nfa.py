@@ -385,6 +385,30 @@ class EpsilonNFA(object):
         """
         return self._to_deterministic_internal(True)
 
+    def copy(self) -> "EpsilonNFA":
+        """ Copies the current Epsilon NFA
+
+        Returns
+        ----------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            A copy of the current Epsilon NFA
+        """
+        enfa = EpsilonNFA()
+        for start in self._start_state:
+            enfa.add_start_state(start)
+        for final in self._final_states:
+            enfa.add_final_state(final)
+        for state in self._states:
+            for symbol in self._input_symbols:
+                states = self._transition_function(state, symbol)
+                for state_to in states:
+                    enfa.add_transition(state, symbol, state_to)
+            states = self._transition_function(state, Epsilon())
+            for state_to in states:
+                enfa.add_transition(state, Epsilon(), state_to)
+        return enfa
+
+
 def to_single_state(l_states: Iterable[State]) -> State:
     """ Merge a list of states
 

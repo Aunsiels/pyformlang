@@ -71,22 +71,17 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
     def test_accepts(self):
         """ Tests the acceptance of dfa
         """
-        dfa = DeterministicFiniteAutomaton()
-        state0 = State(0)
-        state1 = State(1)
-        state2 = State(2)
-        state3 = State(3)
+        dfa = get_example0()
+        self._perform_tests_example0(dfa)
+
+    def _perform_tests_example0(self, dfa):
+        """ Tests for DFA from example 0 """
         symb_a = Symbol("a")
         symb_b = Symbol("b")
         symb_c = Symbol("c")
         symb_d = Symbol("d")
-        dfa.add_start_state(state0)
-        dfa.add_final_state(state2)
-        dfa.add_final_state(state3)
-        dfa.add_transition(state0, symb_a, state1)
-        dfa.add_transition(state1, symb_b, state1)
-        dfa.add_transition(state1, symb_c, state2)
-        dfa.add_transition(state1, symb_d, state3)
+        state0 = State(0)
+        state1 = State(1)
         self.assertTrue(dfa.accepts([symb_a, symb_b, symb_c]))
         self.assertTrue(dfa.accepts([symb_a, symb_b, symb_b, symb_b, symb_c]))
         self.assertTrue(dfa.accepts([symb_a, symb_b, symb_d]))
@@ -98,3 +93,29 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         self.assertTrue(dfa.accepts([symb_a, symb_b, symb_c]))
         self.assertEqual(dfa.remove_start_state(state0), 1)
         self.assertFalse(dfa.accepts([symb_a, symb_b, symb_c]))
+
+    def test_copy(self):
+        """ Test the copy of a DFA """
+        dfa = get_example0().copy()
+        self._perform_tests_example0(dfa)
+
+
+def get_example0():
+    """ Gives a dfa """
+    dfa = DeterministicFiniteAutomaton()
+    state0 = State(0)
+    state1 = State(1)
+    state2 = State(2)
+    state3 = State(3)
+    symb_a = Symbol("a")
+    symb_b = Symbol("b")
+    symb_c = Symbol("c")
+    symb_d = Symbol("d")
+    dfa.add_start_state(state0)
+    dfa.add_final_state(state2)
+    dfa.add_final_state(state3)
+    dfa.add_transition(state0, symb_a, state1)
+    dfa.add_transition(state1, symb_b, state1)
+    dfa.add_transition(state1, symb_c, state2)
+    dfa.add_transition(state1, symb_d, state3)
+    return dfa
