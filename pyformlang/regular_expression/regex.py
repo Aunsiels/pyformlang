@@ -3,6 +3,7 @@ Representation of a regular expression
 """
 
 from typing import Iterable
+import re
 
 
 class Regex(object):
@@ -39,9 +40,9 @@ class Regex(object):
         else:
             end_first_group = get_end_first_group(regex_l)
             next_node = to_node(regex_l[end_first_group])
-            if isinstance(next_node, KleeneStar) and len(regex_l) == 2:
+            if isinstance(next_node, KleeneStar):
                 self._head = next_node
-                self._sons.append(Regex(" ".join(regex[:end_first_group])))
+                self._sons.append(Regex(" ".join(regex_l[:end_first_group])))
             else:
                 begin_second_group = end_first_group
                 if isinstance(next_node, Symbol):
@@ -50,7 +51,33 @@ class Regex(object):
                     self._head = next_node
                     begin_second_group += 1
                 self._sons.append(Regex(" ".join(regex_l[:end_first_group])))
-                self._sons.append(Regex(" ".join(regex_l[begin_second_group])))
+                self._sons.append(Regex(" ".join(regex_l[begin_second_group:])))
+
+    def get_number_symbols(self) -> int:
+        """ Gives the number of symbols in the regex
+
+        Returns
+        ----------
+        n_symbols : int
+            The number of symbols in the regex
+        """
+        if self._sons:
+            return sum([son.get_number_symbols() for son in self._sons])
+        else:
+            return 1
+
+    def get_number_operators(self) -> int:
+        """ Gives the number of operators in the regex
+
+        Returns
+        ----------
+        n_operators : int
+            The number of operators in the regex
+        """
+        if self._sons:
+            return 1 + sum([son.get_number_operators() for son in self._sons])
+        else:
+            return 0
 
 
 class Node(object): # pylint: disable=too-few-public-methods
@@ -177,13 +204,16 @@ def preprocess_regex(regex: str) -> str:
     regex_prepro : str
         The preprocessed regex
     """
+    regex = re.sub(r"\s+", " ", regex.strip())
     res = []
     pos = 0
     for current_c in regex:
-        if not current_c.isalnum() and pos != 0 and regex[pos-1] != " ":
+        if not current_c.isalnum() and current_c != " " and \
+                pos != 0 and res[-1] != " ":
             res.append(" ")
         res.append(current_c)
-        if not current_c.isalnum() and pos != len(regex) - 1 and regex[pos+1] != " ":
+        if not current_c.isalnum() and current_c != " " and \
+                pos != len(regex) - 1 and regex[pos+1] != " ":
             res.append(" ")
         pos += 1
     return "".join(res)
