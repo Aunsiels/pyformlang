@@ -408,7 +408,7 @@ class EpsilonNFA(object):
                 enfa.add_transition(state, Epsilon(), state_to)
         return enfa
 
-    def to_regex(self) -> regular_expression.Regex:
+    def to_regex(self) -> "Regex":
         """ Tranforms the EpsilonNFA to a regular expression
 
         Returns
@@ -417,20 +417,87 @@ class EpsilonNFA(object):
             A regular expression equivalent to the current Epsilon NFA
         """
         enfas = [self.copy() for _ in self._final_states]
+        final_states = list(self._final_states)
         for i in range(len(self._final_states)):
             for j in range(len(self._final_states)):
                 if i != j:
-                    enfas[j].remove_final_state(self._final_states[i])
+                    enfas[j].remove_final_state(final_states[i])
+        regex_l = []
         for enfa in enfas:
-            enfa.create_or_transitions()
+            enfa.remove_all_basic_states()
+            regex_sub = enfa.get_regex_simple()
+            if regex_sub:
+                regex_l.append(regex_sub)
+        res = "+".join(regex_l)
+        return regular_expression.Regex(res)
 
-    def remove_state(self, state):
+    def get_regex_simple(self) -> str:
+        """ Get the regex of an automaton when it only composed of a start and a final state
+
+        CAUTION: For internal use only!
+
+        Returns
+        ----------
+        regex : str
+            A regex representing the automaton
+        """
+        if not self._final_states or not self._start_state:
+            return ""
+        if len(self._final_states) != 1 or len(self._start_state) != 1:
+            raise ValueError("The automaton is not simple enough!")
+        if self._start_state == self._final_states:
+            # We are suppose to have only one good symbol
+            for symbol in self._input_symbols:
+                out_states = self._transition_function(list(self._start_state)[0], symbol)
+                if out_states:
+                    return "(" + str(symbol.get_value()) + ")*"
+            return "epsilon"
+        start = list(self._start_state)[0]
+        end = list(self._final_states)[0]
+        start_to_start = "epsilon"
+        start_to_end = ""
+        end_to_end = "epsilon"
+        end_to_start = ""
+        for state in self._states:
+            for symbol in self._input_symbols.union({Epsilon()}):
+                for out_state in self._transition_function(state, symbol):
+                    symbol_str = str(symbol.get_value())
+                    if not symbol_str.isalnum():
+                        symbol_str = "(" + symbol_str + ")"
+                    if state == start and out_state == start:
+                        start_to_start = symbol_str
+                    elif state == start and out_state == end:
+                        start_to_end = symbol_str
+                    elif state == end and out_state == start:
+                        end_to_start = symbol_str
+                    elif state == end and out_state == end:
+                        end_to_end = symbol_str
+        return get_regex_sub(start_to_start, start_to_end, end_to_start, end_to_end)
+
+
+    def remove_all_basic_states(self):
+        """ Remove all states which are not the start state or a final state
+
+
+        CAREFUL: This method modifies the current automaton, for internal usage
+        only!
+
+        The function _create_or_transitions is supposed to be called before
+        calling this function
+        """
+        self._create_or_transitions()
+        states = self._states.copy()
+        for state in states:
+            if state not in self._start_state and state not in self._final_states:
+                self._remove_state(state)
+
+    def _remove_state(self, state):
         """ Removes a given state from the epsilon NFA
 
         CAREFUL: This method modifies the current automaton, for internal usage
         only!
 
-        The function create_or_transitions is supposed to be called before
+        The function _create_or_transitions is supposed to be called before
         calling this function
 
         Parameters
@@ -441,17 +508,17 @@ class EpsilonNFA(object):
         """
         # First compute all endings
         out_transitions = dict()
-        for symbol in self._input_symbols:
+        for symbol in self._input_symbols.union({Epsilon()}):
             out_states = self._transition_function(state, symbol).copy()
             for out_state in out_states:
-                out_transitions[out_state] = symbol.get_value()
+                out_transitions[out_state] = str(symbol.get_value())
                 self.remove_transition(state, symbol, out_state)
         if state in out_transitions:
             to_itself = "(" + out_transitions[state] + ")*"
             del out_transitions[state]
             for out_state in out_transitions:
                 out_transitions[out_state] = to_itself + "." + out_transitions[out_state]
-        input_symbols = self._input_symbols.copy()
+        input_symbols = self._input_symbols.copy().union({Epsilon()})
         for in_state in self._states:
             if in_state == state:
                 continue
@@ -459,17 +526,17 @@ class EpsilonNFA(object):
                 out_states = self._transition_function(in_state, symbol)
                 if state not in out_states:
                     continue
-                symbol_str = "(" + symbol.get_value() + ")"
+                symbol_str = "(" + str(symbol.get_value()) + ")"
                 self.remove_transition(in_state, symbol, state)
                 for out_state in out_transitions:
                     new_symbol = Symbol(symbol_str + "." + out_transitions[out_state])
                     self.add_transition(in_state, new_symbol, out_state)
         self._states.remove(state)
         # We make sure the automaton has the good structure
-        self.create_or_transitions()
+        self._create_or_transitions()
 
 
-    def create_or_transitions(self):
+    def _create_or_transitions(self):
         """ Creates a OR transition instead of several connections
 
         CAREFUL: This method modifies the automaton and is designed for internal
@@ -477,21 +544,63 @@ class EpsilonNFA(object):
         """
         for state in self._states:
             new_transitions = dict()
-            input_symbols = self._input_symbols.copy()
+            input_symbols = self._input_symbols.copy().union({Epsilon()})
             for symbol in input_symbols:
                 out_states = self._transition_function(state, symbol)
                 out_states = out_states.copy()
-                symbol_str = symbol.get_value()
+                symbol_str = str(symbol.get_value())
                 for out_state in out_states:
                     self.remove_transition(state, symbol, out_state)
                     base = new_transitions.setdefault(out_state, "")
                     if "+" in symbol_str:
                         symbol_str = "(" + symbol_str + ")"
-                    new_transitions[out_state] = base + "+" + symbol_str
+                    if base:
+                        new_transitions[out_state] = base + "+" + symbol_str
+                    else:
+                        new_transitions[out_state] = symbol_str
             for out_state in new_transitions:
                 self.add_transition(state,
                                     Symbol(new_transitions[out_state]),
                                     out_state)
+
+
+
+def get_regex_sub(start_to_start, start_to_end, end_to_start, end_to_end):
+    """ Combines the transitions in the regex simple function """
+    if not start_to_end:
+        return ""
+    temp = ""
+    temp = "epsilon"
+    if start_to_end != "epsilon" or end_to_end != "epsilon" or end_to_start != "epsilon":
+        temp = ""
+    if start_to_end != "epsilon":
+        temp = start_to_end
+    if end_to_end != "epsilon":
+        if temp:
+            temp += "." + end_to_end + "*"
+        else:
+            temp = end_to_end + "*"
+    part1 = temp
+    if not part1:
+        part1 = "epsilon"
+    if end_to_start != "epsilon":
+        if temp:
+            temp += "." + end_to_start
+        else:
+            temp = end_to_start
+    if not end_to_start:
+        temp = ""
+    part0 = "epsilon"
+    if start_to_start != "epsilon" and temp != "epsilon":
+        if temp:
+            part0 = "(" + start_to_start + "+" + temp + ")*"
+        else:
+            part0 = "(" + start_to_start + ")*"
+    elif start_to_start != "epsilon":
+        part0 = start_to_start + "*"
+    elif temp != "epsilon" and temp:
+        part0 = "(" + temp + ")*"
+    return "(" + part0 + "." + part1 + ")"
 
 
 

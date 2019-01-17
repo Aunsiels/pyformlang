@@ -121,7 +121,6 @@ class Regex(object):
             state1 = finite_automaton.State(counter)
             counter += 1
             if isinstance(self._head, Concatenation):
-                print("here")
                 enfa.add_transition(state0, finite_automaton.Epsilon(), state1)
                 counter = self._sons[0].process_to_enfa(enfa, s_from, state0, counter)
                 counter = self._sons[1].process_to_enfa(enfa, state1, s_to, counter)
@@ -223,6 +222,8 @@ def remove_extreme_parenthesis(value_l: Iterable[str]) -> Iterable[str]:
 
 def get_end_first_group(value_l: Iterable[str]) -> int:
     """ Gives the end of the first group """
+    if not value_l:
+        return 0
     if value_l[0] == ")":
         raise MisformedRegexError("Wrong parenthesis regex", " ".join(value_l))
     if value_l[0] == "(":
