@@ -98,9 +98,9 @@ class Regex(object):
         self.process_to_enfa(enfa, s_initial, s_final, counter)
         return enfa
 
-    def process_to_enfa(self, enfa: finite_automaton.EpsilonNFA,
-                        s_from: finite_automaton.State,
-                        s_to: finite_automaton.State,
+    def process_to_enfa(self, enfa: "EpsilonNFA",
+                        s_from: "State",
+                        s_to: "State",
                         counter: int) -> int:
         """ Internal function to add a regex to a given epsilon NFA
 

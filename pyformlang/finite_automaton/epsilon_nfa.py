@@ -4,7 +4,7 @@ Nondeterminsitic Automaton with epsilon transitions
 
 from typing import Set, Iterable, AbstractSet
 
-from pyformlang import finite_automaton
+from pyformlang import finite_automaton, regular_expression
 
 from .epsilon import Epsilon
 from .state import State
@@ -407,6 +407,92 @@ class EpsilonNFA(object):
             for state_to in states:
                 enfa.add_transition(state, Epsilon(), state_to)
         return enfa
+
+    def to_regex(self) -> regular_expression.Regex:
+        """ Tranforms the EpsilonNFA to a regular expression
+
+        Returns
+        ----------
+        regex : :class:`~pyformlang.regular_expression.Regex`
+            A regular expression equivalent to the current Epsilon NFA
+        """
+        enfas = [self.copy() for _ in self._final_states]
+        for i in range(len(self._final_states)):
+            for j in range(len(self._final_states)):
+                if i != j:
+                    enfas[j].remove_final_state(self._final_states[i])
+        for enfa in enfas:
+            enfa.create_or_transitions()
+
+    def remove_state(self, state):
+        """ Removes a given state from the epsilon NFA
+
+        CAREFUL: This method modifies the current automaton, for internal usage
+        only!
+
+        The function create_or_transitions is supposed to be called before
+        calling this function
+
+        Parameters
+        ----------
+        state : :class:`~pyformlang.finite_automaton.State`
+            The state to remove
+
+        """
+        # First compute all endings
+        out_transitions = dict()
+        for symbol in self._input_symbols:
+            out_states = self._transition_function(state, symbol).copy()
+            for out_state in out_states:
+                out_transitions[out_state] = symbol.get_value()
+                self.remove_transition(state, symbol, out_state)
+        if state in out_transitions:
+            to_itself = "(" + out_transitions[state] + ")*"
+            del out_transitions[state]
+            for out_state in out_transitions:
+                out_transitions[out_state] = to_itself + "." + out_transitions[out_state]
+        input_symbols = self._input_symbols.copy()
+        for in_state in self._states:
+            if in_state == state:
+                continue
+            for symbol in input_symbols:
+                out_states = self._transition_function(in_state, symbol)
+                if state not in out_states:
+                    continue
+                symbol_str = "(" + symbol.get_value() + ")"
+                self.remove_transition(in_state, symbol, state)
+                for out_state in out_transitions:
+                    new_symbol = Symbol(symbol_str + "." + out_transitions[out_state])
+                    self.add_transition(in_state, new_symbol, out_state)
+        self._states.remove(state)
+        # We make sure the automaton has the good structure
+        self.create_or_transitions()
+
+
+    def create_or_transitions(self):
+        """ Creates a OR transition instead of several connections
+
+        CAREFUL: This method modifies the automaton and is designed for internal
+        use only!
+        """
+        for state in self._states:
+            new_transitions = dict()
+            input_symbols = self._input_symbols.copy()
+            for symbol in input_symbols:
+                out_states = self._transition_function(state, symbol)
+                out_states = out_states.copy()
+                symbol_str = symbol.get_value()
+                for out_state in out_states:
+                    self.remove_transition(state, symbol, out_state)
+                    base = new_transitions.setdefault(out_state, "")
+                    if "+" in symbol_str:
+                        symbol_str = "(" + symbol_str + ")"
+                    new_transitions[out_state] = base + "+" + symbol_str
+            for out_state in new_transitions:
+                self.add_transition(state,
+                                    Symbol(new_transitions[out_state]),
+                                    out_state)
+
 
 
 def to_single_state(l_states: Iterable[State]) -> State:

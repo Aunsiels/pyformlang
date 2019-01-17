@@ -71,6 +71,50 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(dfa.accepts([point]))
         self.assertFalse(dfa.accepts([plus]))
 
+    def test_create_or_transitions(self):
+        """ Tests the creation of or transitions """
+        enfa = EpsilonNFA()
+        state0 = State(0)
+        state1 = State(1)
+        state2 = State(2)
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        symb_c = Symbol("c")
+        symb_plus = Symbol("c+d")
+        enfa.add_start_state(state0)
+        enfa.add_final_state(state2)
+        enfa.add_transition(state0, symb_a, state1)
+        enfa.add_transition(state0, symb_b, state1)
+        enfa.add_transition(state0, symb_plus, state1)
+        enfa.add_transition(state0, symb_c, state2)
+        enfa.add_transition(state1, symb_b, state2)
+        enfa.add_transition(state1, symb_c, state2)
+        enfa.add_transition(state1, symb_b, state1)
+        enfa.add_transition(state1, symb_c, state1)
+        self.assertEqual(enfa.get_number_transitions(), 8)
+        enfa.create_or_transitions()
+        self.assertEqual(enfa.get_number_transitions(), 4)
+
+    def test_remove_state(self):
+        " Tests the remove of state """
+        enfa = EpsilonNFA()
+        state0 = State(0)
+        state1 = State(1)
+        state2 = State(2)
+        symb02 = Symbol("a+b")
+        symb01 = Symbol("c*")
+        symb11 = Symbol("b+(c.d)")
+        symb12 = Symbol("a.b.c")
+        enfa.add_start_state(state0)
+        enfa.add_final_state(state2)
+        enfa.add_transition(state0, symb01, state1)
+        enfa.add_transition(state0, symb02, state2)
+        enfa.add_transition(state1, symb11, state1)
+        enfa.add_transition(state1, symb12, state2)
+        enfa.remove_state(state1)
+        self.assertEqual(enfa.get_number_transitions(), 1)
+        self.assertEqual(enfa.get_number_states(), 2)
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """
