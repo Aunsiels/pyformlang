@@ -452,6 +452,23 @@ class EpsilonNFA(object):
                 if out_states:
                     return "(" + str(symbol.get_value()) + ")*"
             return "epsilon"
+        start_to_start, start_to_end, end_to_start, end_to_end = self._get_bi_transitions()
+        return get_regex_sub(start_to_start, start_to_end, end_to_start, end_to_end)
+
+    def _get_bi_transitions(self) -> (str, str, str, str):
+        """ Internal method to compute the transition in the case of an simple automaton
+
+        Returns
+        start_to_start : str
+            The transition from the start state to the start state
+        start_to_end : str
+            The transition from the start state to the end state
+        end_to_start : str
+            The transition from the end state to the start state
+        end_to_end : str
+            The transition from the end state to the end state
+        ----------
+        """
         start = list(self._start_state)[0]
         end = list(self._final_states)[0]
         start_to_start = "epsilon"
@@ -472,7 +489,8 @@ class EpsilonNFA(object):
                         end_to_start = symbol_str
                     elif state == end and out_state == end:
                         end_to_end = symbol_str
-        return get_regex_sub(start_to_start, start_to_end, end_to_start, end_to_end)
+        return (start_to_start, start_to_end, end_to_start, end_to_end)
+
 
 
     def remove_all_basic_states(self):
@@ -491,7 +509,7 @@ class EpsilonNFA(object):
             if state not in self._start_state and state not in self._final_states:
                 self._remove_state(state)
 
-    def _remove_state(self, state):
+    def _remove_state(self, state: State):
         """ Removes a given state from the epsilon NFA
 
         CAREFUL: This method modifies the current automaton, for internal usage
@@ -564,12 +582,8 @@ class EpsilonNFA(object):
                                     out_state)
 
 
-
-def get_regex_sub(start_to_start, start_to_end, end_to_start, end_to_end):
-    """ Combines the transitions in the regex simple function """
-    if not start_to_end:
-        return ""
-    temp = ""
+def get_temp(start_to_end: str, end_to_start: str, end_to_end: str) -> (str, str):
+    """ Gets a temp values in the computation of the simple automaton regex """
     temp = "epsilon"
     if start_to_end != "epsilon" or end_to_end != "epsilon" or end_to_start != "epsilon":
         temp = ""
@@ -590,14 +604,23 @@ def get_regex_sub(start_to_start, start_to_end, end_to_start, end_to_end):
             temp = end_to_start
     if not end_to_start:
         temp = ""
+    return (temp, part1)
+
+
+def get_regex_sub(start_to_start: str,
+                  start_to_end: str,
+                  end_to_start: str,
+                  end_to_end: str) -> str:
+    """ Combines the transitions in the regex simple function """
+    if not start_to_end:
+        return ""
+    temp, part1 = get_temp(start_to_end, end_to_start, end_to_end)
     part0 = "epsilon"
-    if start_to_start != "epsilon" and temp != "epsilon":
+    if start_to_start != "epsilon":
         if temp:
             part0 = "(" + start_to_start + "+" + temp + ")*"
         else:
             part0 = "(" + start_to_start + ")*"
-    elif start_to_start != "epsilon":
-        part0 = start_to_start + "*"
     elif temp != "epsilon" and temp:
         part0 = "(" + temp + ")*"
     return "(" + part0 + "." + part1 + ")"
