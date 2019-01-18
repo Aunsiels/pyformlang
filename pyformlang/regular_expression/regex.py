@@ -18,9 +18,9 @@ class Regex(object):
 
     Attributes
     ----------
-    _head : Node
+    head : Node
         In the tree representation of the regex, represents a node
-    _sons : list of Node
+    sons : list of Node
         In the tree representation of the regex, represents the sons
     """
 
@@ -31,29 +31,29 @@ class Regex(object):
         regex_l = remove_extreme_parenthesis(regex_l)
         regex_l = compute_precedence(regex_l)
         regex_l = remove_extreme_parenthesis(regex_l)
-        self._sons = []
+        self.sons = []
         if not regex:
-            self._head = to_node("")
+            self.head = to_node("")
         elif len(regex_l) == 1:
             first = to_node(regex_l[0])
             if not isinstance(first, Symbol):
                 raise MisformedRegexError("The regex is misformed here.", regex)
-            self._head = first
+            self.head = first
         else:
             end_first_group = get_end_first_group(regex_l)
             next_node = to_node(regex_l[end_first_group])
             if isinstance(next_node, KleeneStar):
-                self._head = next_node
-                self._sons.append(Regex(" ".join(regex_l[:end_first_group])))
+                self.head = next_node
+                self.sons.append(Regex(" ".join(regex_l[:end_first_group])))
             else:
                 begin_second_group = end_first_group
                 if isinstance(next_node, Symbol):
-                    self._head = Concatenation()
+                    self.head = Concatenation()
                 else:
-                    self._head = next_node
+                    self.head = next_node
                     begin_second_group += 1
-                self._sons.append(Regex(" ".join(regex_l[:end_first_group])))
-                self._sons.append(Regex(" ".join(regex_l[begin_second_group:])))
+                self.sons.append(Regex(" ".join(regex_l[:end_first_group])))
+                self.sons.append(Regex(" ".join(regex_l[begin_second_group:])))
 
     def get_number_symbols(self) -> int:
         """ Gives the number of symbols in the regex
@@ -63,8 +63,8 @@ class Regex(object):
         n_symbols : int
             The number of symbols in the regex
         """
-        if self._sons:
-            return sum([son.get_number_symbols() for son in self._sons])
+        if self.sons:
+            return sum([son.get_number_symbols() for son in self.sons])
         return 1
 
     def get_number_operators(self) -> int:
@@ -75,8 +75,8 @@ class Regex(object):
         n_operators : int
             The number of operators in the regex
         """
-        if self._sons:
-            return 1 + sum([son.get_number_operators() for son in self._sons])
+        if self.sons:
+            return 1 + sum([son.get_number_operators() for son in self.sons])
         return 0
 
     def to_epsilon_nfa(self):
@@ -115,16 +115,16 @@ class Regex(object):
         counter : int
             Prevents duplicate states
         """
-        if self._sons:
+        if self.sons:
             state0 = finite_automaton.State(counter)
             counter += 1
             state1 = finite_automaton.State(counter)
             counter += 1
-            if isinstance(self._head, Concatenation):
+            if isinstance(self.head, Concatenation):
                 enfa.add_transition(state0, finite_automaton.Epsilon(), state1)
-                counter = self._sons[0].process_to_enfa(enfa, s_from, state0, counter)
-                counter = self._sons[1].process_to_enfa(enfa, state1, s_to, counter)
-            elif isinstance(self._head, Union):
+                counter = self.sons[0].process_to_enfa(enfa, s_from, state0, counter)
+                counter = self.sons[1].process_to_enfa(enfa, state1, s_to, counter)
+            elif isinstance(self.head, Union):
                 state2 = finite_automaton.State(counter)
                 counter += 1
                 state3 = finite_automaton.State(counter)
@@ -133,28 +133,47 @@ class Regex(object):
                 enfa.add_transition(s_from, finite_automaton.Epsilon(), state1)
                 enfa.add_transition(state2, finite_automaton.Epsilon(), s_to)
                 enfa.add_transition(state3, finite_automaton.Epsilon(), s_to)
-                counter = self._sons[0].process_to_enfa(enfa, state0, state2, counter)
-                counter = self._sons[1].process_to_enfa(enfa, state1, state3, counter)
-            elif isinstance(self._head, KleeneStar):
+                counter = self.sons[0].process_to_enfa(enfa, state0, state2, counter)
+                counter = self.sons[1].process_to_enfa(enfa, state1, state3, counter)
+            elif isinstance(self.head, KleeneStar):
                 enfa.add_transition(state1, finite_automaton.Epsilon(), state0)
                 enfa.add_transition(s_from, finite_automaton.Epsilon(), s_to)
                 enfa.add_transition(s_from, finite_automaton.Epsilon(), state0)
                 enfa.add_transition(state1, finite_automaton.Epsilon(), s_to)
-                counter = self._sons[0].process_to_enfa(enfa, state0, state1, counter)
+                counter = self.sons[0].process_to_enfa(enfa, state0, state1, counter)
         else:
-            if isinstance(self._head, Epsilon):
+            if isinstance(self.head, Epsilon):
                 enfa.add_transition(s_from, finite_automaton.Epsilon(), s_to)
-            elif not isinstance(self._head, Empty):
-                symb = finite_automaton.Symbol(self._head.get_value())
+            elif not isinstance(self.head, Empty):
+                symb = finite_automaton.Symbol(self.head.get_value())
                 enfa.add_transition(s_from, symb, s_to)
         return counter
 
     def get_tree_str(self, depth: int = 0) -> str:
         """ Print the regex as a tree """
-        temp = " " * depth + str(self._head) + "\n"
-        for son in self._sons:
+        temp = " " * depth + str(self.head) + "\n"
+        for son in self.sons:
             temp += son.get_tree_str(depth + 1)
         return temp
+
+    def union(self, other: "Regex") -> "Regex":
+        """ Makes the union with another regex
+
+        Parameters
+        ----------
+        other : :class:`~pyformlang.regular_expression.Regex`
+            The other regex
+
+        Returns
+        ----------
+        regex : :class:`~pyformlang.regular_expression.Regex`
+            The union of the two regexes
+        """
+        regex = Regex("")
+        regex.head = Union()
+        regex.sons = [self, other]
+        return regex
+
 
 
 class Node(object): # pylint: disable=too-few-public-methods

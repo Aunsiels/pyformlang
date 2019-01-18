@@ -216,6 +216,31 @@ class TestEpsilonNFA(unittest.TestCase):
         enfa2 = regex.to_epsilon_nfa()
         self.assertTrue(enfa2.accepts([symb_a, symb_b]))
 
+    def test_union(self):
+        enfa0 = EpsilonNFA()
+        state0 = State(0)
+        state1 = State(1)
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        enfa0.add_start_state(state0)
+        enfa0.add_final_state(state1)
+        enfa0.add_transition(state0, symb_a, state0)
+        enfa0.add_transition(state0, symb_b, state1)
+        enfa1 = EpsilonNFA()
+        state2 = State(2)
+        state3 = State(3)
+        symb_c = Symbol("c")
+        enfa1.add_start_state(state2)
+        enfa1.add_final_state(state3)
+        enfa1.add_transition(state2, symb_c, state3)
+        enfa = enfa0.union(enfa1)
+        self.assertTrue(enfa.accepts([symb_b]))
+        self.assertTrue(enfa.accepts([symb_a, symb_b]))
+        self.assertTrue(enfa.accepts([symb_c]))
+        self.assertFalse(enfa.accepts([symb_a]))
+        self.assertFalse(enfa.accepts([]))
+
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """

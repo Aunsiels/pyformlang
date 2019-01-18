@@ -10,9 +10,10 @@ from .epsilon import Epsilon
 from .state import State
 from .symbol import Symbol
 from .nondeterministic_transition_function import NondeterministicTransitionFunction
+from .regexable import Regexable
 
 
-class EpsilonNFA(object):
+class EpsilonNFA(Regexable):
     """ Represents an epsilon NFA
 
 
