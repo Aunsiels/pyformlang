@@ -105,6 +105,25 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa = dfa.to_regex().to_epsilon_nfa()
         self._perform_tests_example0(dfa)
 
+    def test_complement(self):
+        """ Tests tje complement operation """
+        dfa = DeterministicFiniteAutomaton()
+        state0 = State(0)
+        state1 = State(1)
+        state2 = State(2)
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        dfa.add_start_state(state0)
+        dfa.add_final_state(state2)
+        dfa.add_transition(state0, symb_a, state1)
+        dfa.add_transition(state1, symb_b, state2)
+        dfa_comp = dfa.get_complement()
+        self.assertTrue(dfa_comp.accepts([symb_a]))
+        self.assertTrue(dfa_comp.accepts([symb_b]))
+        self.assertTrue(dfa_comp.accepts([symb_b, symb_a]))
+        self.assertTrue(dfa_comp.accepts([]))
+        self.assertFalse(dfa_comp.accepts([symb_a, symb_b]))
+
 
 def get_example0():
     """ Gives a dfa """
