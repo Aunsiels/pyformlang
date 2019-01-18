@@ -39,9 +39,9 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                  final_states: AbstractSet[State] = None):
         super().__init__(states, input_symbols, None, None, final_states)
         self._transition_function = transition_function or TransitionFunction()
-        self._start_state = start_state
-        if self._start_state is not None:
-            self._states.add(self._start_state)
+        self._start_state = {start_state}
+        if start_state is not None:
+            self._states.add(start_state)
 
     def add_start_state(self, state: State) -> int:
         """ Set an initial state
@@ -56,7 +56,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         done : int
             1 is correctly added
         """
-        self._start_state = state
+        self._start_state = {state}
         self._states.add(state)
         return 1
 
@@ -73,8 +73,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         done : int
             1 is correctly added
         """
-        if state == self._start_state:
-            self._start_state = None
+        if {state} == self._start_state:
+            self._start_state = {}
             return 1
         return 0
 
@@ -91,11 +91,17 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         is_accepted : bool
             Whether the word is accepted or not
         """
-        current_state = self._start_state
+        current_state = None
+        if self._start_state:
+            current_state = list(self._start_state)[0]
         for symbol in word:
             if current_state is None:
                 return False
             current_state = self._transition_function(current_state, symbol)
+            if current_state:
+                current_state = current_state[0]
+            else:
+                current_state = None
         return current_state is not None and self.is_final_state(current_state)
 
     def is_deterministic(self) -> bool:
@@ -127,12 +133,17 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             A copy of the current DFA
         """
         dfa = DeterministicFiniteAutomaton()
-        dfa.add_start_state(self._start_state)
+        if self._start_state:
+            dfa.add_start_state(list(self._start_state)[0])
         for final in self._final_states:
             dfa.add_final_state(final)
         for state in self._states:
             for symbol in self._input_symbols:
                 state_to = self._transition_function(state, symbol)
+                if state_to:
+                    state_to = state_to[0]
+                else:
+                    state_to = None
                 if state_to is not None:
                     dfa.add_transition(state, symbol, state_to)
         return dfa

@@ -568,6 +568,7 @@ class EpsilonNFA(object):
                 out_states = out_states.copy()
                 symbol_str = str(symbol.get_value())
                 for out_state in out_states:
+                    print(state, out_state)
                     self.remove_transition(state, symbol, out_state)
                     base = new_transitions.setdefault(out_state, "")
                     if "+" in symbol_str:

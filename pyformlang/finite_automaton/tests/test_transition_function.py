@@ -67,8 +67,8 @@ class TestTransitionFunction(unittest.TestCase):
         transition_function.add_transition(s_from, symb_by, s_to)
         self.assertEqual(transition_function.remove_transition(s_from, symb_by, s_to), 1)
         self.assertEqual(transition_function.get_number_transitions(), 0)
-        self.assertIsNone(transition_function(s_to, symb_by))
-        self.assertIsNone(transition_function(s_from, symb_by))
+        self.assertEqual(transition_function(s_to, symb_by), [])
+        self.assertEqual(transition_function(s_from, symb_by), [])
         self.assertEqual(transition_function.remove_transition(s_from, symb_by, s_to), 0)
 
     def test_call(self):
@@ -79,5 +79,5 @@ class TestTransitionFunction(unittest.TestCase):
         s_to = State(1)
         symb_by = Symbol("a")
         transition_function.add_transition(s_from, symb_by, s_to)
-        self.assertEqual(transition_function(s_from, symb_by), s_to)
-        self.assertIsNone(transition_function(s_to, symb_by))
+        self.assertEqual(transition_function(s_from, symb_by), [s_to])
+        self.assertEqual(transition_function(s_to, symb_by), [])

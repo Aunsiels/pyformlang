@@ -99,6 +99,12 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa = get_example0().copy()
         self._perform_tests_example0(dfa)
 
+    def test_regex(self):
+        """ Tests the regex transformation """
+        dfa = get_example0()
+        dfa = dfa.to_regex().to_epsilon_nfa()
+        self._perform_tests_example0(dfa)
+
 
 def get_example0():
     """ Gives a dfa """

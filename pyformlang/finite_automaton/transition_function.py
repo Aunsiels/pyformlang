@@ -2,6 +2,7 @@
 Repretation of a transition function
 """
 
+from typing import List
 
 from .state import State
 from .symbol import Symbol
@@ -89,7 +90,7 @@ class TransitionFunction(object):
             return 1
         return 0
 
-    def __call__(self, s_from: State, symb_by: Symbol) -> State:
+    def __call__(self, s_from: State, symb_by: Symbol) -> List[State]:
         """ Calls the transition function as a real function
 
         Parameters
@@ -101,14 +102,14 @@ class TransitionFunction(object):
 
         Returns
         ----------
-        s_from : :class:`~pyformlang.finite_automaton.State` or None
-            The destination state or None if it does not exists
+        s_from : list of :class:`~pyformlang.finite_automaton.State`
+            The destination state, in a list
 
         """
         if s_from in self._transitions:
             if symb_by in self._transitions[s_from]:
-                return self._transitions[s_from][symb_by]
-        return None
+                return [self._transitions[s_from][symb_by]]
+        return []
 
     def get_number_transitions(self) -> int:
         """ Gives the number of transitions describe by the deterministic function
