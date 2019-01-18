@@ -5,6 +5,7 @@ Tests for epsilon NFA
 import unittest
 
 from pyformlang.finite_automaton import EpsilonNFA, State, Symbol, Epsilon
+from ..regexable import Regexable
 
 
 class TestEpsilonNFA(unittest.TestCase):
@@ -217,6 +218,8 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(enfa2.accepts([symb_a, symb_b]))
 
     def test_union(self):
+        with self.assertRaises(NotImplementedError) as _:
+            Regexable().to_regex()
         enfa0 = EpsilonNFA()
         state0 = State(0)
         state1 = State(1)
