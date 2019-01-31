@@ -218,24 +218,14 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(enfa2.accepts([symb_a, symb_b]))
 
     def test_union(self):
+        """ Tests the union of two epsilon NFA """
         with self.assertRaises(NotImplementedError) as _:
             Regexable().to_regex()
-        enfa0 = EpsilonNFA()
-        state0 = State(0)
-        state1 = State(1)
+        enfa0 = get_enfa_example0()
+        enfa1 = get_enfa_example1()
         symb_a = Symbol("a")
         symb_b = Symbol("b")
-        enfa0.add_start_state(state0)
-        enfa0.add_final_state(state1)
-        enfa0.add_transition(state0, symb_a, state0)
-        enfa0.add_transition(state0, symb_b, state1)
-        enfa1 = EpsilonNFA()
-        state2 = State(2)
-        state3 = State(3)
         symb_c = Symbol("c")
-        enfa1.add_start_state(state2)
-        enfa1.add_final_state(state3)
-        enfa1.add_transition(state2, symb_c, state3)
         enfa = enfa0.union(enfa1)
         self.assertTrue(enfa.accepts([symb_b]))
         self.assertTrue(enfa.accepts([symb_a, symb_b]))
@@ -243,6 +233,34 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(enfa.accepts([symb_a]))
         self.assertFalse(enfa.accepts([]))
 
+    def test_concatenate(self):
+        """ Tests the concatenation of two epsilon NFA """
+        enfa0 = get_enfa_example0()
+        enfa1 = get_enfa_example1()
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        symb_c = Symbol("c")
+        enfa = enfa0.concatenate(enfa1)
+        self.assertTrue(enfa.accepts([symb_b, symb_c]))
+        self.assertTrue(enfa.accepts([symb_a, symb_b, symb_c]))
+        self.assertTrue(enfa.accepts([symb_a, symb_a, symb_b, symb_c]))
+        self.assertFalse(enfa.accepts([symb_c]))
+        self.assertFalse(enfa.accepts([symb_b]))
+        self.assertFalse(enfa.accepts([]))
+
+    def test_kleene(self):
+        """ Tests the kleene star of an epsilon NFA """
+        enfa0 = get_enfa_example0()
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        enfa = enfa0.kleene_star()
+        self.assertTrue(enfa.accepts([symb_b]))
+        self.assertTrue(enfa.accepts([symb_a, symb_b]))
+        self.assertTrue(enfa.accepts([symb_a, symb_b, symb_a, symb_b]))
+        self.assertTrue(enfa.accepts([]))
+        self.assertTrue(enfa.accepts([symb_b, symb_b]))
+        self.assertFalse(enfa.accepts([symb_a]))
+        self.assertFalse(enfa.accepts([symb_a, symb_b, symb_a]))
 
 
 def get_digits_enfa():
@@ -268,3 +286,31 @@ def get_digits_enfa():
     enfa.add_transition(states[4], point, states[3])
     enfa.add_transition(states[3], epsilon, states[5])
     return (enfa, digits, epsilon, plus, minus, point)
+
+def get_enfa_example0():
+    """ Gives an example ENFA
+    Accepts a*b
+    """
+    enfa0 = EpsilonNFA()
+    state0 = State(0)
+    state1 = State(1)
+    symb_a = Symbol("a")
+    symb_b = Symbol("b")
+    enfa0.add_start_state(state0)
+    enfa0.add_final_state(state1)
+    enfa0.add_transition(state0, symb_a, state0)
+    enfa0.add_transition(state0, symb_b, state1)
+    return enfa0
+
+def get_enfa_example1():
+    """ Gives and example ENFA
+    Accepts c
+    """
+    enfa1 = EpsilonNFA()
+    state2 = State(2)
+    state3 = State(3)
+    symb_c = Symbol("c")
+    enfa1.add_start_state(state2)
+    enfa1.add_final_state(state3)
+    enfa1.add_transition(state2, symb_c, state3)
+    return enfa1

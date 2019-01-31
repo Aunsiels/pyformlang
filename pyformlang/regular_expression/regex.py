@@ -174,6 +174,36 @@ class Regex(object):
         regex.sons = [self, other]
         return regex
 
+    def concatenate(self, other: "Regex") -> "Regex":
+        """ Concatenates a regular expression with an other one
+
+        Parameters
+        ----------
+        other : :class:`~pyformlang.regular_expression.Regex`
+            The other regex
+
+        Returns
+        ----------
+        regex : :class:`~pyformlang.regular_expression.Regex`
+            The concatenation of the two regexes
+        """
+        regex = Regex("")
+        regex.head = Concatenation()
+        regex.sons = [self, other]
+        return regex
+
+    def kleene_star(self) -> "Regex":
+        """ Makes the kleene star of the current regex
+
+        Returns
+        ----------
+        regex : :class:`~pyformlang.regular_expression.Regex`
+            The kleene star of the current regex
+        """
+        regex = Regex("")
+        regex.head = KleeneStar()
+        regex.sons = [self]
+        return regex
 
 
 class Node(object): # pylint: disable=too-few-public-methods

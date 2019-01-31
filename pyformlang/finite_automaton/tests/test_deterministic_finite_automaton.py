@@ -106,7 +106,7 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         self._perform_tests_example0(dfa)
 
     def test_complement(self):
-        """ Tests tje complement operation """
+        """ Tests the complement operation """
         dfa = DeterministicFiniteAutomaton()
         state0 = State(0)
         state1 = State(1)
