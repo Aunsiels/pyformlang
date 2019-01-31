@@ -262,6 +262,20 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(enfa.accepts([symb_a]))
         self.assertFalse(enfa.accepts([symb_a, symb_b, symb_a]))
 
+    def test_complement(self):
+        """ Tests the complement operation """
+        enfa = EpsilonNFA()
+        state0 = State(0)
+        state1 = State(1)
+        state2 = State(2)
+        symb_a = Symbol("a")
+        enfa.add_start_state(state0)
+        enfa.add_final_state(state2)
+        enfa.add_transition(state0, Epsilon(), state1)
+        enfa.add_transition(state1, symb_a, state2)
+        enfa_comp = enfa.get_complement()
+        self.assertFalse(enfa_comp.accepts([symb_a]))
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """

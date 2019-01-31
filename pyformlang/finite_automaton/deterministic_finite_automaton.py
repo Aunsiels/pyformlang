@@ -147,28 +147,3 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                 if state_to is not None:
                     dfa.add_transition(state, symbol, state_to)
         return dfa
-
-    def get_complement(self) -> "DeterministicFiniteAutomaton":
-        """ Get the complement of the current DFA
-
-        Returns
-        ----------
-        dfa : :class:`~pyformlang.finite_automaton.DeterministicFiniteAutomaton`
-            A complement automaton
-        """
-        dfa = self.copy()
-        trash = State("TrashNode")
-        dfa.add_final_state(trash)
-        for state in self._states:
-            if state in self._final_states:
-                dfa.remove_final_state(state)
-            else:
-                dfa.add_final_state(state)
-        for state in self._states:
-            for symbol in self._input_symbols:
-                state_to = self._transition_function(state, symbol)
-                if not state_to:
-                    dfa.add_transition(state, symbol, trash)
-        for symbol in self._input_symbols:
-            dfa.add_transition(trash, symbol, trash)
-        return dfa

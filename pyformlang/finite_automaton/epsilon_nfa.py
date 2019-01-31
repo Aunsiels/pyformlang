@@ -492,6 +492,35 @@ class EpsilonNFA(Regexable):
                         end_to_end = symbol_str
         return (start_to_start, start_to_end, end_to_start, end_to_end)
 
+    def get_complement(self) -> "EpsilonNFA":
+        """ Get the complement of the current Epsilon NFA
+
+        Returns
+        ----------
+        dfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            A complement automaton
+        """
+        enfa = self.copy()
+        trash = State("TrashNode")
+        enfa.add_final_state(trash)
+        for state in self._states:
+            if state in self._final_states:
+                enfa.remove_final_state(state)
+            else:
+                enfa.add_final_state(state)
+        for state in self._states:
+            for symbol in self._input_symbols:
+                state_to = []
+                eclose = self.eclose(state)
+                for state0 in eclose:
+                    print(state0, state)
+                    state_to += self._transition_function(state0, symbol)
+                print(state_to)
+                if not state_to:
+                    enfa.add_transition(state, symbol, trash)
+        for symbol in self._input_symbols:
+            enfa.add_transition(trash, symbol, trash)
+        return enfa
 
 
     def remove_all_basic_states(self):
