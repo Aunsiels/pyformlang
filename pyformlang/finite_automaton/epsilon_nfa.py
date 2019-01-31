@@ -11,9 +11,10 @@ from .state import State
 from .symbol import Symbol
 from .nondeterministic_transition_function import NondeterministicTransitionFunction
 from .regexable import Regexable
+from .finite_automaton import FiniteAutomaton
 
 
-class EpsilonNFA(Regexable):
+class EpsilonNFA(Regexable, FiniteAutomaton):
     """ Represents an epsilon NFA
 
 
@@ -26,7 +27,7 @@ class EpsilonNFA(Regexable):
     transition_function : :class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`\
 , optional
         Takes as arguments a state and an input symbol and returns a state.
-    start_state : :class:`~pyformlang.finite_automaton.State`, optional
+    start_state : set of :class:`~pyformlang.finite_automaton.State`, optional
         A start state, element of states
     final_states : set of :class:`~pyformlang.finite_automaton.State`, optional
         A set of final or accepting states. It is a subset of states.
@@ -40,6 +41,7 @@ class EpsilonNFA(Regexable):
                  transition_function: NondeterministicTransitionFunction = None,
                  start_state: AbstractSet[State] = None,
                  final_states: AbstractSet[State] = None):
+        super().__init__()
         self._states = states or set()
         self._input_symbols = input_symbols or set()
         self._transition_function = transition_function or \
@@ -52,183 +54,6 @@ class EpsilonNFA(Regexable):
         for state in self._start_state:
             if state is not None and state not in self._states:
                 self._states.add(state)
-
-    def add_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
-        """ Adds a transition to the nfa
-
-        Parameters
-        ----------
-        s_from : :class:`~pyformlang.finite_automaton.State`
-            The source state
-        symb_by : :class:`~pyformlang.finite_automaton.Symbol`
-            The transition symbol
-        s_to : :class:`~pyformlang.finite_automaton.State`
-            The destination state
-
-
-        Returns
-        --------
-        done : int
-            Always 1
-
-        Raises
-        --------
-        DuplicateTransitionError
-            If the transition already exists
-        """
-        self._states.add(s_from)
-        self._states.add(s_to)
-        if symb_by != Epsilon():
-            self._input_symbols.add(symb_by)
-        return self._transition_function.add_transition(s_from, symb_by, s_to)
-
-    def remove_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
-        """ Remove a transition of the nfa
-
-        Parameters
-        ----------
-        s_from : :class:`~pyformlang.finite_automaton.State`
-            The source state
-        symb_by : :class:`~pyformlang.finite_automaton.Symbol`
-            The transition symbol
-        s_to : :class:`~pyformlang.finite_automaton.State`
-            The destination state
-
-
-        Returns
-        --------
-        done : int
-            1 if the transition existed, 0 otherwise
-        """
-        return self._transition_function.remove_transition(s_from,
-                                                           symb_by,
-                                                           s_to)
-
-    def get_number_states(self) -> int:
-        """ Gives the total number of states
-
-        Returns
-        ----------
-        number_states : int
-            The number of states
-        """
-        return len(self._states)
-
-    def get_number_transitions(self) -> int:
-        """ Gives the number of transitions
-
-        Returns
-        ----------
-        n_transitions : int
-            The number of deterministic transitions
-
-        """
-        return self._transition_function.get_number_transitions()
-
-    def get_number_symbols(self) -> int:
-        """ Gives the total number of symbols
-
-        Returns
-        ----------
-        number_symbols : int
-            The number of symbols
-        """
-        return len(self._input_symbols)
-
-    def get_number_final_states(self) -> int:
-        """ Gives the number of final states
-
-        Returns
-        ----------
-        number_final_states : int
-            The number of final states
-        """
-        return len(self._final_states)
-
-    def add_start_state(self, state: State) -> int:
-        """ Set an initial state
-
-        Parameters
-        -----------
-        state : :class:`~pyformlang.finite_automaton.State`
-            The new initial state
-
-        Returns
-        ----------
-        done : int
-            1 is correctly added
-        """
-        self._start_state.add(state)
-        self._states.add(state)
-        return 1
-
-    def remove_start_state(self, state: State) -> int:
-        """ remove an initial state
-
-        Parameters
-        -----------
-        state : :class:`~pyformlang.finite_automaton.State`
-            The new initial state
-
-        Returns
-        ----------
-        done : int
-            1 is correctly added
-        """
-        if state in self._start_state:
-            self._start_state.remove(state)
-            return 1
-        return 0
-
-    def add_final_state(self, state: State) -> int:
-        """ Adds a new final state
-
-        Parameters
-        -----------
-        state : :class:`~pyformlang.finite_automaton.State`
-            A new final state
-
-        Returns
-        ----------
-        done : int
-            1 is correctly added
-        """
-        self._final_states.add(state)
-        self._states.add(state)
-        return 1
-
-    def remove_final_state(self, state: State) -> int:
-        """ Remove a final state
-
-        Parameters
-        -----------
-        state : :class:`~pyformlang.finite_automaton.State`
-            A final state to remove
-
-        Returns
-        ----------
-        done : int
-            0 if it was not a final state, 1 otherwise
-        """
-        if self.is_final_state(state):
-            self._final_states.remove(state)
-            return 1
-        return 0
-
-    def is_final_state(self, state: State) -> bool:
-        """ Checks if a state is final
-
-        Parameters
-        -----------
-        state : :class:`~pyformlang.finite_automaton.State`
-            The state to check
-
-        Returns
-        ----------
-        is_final : bool
-            Whether the state is final or not
-        """
-        return state in self._final_states
 
     def _get_next_states_iterable(self,
                                   current_states: Iterable[State],
@@ -522,6 +347,57 @@ class EpsilonNFA(Regexable):
             enfa.add_transition(trash, symbol, trash)
         return enfa
 
+    def get_intersection(self, other: "EpsilonNFA") -> "EpsilonNFA":
+        """ Computes the intersection of two Epsilon NFAs
+
+        Parameters
+        ----------
+        other : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The other Epsilon NFA
+
+        Returns
+        ---------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The intersection of the two Epsilon NFAs
+        """
+        start0 = self.eclose_iterable(self.get_start_states())
+        start1 = other.eclose_iterable(other.get_start_states())
+        final0 = self.get_final_states()
+        final1 = other.get_final_states()
+        enfa = EpsilonNFA()
+        symbols = list(self.get_symbols().intersection(other.get_symbols()))
+        to_process = []
+        processed = set()
+        for st0 in start0:
+            for st1 in start1:
+                state = combine_state_pair(st0, st1)
+                enfa.add_start_state(state)
+                to_process.append((st0, st1))
+                processed.add((st0, st1))
+        for st0 in final0:
+            for st1 in final1:
+                state = combine_state_pair(st0, st1)
+                enfa.add_final_state(state)
+        while to_process:
+            current = to_process.pop()
+            st0 = current[0]
+            st1 = current[1]
+            current_state = combine_state_pair(st0, st1)
+            next_states0 = dict()
+            next_states1 = dict()
+            for symb in symbols:
+                next0 = self.eclose_iterable(self(st0, symb))
+                next1 = other.eclose_iterable(other(st1, symb))
+                for new_s0 in next0:
+                    for new_s1 in next1:
+                        state = combine_state_pair(new_s0, new_s1)
+                        enfa.add_transition(current_state, symb, state)
+                        if (new_s0, new_s1) not in processed:
+                            processed.add((new_s0, new_s1))
+                            to_process.append((new_s0, new_s1))
+        return enfa
+
+
 
     def remove_all_basic_states(self):
         """ Remove all states which are not the start state or a final state
@@ -675,3 +551,6 @@ def to_single_state(l_states: Iterable[State]) -> State:
         values.append(str(state.get_value()))
     values = sorted(values)
     return State("; ".join(values))
+
+def combine_state_pair(state0, state1):
+    return State(str(state0.get_value()) + "; " + str(state1.get_value()))

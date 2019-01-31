@@ -276,6 +276,35 @@ class TestEpsilonNFA(unittest.TestCase):
         enfa_comp = enfa.get_complement()
         self.assertFalse(enfa_comp.accepts([symb_a]))
 
+    def test_intersection(self):
+        """ Tests the intersection of two enfas """
+        enfa0 = get_enfa_example0()
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        eps = Epsilon()
+        enfa1 = EpsilonNFA()
+        state0 = State(10)
+        state1 = State(11)
+        state2 = State(12)
+        state3 = State(13)
+        state4 = State(14)
+        enfa1.add_start_state(state0)
+        enfa1.add_final_state(state3)
+        enfa1.add_final_state(state4)
+        enfa1.add_transition(state0, eps, state1)
+        enfa1.add_transition(state1, symb_a, state2)
+        enfa1.add_transition(state2, eps, state3)
+        enfa1.add_transition(state3, symb_b, state4)
+        enfa = enfa0.get_intersection(enfa1)
+        self.assertEqual(len(enfa.get_start_states()), 2)
+        self.assertEqual(len(enfa.get_final_states()), 2)
+        self.assertEqual(len(enfa.get_symbols()), 2)
+        self.assertTrue(enfa.accepts([symb_a, symb_b]))
+        self.assertFalse(enfa.accepts([symb_b]))
+        self.assertFalse(enfa.accepts([symb_a]))
+        self.assertFalse(enfa.accepts([]))
+        self.assertFalse(enfa.accepts([symb_a, symb_a, symb_b]))
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """
