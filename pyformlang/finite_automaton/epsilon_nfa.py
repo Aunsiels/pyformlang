@@ -628,7 +628,6 @@ def get_regex_sub(start_to_start: str,
     return "(" + part0 + "." + part1 + ")"
 
 
-
 def to_single_state(l_states: Iterable[State]) -> State:
     """ Merge a list of states
 
