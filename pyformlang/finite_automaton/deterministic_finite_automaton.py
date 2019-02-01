@@ -8,6 +8,7 @@ from .state import State
 from .symbol import Symbol
 from .transition_function import TransitionFunction
 from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
+from .epsilon_nfa import to_single_state
 
 
 class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
@@ -147,3 +148,126 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                 if state_to is not None:
                     dfa.add_transition(state, symbol, state_to)
         return dfa
+
+    def _get_distinguishable_states(self):
+        """ Get all the pair of states which are distinguishable
+
+        Returns
+        ----------
+        states : set of (:class:`~pyformlang.finite_automaton.State`,\
+                :class:`~pyformlang.finite_automaton.State`)
+            The pair of distinguishable
+        """
+        disting = set()
+        for final in self._final_states:
+            for state in self._states:
+                if state not in self._final_states:
+                    disting.add((final, state))
+                    disting.add((state, final))
+            disting.add((None, final))
+            disting.add((final, None))
+        was_modified = True
+        while was_modified:
+            was_modified = False
+            for state0 in self._states:
+                for state1 in self._states:
+                    if (state0, state1) in disting:
+                        continue
+                    for symbol in self._input_symbols:
+                        next0 = self._transition_function(state0, symbol)
+                        next1 = self._transition_function(state1, symbol)
+                        if next0:
+                            next0 = next0[0]
+                        else:
+                            next0 = None
+                        if next1:
+                            next1 = next1[0]
+                        else:
+                            next1 = None
+                        if (next0, next1) in disting:
+                            disting.add((state0, state1))
+                            disting.add((state1, state0))
+                            was_modified = True
+                            break
+        return disting
+
+    def _get_reachable_states(self) -> AbstractSet[State]:
+        """ Get all states which are reachable """
+        to_process = []
+        processed = set()
+        for state in self._start_state:
+            to_process.append(state)
+            processed.add(state)
+        while to_process:
+            current = to_process.pop()
+            for symbol in self._input_symbols:
+                next_state = self._transition_function(current, symbol)
+                if not next_state or next_state[0] in processed:
+                    continue
+                to_process.append(next_state[0])
+                processed.add(next_state[0])
+        return processed
+
+    def minimize(self) -> "DeterministicFiniteAutomaton":
+        """ Minimize the current DFA
+
+        Returns
+        ----------
+        dfa : :class:`~pyformlang.deterministic_finite_automaton.DeterministicFiniteAutomaton`
+            The minimal DFA
+        """
+        if not self._start_state or not self._final_states:
+            return DeterministicFiniteAutomaton()
+        # Remove unreachable
+        reachables = self._get_reachable_states()
+        states = self._states.intersection(reachables)
+        # Group the equivalent states
+        distinguishable = self._get_distinguishable_states()
+        groups, were_grouped = get_groups(states, distinguishable)
+        # Create a state for this
+        to_new_states = dict()
+        for group in groups:
+            new_state = to_single_state(group)
+            for state in group:
+                to_new_states[state] = new_state
+        for state in states:
+            if state not in were_grouped:
+                to_new_states[state] = state
+        # Build the DFA
+        dfa = DeterministicFiniteAutomaton()
+        for state in self._start_state:
+            dfa.add_start_state(to_new_states[state])
+        for state in states:
+            if state in self._final_states:
+                dfa.add_final_state(to_new_states[state])
+            done = set()
+            new_state = to_new_states[state]
+            for symbol in self._input_symbols:
+                for next_node in self._transition_function(state, symbol):
+                    if next_node in states:
+                        next_node = to_new_states[next_node]
+                        if next_node not in done:
+                            dfa.add_transition(new_state, symbol, next_node)
+                            done.add(next_node)
+        return dfa
+
+
+def get_groups(states, distinguishable) -> Iterable[AbstractSet[State]]:
+    """ Get the groups in the minimization """
+    groups = []
+    were_grouped = set()
+    states = list(states)
+    for i, state0 in enumerate(states):
+        for _, state1 in enumerate(states[i+1:]):
+            if (state0, state1) in distinguishable:
+                continue
+            were_grouped.add(state0)
+            were_grouped.add(state1)
+            new_groups = [{state0, state1}]
+            for group in groups:
+                if state0 in group or state1 in group:
+                    new_groups[0] = new_groups[0].union(group)
+                else:
+                    new_groups.append(group)
+            groups = new_groups
+    return (groups, were_grouped)

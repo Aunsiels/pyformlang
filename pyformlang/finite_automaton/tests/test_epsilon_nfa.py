@@ -341,6 +341,7 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(enfa.accepts([]))
 
     def test_empty(self):
+        """ Tests the emptiness of a finite automaton """
         self.assertFalse(get_enfa_example0().is_empty())
         self.assertFalse(get_enfa_example1().is_empty())
         enfa = EpsilonNFA()
@@ -353,6 +354,32 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(enfa.is_empty())
         enfa.add_final_state(state1)
         self.assertFalse(enfa.is_empty())
+
+    def test_minimization(self):
+        """ Tests the minimization algorithm """
+        enfa = get_enfa_example0_bis()
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        enfa = enfa.minimize()
+        self.assertTrue(enfa.is_deterministic())
+        self.assertEqual(enfa.get_number_states(), 2)
+        self.assertTrue(enfa.accepts([symb_a, symb_b]))
+        self.assertTrue(enfa.accepts([symb_a, symb_a, symb_b]))
+        self.assertTrue(enfa.accepts([symb_b]))
+        self.assertFalse(enfa.accepts([symb_a]))
+        enfa = get_example_non_minimal()
+        enfa = enfa.minimize()
+        self.assertTrue(enfa.is_deterministic())
+        self.assertEqual(enfa.get_number_states(), 3)
+        self.assertTrue(enfa.accepts([symb_a, symb_b]))
+        self.assertTrue(enfa.accepts([symb_a, symb_a, symb_b]))
+        self.assertFalse(enfa.accepts([symb_b]))
+        self.assertFalse(enfa.accepts([symb_a]))
+        enfa = EpsilonNFA()
+        enfa = enfa.minimize()
+        self.assertTrue(enfa.is_deterministic())
+        self.assertEqual(enfa.get_number_states(), 0)
+        self.assertFalse(enfa.accepts([]))
 
 
 def get_digits_enfa():
@@ -408,3 +435,51 @@ def get_enfa_example1():
     enfa1.add_final_state(state3)
     enfa1.add_transition(state2, symb_c, state3)
     return enfa1
+
+def get_enfa_example0_bis():
+    """ A non minimal NFA, equivalent to example0 """
+    enfa0 = EpsilonNFA()
+    state3 = State(3)
+    state4 = State(4)
+    state0 = State(0)
+    state1 = State(1)
+    state2 = State(2)
+    symb_a = Symbol("a")
+    symb_b = Symbol("b")
+    enfa0.add_start_state(state0)
+    enfa0.add_final_state(state2)
+    enfa0.add_final_state(state4)
+    enfa0.add_transition(state0, symb_a, state0)
+    enfa0.add_transition(state0, Epsilon(), state1)
+    enfa0.add_transition(state1, symb_b, state2)
+    # New part
+    enfa0.add_transition(state0, Epsilon(), state3)
+    enfa0.add_transition(state3, symb_a, state3)
+    enfa0.add_transition(state3, symb_b, state4)
+    return enfa0
+
+def get_example_non_minimal():
+    """ A non minimal example a.a*.b"""
+    enfa0 = EpsilonNFA()
+    state0 = State(0)
+    state3 = State(3)
+    state4 = State(4)
+    state5 = State(5)
+    state6 = State(6)
+    state1 = State(1)
+    state2 = State(2)
+    symb_a = Symbol("a")
+    symb_b = Symbol("b")
+    enfa0.add_start_state(state0)
+    enfa0.add_final_state(state3)
+    enfa0.add_final_state(state4)
+    enfa0.add_transition(state0, symb_a, state1)
+    enfa0.add_transition(state1, symb_a, state2)
+    enfa0.add_transition(state2, symb_a, state5)
+    enfa0.add_transition(state5, symb_a, state6)
+    enfa0.add_transition(state6, symb_a, state1)
+    enfa0.add_transition(state1, symb_b, state3)
+    enfa0.add_transition(state2, symb_b, state4)
+    enfa0.add_transition(state5, symb_b, state3)
+    enfa0.add_transition(state6, symb_b, state4)
+    return enfa0

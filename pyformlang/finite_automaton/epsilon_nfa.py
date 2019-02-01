@@ -513,6 +513,16 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         # We make sure the automaton has the good structure
         self._create_or_transitions()
 
+    def minimize(self) -> "DeterministicFiniteAutomaton":
+        """ Minimize the current epsilon NFA
+
+        Returns
+        ----------
+        dfa : :class:`~pyformlang.deterministic_finite_automaton.DeterministicFiniteAutomaton`
+            The minimal DFA
+        """
+        return self.to_deterministic().minimize()
+
 
     def _create_or_transitions(self):
         """ Creates a OR transition instead of several connections
