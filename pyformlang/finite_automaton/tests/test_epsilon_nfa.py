@@ -305,6 +305,28 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(enfa.accepts([]))
         self.assertFalse(enfa.accepts([symb_a, symb_a, symb_b]))
 
+    def test_difference(self):
+        """ Tests the intersection of two languages """
+        enfa0 = get_enfa_example0()
+        enfa1 = get_enfa_example1()
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        symb_c = Symbol("c")
+        enfa = enfa0.get_difference(enfa1)
+        self.assertTrue(enfa.accepts([symb_a, symb_b]))
+        self.assertTrue(enfa.accepts([symb_b]))
+        self.assertFalse(enfa.accepts([symb_c]))
+        self.assertFalse(enfa.accepts([]))
+        enfa2 = EpsilonNFA()
+        state0 = State(0)
+        enfa2.add_start_state(state0)
+        enfa2.add_final_state(state0)
+        enfa2.add_transition(state0, symb_b, state0)
+        enfa = enfa0.get_difference(enfa2)
+        self.assertTrue(enfa.accepts([symb_a, symb_b]))
+        self.assertFalse(enfa.accepts([symb_b]))
+        self.assertFalse(enfa.accepts([symb_c]))
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """

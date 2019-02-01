@@ -257,3 +257,13 @@ class FiniteAutomaton(object):
             The symbols
         """
         return self._input_symbols
+
+    def add_symbol(self, symbol: Symbol):
+        """ Add a symbol
+
+        Parameters
+        -----------
+        symbol : :class:`~pyformlang.finite_automaton.Symbol`
+            The symbol
+        """
+        self._input_symbols.add(symbol)

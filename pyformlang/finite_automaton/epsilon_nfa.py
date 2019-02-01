@@ -360,36 +360,24 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
             The intersection of the two Epsilon NFAs
         """
-        start0 = self.eclose_iterable(self.get_start_states())
-        start1 = other.eclose_iterable(other.get_start_states())
-        final0 = self.get_final_states()
-        final1 = other.get_final_states()
         enfa = EpsilonNFA()
         symbols = list(self.get_symbols().intersection(other.get_symbols()))
         to_process = []
         processed = set()
-        for st0 in start0:
-            for st1 in start1:
-                state = combine_state_pair(st0, st1)
-                enfa.add_start_state(state)
+        for st0 in self.eclose_iterable(self.get_start_states()):
+            for st1 in other.eclose_iterable(other.get_start_states()):
+                enfa.add_start_state(combine_state_pair(st0, st1))
                 to_process.append((st0, st1))
                 processed.add((st0, st1))
-        for st0 in final0:
-            for st1 in final1:
-                state = combine_state_pair(st0, st1)
-                enfa.add_final_state(state)
+        for st0 in self.get_final_states():
+            for st1 in other.get_final_states():
+                enfa.add_final_state(combine_state_pair(st0, st1))
         while to_process:
-            current = to_process.pop()
-            st0 = current[0]
-            st1 = current[1]
+            st0, st1 = to_process.pop()
             current_state = combine_state_pair(st0, st1)
-            next_states0 = dict()
-            next_states1 = dict()
             for symb in symbols:
-                next0 = self.eclose_iterable(self(st0, symb))
-                next1 = other.eclose_iterable(other(st1, symb))
-                for new_s0 in next0:
-                    for new_s1 in next1:
+                for new_s0 in self.eclose_iterable(self(st0, symb)):
+                    for new_s1 in other.eclose_iterable(other(st1, symb)):
                         state = combine_state_pair(new_s0, new_s1)
                         enfa.add_transition(current_state, symb, state)
                         if (new_s0, new_s1) not in processed:
@@ -397,6 +385,24 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                             to_process.append((new_s0, new_s1))
         return enfa
 
+    def get_difference(self, other: "EpsilonNFA")\
+            -> "EpsilonNFA":
+        """ Compute the difference with another Epsilon NFA
+
+        Parameters
+        ----------
+        other : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The other Epsilon NFA
+
+        Returns
+        ---------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The difference with the other epsilon NFA
+        """
+        other = other.copy()
+        for symbol in self._input_symbols:
+            other.add_symbol(symbol)
+        return self.get_intersection(other.get_complement())
 
 
     def remove_all_basic_states(self):
@@ -553,4 +559,5 @@ def to_single_state(l_states: Iterable[State]) -> State:
     return State("; ".join(values))
 
 def combine_state_pair(state0, state1):
+    """ Combine two states """
     return State(str(state0.get_value()) + "; " + str(state1.get_value()))
