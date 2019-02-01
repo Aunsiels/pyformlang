@@ -404,6 +404,26 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             other.add_symbol(symbol)
         return self.get_intersection(other.get_complement())
 
+    def reverse(self) -> "EpsilonNFA":
+        """ Compute the reversed EpsilonNFA
+
+        Returns
+        ---------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The difference with the other epsilon NFA
+        """
+        enfa = EpsilonNFA()
+        for state0 in self._states:
+            for symbol in self._input_symbols:
+                for state1 in self._transition_function(state0, symbol):
+                    enfa.add_transition(state1, symbol, state0)
+            for state1 in self._transition_function(state0, Epsilon()):
+                enfa.add_transition(state1, Epsilon(), state0)
+        for start in self._start_state:
+            enfa.add_final_state(start)
+        for final in self._final_states:
+            enfa.add_start_state(final)
+        return enfa
 
     def remove_all_basic_states(self):
         """ Remove all states which are not the start state or a final state

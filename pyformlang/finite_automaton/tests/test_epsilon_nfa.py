@@ -296,7 +296,7 @@ class TestEpsilonNFA(unittest.TestCase):
         enfa1.add_transition(state2, eps, state3)
         enfa1.add_transition(state3, symb_b, state4)
         enfa = enfa0.get_intersection(enfa1)
-        self.assertEqual(len(enfa.get_start_states()), 2)
+        self.assertEqual(len(enfa.get_start_states()), 4)
         self.assertEqual(len(enfa.get_final_states()), 2)
         self.assertEqual(len(enfa.get_symbols()), 2)
         self.assertTrue(enfa.accepts([symb_a, symb_b]))
@@ -326,6 +326,20 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(enfa.accepts([symb_a, symb_b]))
         self.assertFalse(enfa.accepts([symb_b]))
         self.assertFalse(enfa.accepts([symb_c]))
+
+    def test_reverse(self):
+        """ Test the reversal of a language """
+        enfa0 = get_enfa_example0()
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        enfa = enfa0.reverse()
+        self.assertTrue(enfa.accepts([symb_b]))
+        self.assertTrue(enfa.accepts([symb_b, symb_a]))
+        self.assertTrue(enfa.accepts([symb_b, symb_a, symb_a]))
+        self.assertFalse(enfa.accepts([symb_a, symb_b]))
+        self.assertFalse(enfa.accepts([symb_a]))
+        self.assertFalse(enfa.accepts([]))
+
 
 
 def get_digits_enfa():
@@ -359,12 +373,14 @@ def get_enfa_example0():
     enfa0 = EpsilonNFA()
     state0 = State(0)
     state1 = State(1)
+    state2 = State(2)
     symb_a = Symbol("a")
     symb_b = Symbol("b")
     enfa0.add_start_state(state0)
-    enfa0.add_final_state(state1)
+    enfa0.add_final_state(state2)
     enfa0.add_transition(state0, symb_a, state0)
-    enfa0.add_transition(state0, symb_b, state1)
+    enfa0.add_transition(state0, Epsilon(), state1)
+    enfa0.add_transition(state1, symb_b, state2)
     return enfa0
 
 def get_enfa_example1():
