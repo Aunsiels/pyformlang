@@ -340,6 +340,19 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(enfa.accepts([symb_a]))
         self.assertFalse(enfa.accepts([]))
 
+    def test_empty(self):
+        self.assertFalse(get_enfa_example0().is_empty())
+        self.assertFalse(get_enfa_example1().is_empty())
+        enfa = EpsilonNFA()
+        state0 = State(0)
+        enfa.add_start_state(state0)
+        self.assertTrue(enfa.is_empty())
+        state1 = State(1)
+        symb_a = Symbol('a')
+        enfa.add_transition(state0, symb_a, state1)
+        self.assertTrue(enfa.is_empty())
+        enfa.add_final_state(state1)
+        self.assertFalse(enfa.is_empty())
 
 
 def get_digits_enfa():

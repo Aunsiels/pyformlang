@@ -425,6 +425,34 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             enfa.add_start_state(final)
         return enfa
 
+    def is_empty(self) -> bool:
+        """ Checks if the language represented by the FSM is empty or not
+
+        Returns
+        ----------
+        is_empty : bool
+            Whether the language is empty or not
+        """
+        to_process = []
+        processed = set()
+        for start in self._start_state:
+            to_process.append(start)
+            processed.add(start)
+        while to_process:
+            current = to_process.pop()
+            if current in self._final_states:
+                return False
+            for symbol in self._input_symbols:
+                for state in self._transition_function(current, symbol):
+                    if state not in processed:
+                        to_process.append(state)
+                        processed.add(state)
+            for state in self._transition_function(current, Epsilon()):
+                if state not in processed:
+                    to_process.append(state)
+                    processed.add(state)
+        return True
+
     def remove_all_basic_states(self):
         """ Remove all states which are not the start state or a final state
 
