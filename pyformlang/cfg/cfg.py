@@ -1,6 +1,6 @@
 """ A context free grammar """
 
-from typing import AbstractSet, List, Iterable, Tuple
+from typing import AbstractSet, List, Iterable, Tuple, Dict
 
 from .variable import Variable
 from .terminal import Terminal
@@ -265,12 +265,12 @@ class CFG(object):
             new_productions.append(Production(term_to_var[terminal], [terminal]))
         return new_productions
 
-    def _get_next_free_variable(self, idx):
+    def _get_next_free_variable(self, idx, prefix):
         idx += 1
-        temp = Variable("C#CNF#" + str(idx))
+        temp = Variable(prefix + str(idx))
         while temp in self._variables:
             idx += 1
-            temp = Variable("C#CNF#" + str(idx))
+            temp = Variable(prefix + str(idx))
         return idx, temp
 
     def _decompose_productions(self, productions):
@@ -285,7 +285,7 @@ class CFG(object):
                 continue
             new_var = []
             for _ in range(len(body) - 2):
-                idx, var = self._get_next_free_variable(idx)
+                idx, var = self._get_next_free_variable(idx, "C#CNF#")
                 new_var.append(var)
             head = production.get_head()
             stopped = False
@@ -302,7 +302,6 @@ class CFG(object):
             if not stopped:
                 new_productions.append(Production(head, [body[-2], body[-1]]))
         return new_productions
-
 
     def to_normal_form(self) -> "CFG":
         """ Gets the Chomsky Normal Form of a CFG
@@ -328,6 +327,104 @@ class CFG(object):
         new_productions = self._decompose_productions(new_productions)
         return CFG(self._variables, self._terminals, self._start_symbol,
                    set(new_productions))
+
+    def get_variables(self) -> AbstractSet[Variable]:
+        """ Gives the variables
+
+        Returns
+        ----------
+        variables : set of :class:`~pyformlang.cfg.Variable`
+            The variables of the CFG
+        """
+        return self._variables.copy()
+
+    def get_terminals(self) -> AbstractSet[Terminal]:
+        """ Gives the terminals
+
+        Returns
+        ----------
+        terminals : set of :class:`~pyformlang.cfg.Terminal`
+            The terminals of the CFG
+        """
+        return self._terminals.copy()
+
+    def get_productions(self) -> AbstractSet[Production]:
+        """ Gives the productions
+
+        Returns
+        ----------
+        productions : set of :class:`~pyformlang.cfg.Production`
+            The productions of the CFG
+        """
+        return self._productions.copy()
+
+    def get_start_symbol(self) -> Variable:
+        """ Gives the start symbol
+
+        Returns
+        ----------
+        start_variable : :class:`~pyformlang.cfg.Variable`
+            The start symbol of the CFG
+        """
+        return self._start_symbol
+
+    def substitute(self, substitution: Dict[Terminal, "CFG"]) -> "CFG":
+        """ Subsitutes CFG to terminals in the current CFG
+
+        Parameters
+        -----------
+        subsitution : dict of :class:`~pyformlang.cfg.Terminal` to :class:`~pyformlang.cfg.CFG`
+            A substitution
+
+        Returns
+        ----------
+        new_cfg : :class:`~pyformlang.cfg.CFG`
+            A new CFG recognizing the substitution
+        """
+        idx = 0
+        suffix = "#SUBS#"
+        new_variables_d = dict()
+        new_vars = set()
+        for variable in self._variables:
+            temp = Variable(variable.get_value() + suffix + str(idx))
+            new_variables_d[variable] = temp
+            new_vars.add(temp)
+            idx += 1
+        productions = []
+        terminals = self._terminals.copy()
+        final_replacement = dict()
+        for ter, cfg in substitution.items():
+            new_variables_d_local = dict()
+            for variable in cfg.get_variables():
+                temp = Variable(variable.get_value() + suffix + str(idx))
+                new_variables_d_local[variable] = temp
+                new_vars.add(temp)
+                idx += 1
+            # Add rules of the new cfg
+            for production in cfg.get_productions():
+                body = []
+                for cfgobj in production.get_body():
+                    if cfgobj in new_variables_d_local:
+                        body.append(new_variables_d_local[cfgobj])
+                    else:
+                        body.append(cfgobj)
+                productions.append(Production(new_variables_d_local[production.get_head()],
+                                              body))
+            final_replacement[ter] = new_variables_d_local[cfg.get_start_symbol()]
+            terminals = terminals.union(cfg.get_terminals())
+        for production in self._productions:
+            body = []
+            for cfgobj in production.get_body():
+                if cfgobj in new_variables_d:
+                    body.append(new_variables_d[cfgobj])
+                elif cfgobj in final_replacement:
+                    body.append(final_replacement[cfgobj])
+                else:
+                    body.append(cfgobj)
+            productions.append(Production(new_variables_d[production.get_head()],
+                                          body))
+        return CFG(new_vars, terminals, new_variables_d[self._start_symbol],
+                   set(productions))
 
 def remove_nullable_production_sub(body: Iterable[CFGObject],
                                    nullables: AbstractSet[CFGObject]) -> List[List[CFGObject]]:

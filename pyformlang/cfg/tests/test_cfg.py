@@ -170,7 +170,7 @@ class TestCFG(unittest.TestCase):
         self.assertEqual(new_cfg.get_number_productions(), 30)
 
     def test_cnf(self):
-        """Tests the conversion to CNF form """
+        """ Tests the conversion to CNF form """
         var_I = Variable("I")
         var_F = Variable("F")
         var_E = Variable("E")
@@ -204,3 +204,16 @@ class TestCFG(unittest.TestCase):
         self.assertEqual(new_cfg.get_number_variables(), 15)
         self.assertEqual(new_cfg.get_number_terminals(), 8)
         self.assertEqual(new_cfg.get_number_productions(), 41)
+
+    def test_substitution(self):
+        """ Tests substitutions in a CFG """
+        var_S = Variable("S")
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        p0 = Production(var_S, [ter_a, var_S, ter_b])
+        p1 = Production(var_S, [])
+        cfg = CFG({var_S}, {ter_a, ter_b}, var_S, {p0, p1})
+        new_cfg = cfg.substitute({ter_a: cfg})
+        self.assertEqual(new_cfg.get_number_variables(), 2)
+        self.assertEqual(new_cfg.get_number_terminals(), 2)
+        self.assertEqual(new_cfg.get_number_productions(), 4)
