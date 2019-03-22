@@ -210,6 +210,14 @@ class TestCFG(unittest.TestCase):
         self.assertEqual(new_cfg.get_number_productions(), 41)
         self.assertFalse(cfg.is_empty())
 
+        cfg2 = CFG(start_symbol=var_E,
+                   productions={Production(var_E, [var_T])})
+        new_cfg = cfg2.to_normal_form()
+        self.assertEqual(new_cfg.get_number_variables(), 1)
+        self.assertEqual(new_cfg.get_number_terminals(), 0)
+        self.assertEqual(new_cfg.get_number_productions(), 0)
+        self.assertTrue(cfg2.is_empty())
+
     def test_substitution(self):
         """ Tests substitutions in a CFG """
         var_S = Variable("S")
@@ -352,3 +360,38 @@ class TestCFG(unittest.TestCase):
                    var_S,
                    {p6, p7, p8, p9})
         self.assertTrue(cfg1.contains([ter_a, ter_b, ter_b]))
+
+    def test_to_pda(self):
+        """ Tests the conversion to PDA """
+        var_E = Variable("E")
+        var_I = Variable("I")
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        ter_0 = Terminal("0")
+        ter_1 = Terminal("1")
+        ter_par_open = Terminal("(")
+        ter_par_close = Terminal(")")
+        ter_mult = Terminal("*")
+        ter_plus = Terminal("+")
+        productions = {Production(var_E, [var_I]),
+                       Production(var_E, [var_E, ter_plus, var_E]),
+                       Production(var_E, [var_E, ter_mult, var_E]),
+                       Production(var_E, [ter_par_open, var_E, ter_par_close]),
+                       Production(var_I, [ter_a]),
+                       Production(var_I, [ter_b]),
+                       Production(var_I, [var_I, ter_a]),
+                       Production(var_I, [var_I, ter_b]),
+                       Production(var_I, [var_I, ter_0]),
+                       Production(var_I, [var_I, ter_1]),
+                       Production(var_I, [var_I, Epsilon()])}
+        cfg = CFG({var_E, var_I},
+                  {ter_a, ter_b, ter_0, ter_1, ter_par_open,
+                   ter_par_close, ter_mult, ter_plus},
+                  var_E,
+                  productions)
+        pda = cfg.to_pda()
+        self.assertEqual(pda.get_number_states(), 1)
+        self.assertEqual(pda.get_number_final_states(), 0)
+        self.assertEqual(pda.get_number_input_symbols(), 8)
+        self.assertEqual(pda.get_number_stack_symbols(), 10)
+        self.assertEqual(pda.get_number_transitions(), 19)

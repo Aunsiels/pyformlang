@@ -52,3 +52,38 @@ class TransitionFunction(object):
             self._transitions[temp_in].add(temp_out)
         else:
             self._transitions[temp_in] = {temp_out}
+
+    def copy(self) -> "TransitionFunction":
+        """ Copy the current transition function
+
+        Returns
+        ----------
+        new_tf : :class:`~pyformlang.pda.TransitionFunction`
+            The copy of the transition function
+        """
+        new_tf = TransitionFunction()
+        for temp_in in self._transitions:
+            for temp_out in self._transitions[temp_in]:
+                new_tf.add_transition(temp_in[0], temp_in[1], temp_in[2],
+                                      temp_out[0], temp_out[1])
+        return new_tf
+
+    def __iter__(self):
+        self._iterkey = iter(self._transitions.keys())
+        self._current_key = None
+        self._iterinside = None
+        return self
+
+    def __next__(self):
+        if self._iterinside is None:
+            next_key = next(self._iterkey)
+            self._current_key = next_key
+            self._iterinside = iter(self._transitions[next_key])
+        try:
+            next_value = next(self._iterinside)
+            return (self._current_key, next_value)
+        except StopIteration:
+            next_key = next(self._iterkey)
+            self._current_key = next_key
+            self._iterinside = iter(self._transitions[next_key])
+            return next(self)

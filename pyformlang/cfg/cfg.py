@@ -30,11 +30,14 @@ class CFG(object):
                  start_symbol: Variable = None,
                  productions: AbstractSet[Production] = None):
         self._variables = variables or set()
+        self._variables = set(self._variables)
         self._terminals = terminals or set()
+        self._terminals = set(self._terminals)
         self._start_symbol = start_symbol
         if start_symbol is not None:
             self._variables.add(start_symbol)
         self._productions = productions or set()
+        self._productions = set(self._productions)
         for production in self._productions:
             self._variables.add(production.get_head())
             for cfg_object in production.get_body():
@@ -318,6 +321,8 @@ class CFG(object):
         if len(nullables) != 0 or len(unit_pairs) != len(self._variables) or\
                 len(generating) != len(self._variables) + len(self._terminals) or \
                 len(reachables) != len(self._variables) + len(self._terminals):
+            if len(self._productions) == 0:
+                return self
             new_cfg = self.remove_epsilon()\
                           .eliminate_unit_productions()\
                           .remove_useless_symbols()
@@ -325,8 +330,8 @@ class CFG(object):
         # Remove terminals from body
         new_productions = self._get_productions_with_only_single_terminals()
         new_productions = self._decompose_productions(new_productions)
-        return CFG(self._variables, self._terminals, self._start_symbol,
-                   set(new_productions))
+        return CFG(start_symbol=self._start_symbol,
+                   productions=set(new_productions))
 
     def get_variables(self) -> AbstractSet[Variable]:
         """ Gives the variables
@@ -615,6 +620,48 @@ class CFG(object):
                                 cyk_table[(i, i + j)].add(A)
         return cnf.get_start_symbol() in cyk_table[(0, len(word))]
 
+    def to_pda(self) -> "pda.PDA":
+        """ Convert the CFG to a PDA equivalent on empty stack
+
+        Returns
+        ----------
+        new_pda : :class:`~pyformlang.pda.PDA`
+            The equivalent PDA
+        """
+        from pyformlang import pda
+        state = pda.State("q")
+        input_symbols = [to_pda_object(x, pda.Symbol) for x in self._terminals]
+        stack_alphabet = [to_pda_object(x, pda.StackSymbol)
+                          for x in self._terminals.union(self._variables)]
+        start_stack_symbol = to_pda_object(self._start_symbol, pda.StackSymbol)
+        new_pda = pda.PDA(states={state},
+                          input_symbols=input_symbols,
+                          stack_alphabet=stack_alphabet,
+                          start_state=state,
+                          start_stack_symbol=start_stack_symbol)
+        for production in self._productions:
+            new_pda.add_transition(state, pda.Epsilon(),
+                                   to_pda_object(production.get_head(),
+                                                 pda.StackSymbol),
+                                   state,
+                                   [to_pda_object(x, pda.StackSymbol)
+                                    for x in production.get_body()])
+        for terminal in self._terminals:
+            new_pda.add_transition(state, to_pda_object(terminal, pda.Symbol),
+                                   to_pda_object(terminal, pda.StackSymbol),
+                                   state, [])
+        return new_pda
+
+
+def to_pda_object(cfgobject: CFGObject, to_type) -> "pda.Symbol":
+    """ Turns the object to a PDA symbol """
+    from pyformlang import pda
+    if isinstance(cfgobject, Epsilon):
+        return pda.Epsilon()
+    elif isinstance(cfgobject, Terminal):
+        return to_type("#Term#" + str(cfgobject.get_value()))
+    elif isinstance(cfgobject, Variable):
+        return to_type("#Var#" + str(cfgobject.get_value()))
 def remove_nullable_production_sub(body: Iterable[CFGObject],
                                    nullables: AbstractSet[CFGObject]) -> List[List[CFGObject]]:
     """ Recursive sub function to remove nullable objects """
