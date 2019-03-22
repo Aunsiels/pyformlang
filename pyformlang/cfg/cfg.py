@@ -423,8 +423,197 @@ class CFG(object):
                     body.append(cfgobj)
             productions.append(Production(new_variables_d[production.get_head()],
                                           body))
-        return CFG(new_vars, terminals, new_variables_d[self._start_symbol],
+        return CFG(new_vars, None, new_variables_d[self._start_symbol],
                    set(productions))
+
+    def union(self, other: "CFG") -> "CFG":
+        """ Makes the union of two CFGs
+
+        Parameters
+        ----------
+        other : :class:`~pyformlang.cfg.CFG`
+            The other CFG to unite with
+
+        Returns
+        ----------
+        new_cfg : :class:`~pyformlang.cfg.CFG`
+            The CFG resulting of the union of the two CFGs
+        """
+        start_temp = Variable("#STARTUNION#")
+        temp_0 = Terminal("#0UNION#")
+        temp_1 = Terminal("#1UNION#")
+        p0 = Production(start_temp, [temp_0])
+        p1 = Production(start_temp, [temp_1])
+        cfg_temp = CFG({start_temp},
+                       {temp_0, temp_1},
+                       start_temp,
+                       {p0, p1})
+        return cfg_temp.substitute({temp_0: self,
+                                    temp_1: other})
+
+    def concatenate(self, other: "CFG") -> "CFG":
+        """ Makes the concatenation of two CFGs
+
+        Parameters
+        ----------
+        other : :class:`~pyformlang.cfg.CFG`
+            The other CFG to concatenate with
+
+        Returns
+        ----------
+        new_cfg : :class:`~pyformlang.cfg.CFG`
+            The CFG resulting of the concatenation of the two CFGs
+        """
+        start_temp = Variable("#STARTCONC#")
+        temp_0 = Terminal("#0CONC#")
+        temp_1 = Terminal("#1CONC#")
+        p0 = Production(start_temp, [temp_0, temp_1])
+        cfg_temp = CFG({start_temp},
+                       {temp_0, temp_1},
+                       start_temp,
+                       {p0})
+        return cfg_temp.substitute({temp_0: self,
+                                    temp_1: other})
+
+    def get_closure(self) -> "CFG":
+        """ Gets the closure of the CFG (*)
+
+        Returns
+        ----------
+        new_cfg : :class:`~pyformlang.cfg.CFG`
+            The closure of the current CFG
+        """
+        start_temp = Variable("#STARTCLOS#")
+        temp_1 = Terminal("#1CLOS#")
+        p0 = Production(start_temp, [temp_1])
+        p1 = Production(start_temp, [start_temp, start_temp])
+        p2 = Production(start_temp, [])
+        cfg_temp = CFG({start_temp},
+                       {temp_1},
+                       start_temp,
+                       {p0, p1, p2})
+        return cfg_temp.substitute({temp_1: self})
+
+    def get_positive_closure(self) -> "CFG":
+        """ Gets the positive closure of the CFG (+)
+
+        Returns
+        ----------
+        new_cfg : :class:`~pyformlang.cfg.CFG`
+            The positive closure of the current CFG
+        """
+        start_temp = Variable("#STARTPOSCLOS#")
+        var_temp = Variable("#VARPOSCLOS#")
+        temp_1 = Terminal("#1POSCLOS#")
+        p0 = Production(start_temp, [temp_1, var_temp])
+        p1 = Production(var_temp, [var_temp, var_temp])
+        p2 = Production(var_temp, [temp_1])
+        p3 = Production(var_temp, [])
+        cfg_temp = CFG({start_temp, var_temp},
+                       {temp_1},
+                       start_temp,
+                       {p0, p1, p2, p3})
+        return cfg_temp.substitute({temp_1: self})
+
+    def reverse(self) -> "CFG":
+        """ Reverse the current CFG
+
+        Returns
+        ----------
+        new_cfg : :class:`~pyformlang.cfg.CFG`
+            Reverse the current CFG
+        """
+        productions = []
+        for production in self._productions:
+            productions.append(Production(production.get_head(),
+                                          production.get_body()[::-1]))
+        return CFG(self.get_variables(),
+                   self.get_terminals(),
+                   self.get_start_symbol(),
+                   productions)
+
+    def is_empty(self) -> bool:
+        """ Says whether the CFG is empty or not
+
+        Returns
+        ----------
+        is_empty : bool
+            Whether the CFG is empty or not
+
+        TODO
+        ----------
+        Can be optimized
+        """
+        return self._start_symbol not in self.get_generating_symbols()
+
+    def _generate_epsilon(self):
+        """ Whether the grammar generates epsilon or not
+
+        Returns
+        ----------
+        generate_epsilon : bool
+            Whether epsilon is generated or not by the CFG
+        """
+        generate_epsilon = {Epsilon()}
+        productions = self._productions.copy()
+        found_modification = True
+        while found_modification:
+            found_modification = False
+            used_productions = []
+            for production in productions:
+                if all([x in generate_epsilon for x in production.get_body()]):
+                    if production.get_head() == self._start_symbol:
+                        return True
+                    generate_epsilon.add(production.get_head())
+                    found_modification = True
+                    used_productions.append(production)
+            for production in used_productions:
+                productions.remove(production)
+        return False
+
+    def contains(self, word: Iterable[Terminal]) -> bool:
+        """ Gives the membership of a word to the grammar
+
+        Parameters
+        ----------
+        word : iterable of :class:`~pyformlang.cfg.CFG`
+            The word to check
+
+        Returns
+        ----------
+        contains : bool
+            Whether word if in the CFG or not
+        """
+        # Remove epsilons
+        word = [x for x in word if x != Epsilon()]
+        if not word:
+            return self._generate_epsilon()
+        # TODO Cache it ?
+        cnf = self.to_normal_form()
+        cyk_table = dict()
+        # Organize productions
+        productions_d = dict()
+        for production in cnf.get_productions():
+            temp = tuple(production.get_body())
+            if temp in productions_d:
+                productions_d[temp].append(production.get_head())
+            else:
+                productions_d[temp] = [production.get_head()]
+        # Initialization
+        for i, ai in enumerate(word):
+            if (ai,) in productions_d:
+                cyk_table[(i, i+1)] = set(productions_d[(ai,)])
+            else:
+                return False
+        for j in range(2, len(word) + 1):
+            for i in range(len(word) - j + 1):
+                cyk_table[(i, i + j)] = set()
+                for k in range(i + 1, i + j):
+                    for B in cyk_table.setdefault((i, k), set()):
+                        for C in cyk_table.setdefault((k, i + j), set()):
+                            for A in productions_d.setdefault((B, C), []):
+                                cyk_table[(i, i + j)].add(A)
+        return cnf.get_start_symbol() in cyk_table[(0, len(word))]
 
 def remove_nullable_production_sub(body: Iterable[CFGObject],
                                    nullables: AbstractSet[CFGObject]) -> List[List[CFGObject]]:
