@@ -40,7 +40,10 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                  final_states: AbstractSet[State] = None):
         super().__init__(states, input_symbols, None, None, final_states)
         self._transition_function = transition_function or TransitionFunction()
-        self._start_state = {start_state}
+        if start_state is not None:
+            self._start_state = {start_state}
+        else:
+            self._start_state = {}
         if start_state is not None:
             self._states.add(start_state)
 

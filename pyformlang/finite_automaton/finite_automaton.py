@@ -236,7 +236,7 @@ class FiniteAutomaton(object):
         states: set of :class:`~pyformlang.finite_automaton.State`
             The initial states
         """
-        return self._start_state
+        return self._start_state.copy()
 
     def get_final_states(self) -> Set[State]:
         """ Gets the final states
@@ -246,7 +246,7 @@ class FiniteAutomaton(object):
         states: set of :class:`~pyformlang.finite_automaton.State`
             The final states
         """
-        return self._final_states
+        return self._final_states.copy()
 
     def get_symbols(self) -> Set[Symbol]:
         """ Gets the input symbols

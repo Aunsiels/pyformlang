@@ -1,6 +1,6 @@
 """ A transition function in a pushdown automaton """
 
-from typing import AbstractSet, List
+from typing import AbstractSet, List, Tuple
 
 from .state import State
 from .symbol import Symbol
@@ -87,3 +87,8 @@ class TransitionFunction(object):
             self._current_key = next_key
             self._iterinside = iter(self._transitions[next_key])
             return next(self)
+
+    def __call__(self, s_from: State,
+                 input_symbol: Symbol,
+                 stack_from: StackSymbol):
+        return self._transitions.get((s_from, input_symbol, stack_from), {})

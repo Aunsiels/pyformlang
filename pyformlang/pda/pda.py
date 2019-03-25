@@ -1,12 +1,13 @@
 """ We represent here a pushdown automaton """
 
-from typing import AbstractSet, List, Iterable
+from typing import AbstractSet, List, Iterable, Any
 
 from .state import State
 from .symbol import Symbol
 from .stack_symbol import StackSymbol
 from .epsilon import Epsilon
 from .transition_function import TransitionFunction
+from pyformlang import finite_automaton
 
 class PDA(object):
     """ Representation of a pushdown automaton
@@ -55,6 +56,16 @@ class PDA(object):
         self._final_states = set(self._final_states)
         for state in self._final_states:
             self._states.add(state)
+
+    def add_final_state(self, state: State):
+        """ Adds a final state to the automaton
+
+        Parameters
+        ----------
+        state : :class:`~pyformlang.pda.State`
+            The state to add
+        """
+        self._final_states.add(state)
 
     def get_number_states(self) -> int:
         """ Gets the number of states
@@ -254,6 +265,73 @@ class PDA(object):
                     productions.add(cfg.Production(head, body))
         return cfg.CFG(start_symbol=start, productions=productions)
 
+    def intersection(self, other:Any) -> "PDA":
+        """ Gets the intersection of the current PDA with something else
+
+        Parameters
+        ----------
+        other : any
+            The other part of the intersection
+
+        Returns
+        ----------
+        new_pda : :class:`~pyformlang.pda.PDA`
+            The pda resulting of the intersection
+
+        Raises
+        ----------
+        TODO
+        """
+        start_state_other = other.get_start_states()
+        if len(start_state_other) == 0:
+            return PDA()
+        start_state_other = list(start_state_other)[0]
+        final_state_other = other.get_final_states()
+        start = to_pda_combined_state(self._start_state,
+                                      start_state_other)
+        pda = PDA(start_state=start,
+                  start_stack_symbol=self._start_stack_symbol)
+        symbols = self._input_symbols.copy()
+        symbols.add(Epsilon())
+        to_process=[(self._start_state, start_state_other)]
+        processed={(self._start_state, start_state_other)}
+        while to_process:
+            state_in, state_dfa = to_process.pop()
+            if state_in in self._final_states and state_dfa in final_state_other:
+                pda.add_final_state(to_pda_combined_state(state_in, state_dfa))
+            for symbol in symbols:
+                if symbol == Epsilon():
+                    symbol_dfa = finite_automaton.Epsilon()
+                else:
+                    symbol_dfa = finite_automaton.Symbol(symbol.get_value())
+                if symbol == Epsilon():
+                    next_states_dfa = [state_dfa]
+                else:
+                    next_states_dfa = other(state_dfa, symbol_dfa)
+                if len(next_states_dfa) == 0:
+                    continue
+                for stack_symbol in self._stack_alphabet:
+                    next_states_self = self._transition_function(state_in,
+                                                                 symbol,
+                                                                 stack_symbol)
+                    for next_state, next_stack in next_states_self:
+                        for next_state_dfa in next_states_dfa:
+                            pda.add_transition(to_pda_combined_state(state_in,
+                                                                     state_dfa),
+                                               symbol,
+                                               stack_symbol,
+                                               to_pda_combined_state(next_state,
+                                                                     next_state_dfa),
+                                               next_stack)
+                            if (next_state, next_state_dfa) not in processed:
+                                to_process.append((next_state, next_state_dfa))
+                                processed.add((next_state, next_state_dfa))
+        return pda
+
+
+def to_pda_combined_state(state_pda, state_other):
+    """ To PDA state in the intersection function """
+    return State(state_pda.get_value() + "###" + state_other.get_value())
 
 def to_cfg_combined_variable(state0, stack_symbol, state1):
     """ Convertion used in the to_pda method """

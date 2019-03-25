@@ -4,6 +4,7 @@ import unittest
 
 from pyformlang.pda import PDA, State, StackSymbol, Symbol, Epsilon
 from pyformlang.cfg import Terminal
+from pyformlang import finite_automaton
 
 class TestPDA(unittest.TestCase):
     """ Tests the pushdown automata """
@@ -196,3 +197,53 @@ class TestPDA(unittest.TestCase):
         self.assertEqual(cfg.get_number_variables(), 2)
         self.assertEqual(cfg.get_number_terminals(), 2)
         self.assertEqual(cfg.get_number_productions(), 3)
+
+    def test_intersection_regex(self):
+        """ Tests the intersection with a regex """
+        p = State("p")
+        q = State("q")
+        r = State("r")
+        i = Symbol("i")
+        e = Symbol("e")
+        Z = StackSymbol("Z")
+        X0 = StackSymbol("X0")
+        pda = PDA(states={p, q, r},
+                  input_symbols={i, e},
+                  stack_alphabet={Z, X0},
+                  start_state=p,
+                  start_stack_symbol=X0,
+                  final_states={r})
+        pda.add_transition(p, Epsilon(), X0, q, [Z, X0])
+        pda.add_transition(q, i, Z, q, [Z, Z])
+        pda.add_transition(q, e, Z, q, [])
+        pda.add_transition(q, Epsilon(), X0, r, [])
+
+        s = finite_automaton.State("s")
+        t = finite_automaton.State("t")
+        i_dfa = finite_automaton.Symbol("i")
+        e_dfa = finite_automaton.Symbol("e")
+        dfa = finite_automaton.DeterministicFiniteAutomaton(
+            states={s, t},
+            input_symbols={i_dfa, e_dfa},
+            start_state=s,
+            final_states={s, t})
+        dfa.add_transition(s, i_dfa, s)
+        dfa.add_transition(s, e_dfa, t)
+        dfa.add_transition(t, e_dfa, t)
+
+        new_pda = pda.intersection(dfa)
+        pda_es = new_pda.to_empty_stack()
+        cfg = pda_es.to_cfg()
+        self.assertEqual(new_pda.get_number_transitions(), 6)
+        self.assertEqual(new_pda.get_number_states(), 5)
+        self.assertEqual(new_pda.get_number_final_states(), 2)
+        self.assertEqual(new_pda.get_number_input_symbols(), 2)
+        self.assertEqual(new_pda.get_number_stack_symbols(), 2)
+
+        i_cfg = Terminal("i")
+        e_cfg = Terminal("e")
+
+        self.assertTrue(cfg.contains([i_cfg, i_cfg, e_cfg, e_cfg, e_cfg]))
+
+        new_pda = pda.intersection(finite_automaton.DeterministicFiniteAutomaton())
+        self.assertEqual(new_pda.get_number_transitions(), 0)
