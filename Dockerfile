@@ -20,4 +20,5 @@ RUN pip3 install pytest \
     setuptools \
     wheel \
     twine \
-    Tqdm
+    Tqdm \
+    networkx
