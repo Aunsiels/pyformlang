@@ -116,3 +116,6 @@ test-reports/
 
 # VIM files
 *swp
+
+# Profiler
+prof/

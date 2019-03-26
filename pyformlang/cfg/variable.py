@@ -12,6 +12,10 @@ class Variable(CFGObject): # pylint: disable=too-few-public-methods
         The value of the variable
     """
 
+    def __init__(self, value):
+        super().__init__(value)
+        self._hash = None
+
     def __eq__(self, other):
         return isinstance(other, Variable) and self.get_value() == other.get_value()
 
@@ -19,4 +23,9 @@ class Variable(CFGObject): # pylint: disable=too-few-public-methods
         return "Variable(" + str(self.get_value()) + ")"
 
     def __hash__(self):
-        return hash(self.get_value())
+        if self._hash is not None:
+            return self._hash
+        else:
+            temp = hash(self.get_value())
+            self._hash = temp
+            return temp

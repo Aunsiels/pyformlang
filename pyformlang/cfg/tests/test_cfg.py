@@ -3,6 +3,8 @@
 import unittest
 
 from pyformlang.cfg import Production, Variable, Terminal, CFG, Epsilon
+from pyformlang.regular_expression import Regex
+from pyformlang.finite_automaton import Symbol
 
 class TestCFG(unittest.TestCase):
     """ Tests the production """
@@ -395,3 +397,42 @@ class TestCFG(unittest.TestCase):
         self.assertEqual(pda.get_number_input_symbols(), 8)
         self.assertEqual(pda.get_number_stack_symbols(), 10)
         self.assertEqual(pda.get_number_transitions(), 19)
+
+    def test_conversions(self):
+        """ Tests multiple conversions """
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        ter_c = Terminal("c")
+        var_S = Variable("S")
+        productions = {Production(var_S, [ter_a, var_S, ter_b]),
+                       Production(var_S, [ter_c])}
+        cfg = CFG(productions=productions, start_symbol=var_S)
+        cfg = cfg.to_pda().to_final_state().to_empty_stack().to_cfg()
+        self.assertTrue(cfg.contains([ter_c]))
+        self.assertTrue(cfg.contains([ter_a, ter_c, ter_b]))
+        self.assertTrue(cfg.contains([ter_a, ter_a, ter_c, ter_b, ter_b]))
+        self.assertFalse(cfg.contains([ter_b, ter_c, ter_a]))
+        self.assertFalse(cfg.contains([ter_b, ter_b, ter_c, ter_a, ter_a]))
+
+
+    def test_intersection(self):
+        """ Tests the intersection with a regex """
+        regex = Regex("a*b*")
+        dfa = regex.to_epsilon_nfa().to_deterministic()
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        self.assertTrue(dfa.accepts([symb_a, symb_a, symb_b, symb_b]))
+        self.assertFalse(dfa.accepts([symb_b, symb_b, symb_a]))
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        var_S = Variable("S")
+        productions = {Production(var_S, [ter_a, var_S, ter_b]),
+                       Production(var_S, [ter_b, var_S, ter_a]),
+                       Production(var_S, [])}
+        cfg = CFG(productions=productions, start_symbol=var_S)
+        self.assertTrue(cfg.contains([ter_a, ter_a, ter_b, ter_b]))
+        self.assertFalse(cfg.contains([ter_a, ter_a, ter_b]))
+        cfg_i = cfg.intersection(regex)
+        self.assertTrue(cfg_i.contains([ter_a, ter_a, ter_b, ter_b]))
+        self.assertFalse(cfg_i.contains([ter_a, ter_a, ter_b]))
+        self.assertTrue(cfg_i.contains([]))

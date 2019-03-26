@@ -30,3 +30,6 @@ class State(object):
         if isinstance(other, State):
             return self._value == other.get_value()
         return False
+
+    def __repr__(self):
+        return "State(" + str(self._value) + ")"

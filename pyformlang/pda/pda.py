@@ -8,6 +8,7 @@ from .stack_symbol import StackSymbol
 from .epsilon import Epsilon
 from .transition_function import TransitionFunction
 from pyformlang import finite_automaton
+from pyformlang.regular_expression import Regex
 
 class PDA(object):
     """ Representation of a pushdown automaton
@@ -226,8 +227,8 @@ class PDA(object):
             return [[to_cfg_combined_variable(s_from, ss_by[0], s_to)]]
         res = []
         for state in self._states:
-            all_next = self._generate_all_rules(state, s_to, ss_by[1:])
-            current = to_cfg_combined_variable(s_from, ss_by[0], state)
+            all_next = self._generate_all_rules(s_from, state, ss_by[:-1])
+            current = to_cfg_combined_variable(state, ss_by[-1], s_to)
             for next_l in all_next:
                 next_l.append(current)
             res += all_next
@@ -242,15 +243,18 @@ class PDA(object):
             The equivalent CFG
         """
         from pyformlang import cfg
-        start = cfg.Variable("S")
+        start = cfg.Variable("#StartCFG#")
         productions = set()
         for state in self._states:
             productions.add(cfg.Production(start,
                                            [to_cfg_combined_variable(self._start_state,
                                                                      self._start_stack_symbol,
                                                                      state)]))
+        states = self._states
         for transition in self._transition_function:
-            for state in self._states:
+            for state in states:
+                if len(transition[1][1]) == 0 and state != transition[1][0]:
+                    continue
                 head = to_cfg_combined_variable(transition[0][0],
                                                 transition[0][2],
                                                 state)
@@ -282,6 +286,8 @@ class PDA(object):
         ----------
         TODO
         """
+        if isinstance(other, Regex):
+            other = other.to_epsilon_nfa().to_deterministic()
         start_state_other = other.get_start_states()
         if len(start_state_other) == 0:
             return PDA()
@@ -336,8 +342,8 @@ def to_pda_combined_state(state_pda, state_other):
 def to_cfg_combined_variable(state0, stack_symbol, state1):
     """ Convertion used in the to_pda method """
     from pyformlang import cfg
-    return cfg.Variable(str(state0.get_value()) + "###" +
-                        str(stack_symbol.get_value()) + "###" +
+    return cfg.Variable(str(state0.get_value()) + "#!#" +
+                        str(stack_symbol.get_value()) + "#!#" +
                         str(state1.get_value()))
 
 def get_next_free(prefix, type_generating, to_check):

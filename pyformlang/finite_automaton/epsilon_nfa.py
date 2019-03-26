@@ -614,7 +614,7 @@ def to_single_state(l_states: Iterable[State]) -> State:
     for state in l_states:
         values.append(str(state.get_value()))
     values = sorted(values)
-    return State("; ".join(values))
+    return State(";".join(values))
 
 def combine_state_pair(state0, state1):
     """ Combine two states """

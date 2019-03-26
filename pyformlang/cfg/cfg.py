@@ -1,6 +1,6 @@
 """ A context free grammar """
 
-from typing import AbstractSet, List, Iterable, Tuple, Dict
+from typing import AbstractSet, List, Iterable, Tuple, Dict, Any
 
 from .variable import Variable
 from .terminal import Terminal
@@ -46,6 +46,7 @@ class CFG(object):
                         self._terminals.add(cfg_object)
                 else:
                     self._variables.add(cfg_object)
+        self._normal_form = None
 
     def get_number_variables(self) -> int:
         """ Returns the number of Variables
@@ -85,22 +86,42 @@ class CFG(object):
         generating_symbols : set of :class:`~pyformlang.cfg.CFGObject`
             The generating symbols of the CFG
         """
+        return self._get_generating_or_nullable(False)
+
+    def _get_generating_or_nullable(self, nullable=False):
+        """ Merge of nullable and generating """
         g_symbols = set()
         g_symbols.add(Epsilon())
-        productions = self._productions.copy()
-        for terminal in self._terminals:
-            g_symbols.add(terminal)
-        found_modification = True
-        while found_modification:
-            found_modification = False
-            used_productions = []
-            for production in productions:
-                if all([x in g_symbols for x in production.get_body()]):
-                    found_modification = True
-                    used_productions.append(production)
-                    g_symbols.add(production.get_head())
-            for production in used_productions:
-                productions.remove(production)
+        productions = list(self._productions)
+        to_process = []
+        to_process.append(Epsilon())
+        if not nullable:
+            for terminal in self._terminals:
+                g_symbols.add(terminal)
+                to_process.append(terminal)
+        symb_to_prod = dict()
+        prod_occured = []
+        prod_required = []
+        prod_head = []
+        for i, production in enumerate(productions):
+            for member in production.get_body():
+                if member in symb_to_prod:
+                    symb_to_prod[member].append(i)
+                else:
+                    symb_to_prod[member] = [i]
+            prod_occured.append(0)
+            prod_required.append(len(production.get_body()))
+            prod_head.append(production.get_head())
+            if prod_required[-1] == 0 and prod_head[-1] not in g_symbols:
+                g_symbols.add(prod_head[-1])
+                to_process.append(prod_head[-1])
+        while to_process:
+            current = to_process.pop()
+            for i in symb_to_prod.get(current, []):
+                prod_occured[i] += 1
+                if prod_occured[i] == prod_required[i] and prod_head[i] not in g_symbols:
+                    g_symbols.add(prod_head[i])
+                    to_process.append(prod_head[i])
         g_symbols.remove(Epsilon())
         return g_symbols
 
@@ -160,23 +181,7 @@ class CFG(object):
         nullable_symbols : set of :class:`~pyformlang.cfg.CFGObject`
             The nullable symbols of the CFG
         """
-        n_symbols = set()
-        n_symbols.add(Epsilon())
-        productions = self._productions.copy()
-        found_modification = True
-        while found_modification:
-            found_modification = False
-            used_productions = []
-            for production in productions:
-                if all([x in n_symbols for x in production.get_body()]) or \
-                        len(production.get_body()) == 0:
-                    found_modification = True
-                    used_productions.append(production)
-                    n_symbols.add(production.get_head())
-            for production in used_productions:
-                productions.remove(production)
-        n_symbols.remove(Epsilon())
-        return n_symbols
+        return self._get_generating_or_nullable(True)
 
     def remove_epsilon(self) -> "CFG":
         """ Removes the epsilon of a cfg
@@ -208,12 +213,11 @@ class CFG(object):
             unit_pairs.add((variable, variable))
         productions = [x for x in self._productions if len(x.get_body()) == 1 and\
                                                        isinstance(x.get_body()[0], Variable)]
+        productions_d = get_productions_d(productions)
         to_process = list(unit_pairs)
         while to_process:
             var_A, var_B = to_process.pop()
-            for production in productions:
-                if production.get_head() != var_B:
-                    continue
+            for production in productions_d.get(var_B, []):
                 temp = (var_A, production.get_body()[0])
                 if temp not in unit_pairs:
                     unit_pairs.add(temp)
@@ -231,16 +235,16 @@ class CFG(object):
         unit_pairs = self.get_unit_pairs()
         productions = [x for x in self._productions if len(x.get_body()) != 1 or\
                                                        not isinstance(x.get_body()[0], Variable)]
-        new_productions = []
+        productions_d = get_productions_d(productions)
+        new_productions = set()
         for var_A, var_B in unit_pairs:
-            for production in productions:
-                if var_B == production.get_head():
-                    new_productions.append(Production(var_A,
-                                                      production.get_body()))
+            for production in productions_d.get(var_B, []):
+                new_productions.add(Production(var_A,
+                                               production.get_body()))
         return CFG(self._variables,
                    self._terminals,
                    self._start_symbol,
-                   set(productions + new_productions))
+                   set(productions).union(new_productions))
 
     def _get_productions_with_only_single_terminals(self):
         """ Remove the terminals involved in a body of length more than 1 """
@@ -314,6 +318,8 @@ class CFG(object):
         new_cfg : :class:`~pyformlang.cfg.CFG`
             A new CFG equivalent in the CNF form
         """
+        if self._normal_form is not None:
+            return self._normal_form
         nullables = self.get_nullable_symbols()
         unit_pairs = self.get_unit_pairs()
         generating = self.get_generating_symbols()
@@ -330,8 +336,10 @@ class CFG(object):
         # Remove terminals from body
         new_productions = self._get_productions_with_only_single_terminals()
         new_productions = self._decompose_productions(new_productions)
-        return CFG(start_symbol=self._start_symbol,
-                   productions=set(new_productions))
+        cfg = CFG(start_symbol=self._start_symbol,
+                  productions=set(new_productions))
+        self._normal_form = cfg
+        return cfg
 
     def get_variables(self) -> AbstractSet[Variable]:
         """ Gives the variables
@@ -593,7 +601,6 @@ class CFG(object):
         word = [x for x in word if x != Epsilon()]
         if not word:
             return self._generate_epsilon()
-        # TODO Cache it ?
         cnf = self.to_normal_form()
         cyk_table = dict()
         # Organize productions
@@ -652,6 +659,27 @@ class CFG(object):
                                    state, [])
         return new_pda
 
+    def intersection(self, other: Any) -> "CFG":
+        """ Gives the intersection of the current CFG with an other object
+
+        Parameters
+        ----------
+        other : any
+            The other object
+
+        Returns
+        ----------
+        new_cfg : :class:`~pyformlang.cfg.CFG`
+            A CFG representing the intersection with the other object
+
+        Raises
+        ----------
+        TODO
+        """
+        pda = self.to_pda().to_final_state()
+        pda_i = pda.intersection(other)
+        return pda_i.to_empty_stack().to_cfg()
+
 
 def to_pda_object(cfgobject: CFGObject, to_type) -> "pda.Symbol":
     """ Turns the object to a PDA symbol """
@@ -659,6 +687,8 @@ def to_pda_object(cfgobject: CFGObject, to_type) -> "pda.Symbol":
     if isinstance(cfgobject, Epsilon):
         return pda.Epsilon()
     elif isinstance(cfgobject, Terminal):
+        if to_type == pda.Symbol:
+            return to_type(cfgobject.get_value())
         return to_type("#Term#" + str(cfgobject.get_value()))
     elif isinstance(cfgobject, Variable):
         return to_type("#Var#" + str(cfgobject.get_value()))
@@ -687,3 +717,11 @@ def remove_nullable_production(production: Production,
             res.append(Production(production.get_head(),
                                   prod_l))
     return res
+
+def get_productions_d(productions):
+    """ Get productions as a dictionary """
+    productions_d = dict()
+    for production in productions:
+        l = productions_d.setdefault(production.get_head(), [])
+        l.append(production)
+    return productions_d

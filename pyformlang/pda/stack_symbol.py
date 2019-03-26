@@ -30,3 +30,6 @@ class StackSymbol(object):
         if isinstance(other, StackSymbol):
             return self._value == other.get_value()
         return False
+
+    def __repr__(self):
+        return "StackSymbol(" + str(self._value) + ")"

@@ -198,6 +198,36 @@ class TestPDA(unittest.TestCase):
         self.assertEqual(cfg.get_number_terminals(), 2)
         self.assertEqual(cfg.get_number_productions(), 3)
 
+    def test_pda_conversion(self):
+        """ Tests conversions from a PDA """
+        p = State("p")
+        q = State("q")
+        s_a = Symbol("a")
+        s_b = Symbol("b")
+        s_c = Symbol("c")
+        t_a = Terminal("a")
+        t_b = Terminal("b")
+        t_c = Terminal("c")
+        ss_a = StackSymbol("a")
+        ss_b = StackSymbol("b")
+        ss_c = StackSymbol("c")
+        X0 = StackSymbol("X0")
+        pda = PDA(states={p,q},
+                  input_symbols={s_a, s_b, s_c},
+                  stack_alphabet={ss_a, ss_b, ss_c, X0},
+                  start_state=p,
+                  start_stack_symbol=X0,
+                  final_states={q})
+        pda.add_transition(p, Epsilon(), X0, q, [])
+        pda.add_transition(p, Epsilon(), X0, p, [ss_a, ss_b, ss_c, X0])
+        pda.add_transition(p, s_a, ss_a, p, [])
+        pda.add_transition(p, s_b, ss_b, p, [])
+        pda.add_transition(p, s_c, ss_c, p, [])
+        cfg = pda.to_empty_stack().to_cfg()
+        self.assertTrue(cfg.contains([]))
+        self.assertTrue(cfg.contains([t_a, t_b, t_c]))
+        self.assertFalse(cfg.contains([t_c, t_b, t_a]))
+
     def test_intersection_regex(self):
         """ Tests the intersection with a regex """
         p = State("p")

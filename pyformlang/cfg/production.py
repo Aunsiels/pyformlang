@@ -19,7 +19,7 @@ class Production(object):
 
     def __init__(self, head: Variable, body: Iterable[CFGObject]):
         self._head = head
-        self._body = body
+        self._body = tuple(body)
 
     def get_head(self) -> Variable:
         return self._head
@@ -31,7 +31,7 @@ class Production(object):
         return str(self._head) +  " -> " + " ".join([str(x) for x in self._body])
 
     def __hash__(self):
-        return hash(self._head) + hash(" ".join([str(x) for x in self._body]))
+        return hash(self._head) + hash(self._body)
 
     def __eq__(self, other):
         return self._head == other.get_head() and self._body == other.get_body()

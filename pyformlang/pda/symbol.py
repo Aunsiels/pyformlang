@@ -30,3 +30,6 @@ class Symbol(object):
         if isinstance(other, Symbol):
             return self._value == other.get_value()
         return False
+
+    def __repr__(self):
+        return "Symbol(" + str(self._value) + ")"
