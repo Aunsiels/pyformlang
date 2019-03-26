@@ -12,6 +12,9 @@ test-code-xml:
 test-code-profiling:
 	$(PYTEST) --showlocals -v pyformlang --profile
 
+test-code-profiling:
+	$(PYTEST) --showlocals -v pyformlang --profile-svg
+
 test-coverage:
 		rm -rf coverage .coverage
 		$(PYTEST) pyformlang --showlocals -v --cov=pyformlang --cov-report=html:coverage

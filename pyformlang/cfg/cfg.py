@@ -328,11 +328,14 @@ class CFG(object):
                 len(generating) != len(self._variables) + len(self._terminals) or \
                 len(reachables) != len(self._variables) + len(self._terminals):
             if len(self._productions) == 0:
+                self._normal_form = self
                 return self
             new_cfg = self.remove_epsilon()\
                           .eliminate_unit_productions()\
                           .remove_useless_symbols()
-            return new_cfg.to_normal_form()
+            cfg = new_cfg.to_normal_form()
+            self._normal_form = cfg
+            return cfg
         # Remove terminals from body
         new_productions = self._get_productions_with_only_single_terminals()
         new_productions = self._decompose_productions(new_productions)

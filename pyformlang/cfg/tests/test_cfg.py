@@ -211,6 +211,8 @@ class TestCFG(unittest.TestCase):
         self.assertEqual(new_cfg.get_number_terminals(), 8)
         self.assertEqual(new_cfg.get_number_productions(), 41)
         self.assertFalse(cfg.is_empty())
+        new_cfg2 = cfg.to_normal_form()
+        self.assertEqual(new_cfg, new_cfg2)
 
         cfg2 = CFG(start_symbol=var_E,
                    productions={Production(var_E, [var_T])})

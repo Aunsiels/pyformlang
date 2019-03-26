@@ -64,6 +64,16 @@ class TestPDA(unittest.TestCase):
         self.assertEqual(pda.get_number_transitions(), 0)
         self.assertEqual(pda.get_number_final_states(), 0)
 
+    def test_represent(self):
+        """ Tests representations """
+        symb = Symbol("S")
+        self.assertEqual(str(symb), "Symbol(S)")
+        state = State("T")
+        self.assertEqual(str(state), "State(T)")
+        stack_symb = StackSymbol("U")
+        self.assertEqual(str(stack_symb), "StackSymbol(U)")
+
+
     def test_transition(self):
         """ Tests the creation of transition """
         pda = PDA()
