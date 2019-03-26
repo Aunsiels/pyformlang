@@ -6,3 +6,4 @@ setuptools
 wheel
 twine
 Tqdm
+networkx
