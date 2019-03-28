@@ -364,6 +364,11 @@ class TestCFG(unittest.TestCase):
                    var_S,
                    {p6, p7, p8, p9})
         self.assertTrue(cfg1.contains([ter_a, ter_b, ter_b]))
+        cfg1 = CFG({"A", "B", "S"},
+                   {"a", "b"},
+                   "S",
+                   {p6, p7, p8, p9})
+        self.assertTrue(cfg1.contains(["a", "b", "b"]))
 
     def test_to_pda(self):
         """ Tests the conversion to PDA """

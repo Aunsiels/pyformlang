@@ -73,6 +73,8 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         """
         dfa = get_example0()
         self._perform_tests_example0(dfa)
+        dfa = get_example0_bis()
+        self._perform_tests_example0(dfa)
 
     def _perform_tests_example0(self, dfa):
         """ Tests for DFA from example 0 """
@@ -93,6 +95,19 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         self.assertTrue(dfa.accepts([symb_a, symb_b, symb_c]))
         self.assertEqual(dfa.remove_start_state(state0), 1)
         self.assertFalse(dfa.accepts([symb_a, symb_b, symb_c]))
+
+        dfa.add_start_state(0)
+        self.assertTrue(dfa.accepts(["a", "b", "c"]))
+        self.assertTrue(dfa.accepts(["a", "b", "b", "b", "c"]))
+        self.assertTrue(dfa.accepts(["a", "b", "d"]))
+        self.assertTrue(dfa.accepts(["a", "d"]))
+        self.assertFalse(dfa.accepts(["a", "c", "d"]))
+        self.assertFalse(dfa.accepts(["d", "c", "d"]))
+        self.assertFalse(dfa.accepts([]))
+        self.assertEqual(dfa.remove_start_state(1), 0)
+        self.assertTrue(dfa.accepts(["a", "b", "c"]))
+        self.assertEqual(dfa.remove_start_state(0), 1)
+        self.assertFalse(dfa.accepts(["a", "b", "c"]))
 
     def test_copy(self):
         """ Test the copy of a DFA """
@@ -143,4 +158,16 @@ def get_example0():
     dfa.add_transition(state1, symb_b, state1)
     dfa.add_transition(state1, symb_c, state2)
     dfa.add_transition(state1, symb_d, state3)
+    return dfa
+
+def get_example0_bis():
+    """ Gives a dfa """
+    dfa = DeterministicFiniteAutomaton()
+    dfa.add_start_state(0)
+    dfa.add_final_state(2)
+    dfa.add_final_state(3)
+    dfa.add_transition(0, "a", 1)
+    dfa.add_transition(1, "b", 1)
+    dfa.add_transition(1, "c", 2)
+    dfa.add_transition(1, "d", 3)
     return dfa

@@ -7,6 +7,7 @@ from .symbol import Symbol
 from .stack_symbol import StackSymbol
 from .epsilon import Epsilon
 from .transition_function import TransitionFunction
+from .utils import to_state, to_symbol, to_stack_symbol
 from pyformlang import finite_automaton
 from pyformlang.regular_expression import Regex
 
@@ -40,6 +41,18 @@ class PDA(object):
                  start_state: State = None,
                  start_stack_symbol: StackSymbol = None,
                  final_states: AbstractSet[State] = None):
+        if states is not None:
+            states = set([to_state(x) for x in states])
+        if input_symbols is not None:
+            input_symbols = set([to_symbol(x) for x in input_symbols])
+        if stack_alphabet is not None:
+            stack_alphabet = set([to_stack_symbol(x) for x in stack_alphabet])
+        if start_state is not None:
+            start_state = to_state(start_state)
+        if start_stack_symbol is not None:
+            start_stack_symbol = to_stack_symbol(start_stack_symbol)
+        if final_states is not None:
+            final_states = set([to_state(x) for x in final_states])
         self._states = states or set()
         self._states = set(self._states)
         self._input_symbols = input_symbols or set()
@@ -66,6 +79,7 @@ class PDA(object):
         state : :class:`~pyformlang.pda.State`
             The state to add
         """
+        state = to_state(state)
         self._final_states.add(state)
 
     def get_number_states(self) -> int:
@@ -139,6 +153,11 @@ class PDA(object):
         stack_to : list of :class:`~pyformlang.pda.StackSymbol`
             The string of stack symbol which replace the stack_from
         """
+        s_from = to_state(s_from)
+        input_symbol = to_symbol(input_symbol)
+        stack_from = to_stack_symbol(stack_from)
+        s_to = to_state(s_to)
+        stack_to = [to_stack_symbol(x) for x in stack_to]
         self._states.add(s_from)
         self._states.add(s_to)
         if input_symbol != Epsilon():

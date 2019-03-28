@@ -9,6 +9,7 @@ from .symbol import Symbol
 from .transition_function import TransitionFunction
 from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
 from .epsilon_nfa import to_single_state
+from .finite_automaton import to_state, to_symbol
 
 
 class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
@@ -39,6 +40,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                  start_state: State = None,
                  final_states: AbstractSet[State] = None):
         super().__init__(states, input_symbols, None, None, final_states)
+        start_state = to_state(start_state)
         self._transition_function = transition_function or TransitionFunction()
         if start_state is not None:
             self._start_state = {start_state}
@@ -60,6 +62,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         done : int
             1 is correctly added
         """
+        state = to_state(state)
         self._start_state = {state}
         self._states.add(state)
         return 1
@@ -77,6 +80,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         done : int
             1 is correctly added
         """
+        state = to_state(state)
         if {state} == self._start_state:
             self._start_state = {}
             return 1
@@ -95,6 +99,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         is_accepted : bool
             Whether the word is accepted or not
         """
+        word = [to_symbol(x) for x in word]
         current_state = None
         if self._start_state:
             current_state = list(self._start_state)[0]

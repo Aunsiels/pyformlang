@@ -6,6 +6,7 @@ from typing import Iterable
 
 from .symbol import Symbol
 from .epsilon_nfa import EpsilonNFA
+from .finite_automaton import to_state, to_symbol
 
 
 class NondeterministicFiniteAutomaton(EpsilonNFA):
@@ -42,6 +43,7 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         is_accepted : bool
             Whether the word is accepted or not
         """
+        word = [to_symbol(x) for x in word]
         current_states = self._start_state
         for symbol in word:
             current_states = self._get_next_states_iterable(current_states,

@@ -7,6 +7,7 @@ from .terminal import Terminal
 from .production import Production
 from .cfg_object import CFGObject
 from .epsilon import Epsilon
+from .utils import to_variable, to_terminal
 
 
 class CFG(object):
@@ -29,10 +30,16 @@ class CFG(object):
                  terminals: AbstractSet[Terminal] = None,
                  start_symbol: Variable = None,
                  productions: AbstractSet[Production] = None):
+        if variables is not None:
+            variables = set([to_variable(x) for x in variables])
         self._variables = variables or set()
         self._variables = set(self._variables)
+        if terminals is not None:
+            terminals = set([to_terminal(x) for x in terminals])
         self._terminals = terminals or set()
         self._terminals = set(self._terminals)
+        if start_symbol is not None:
+            start_symbol = to_variable(start_symbol)
         self._start_symbol = start_symbol
         if start_symbol is not None:
             self._variables.add(start_symbol)
@@ -601,7 +608,7 @@ class CFG(object):
             Whether word if in the CFG or not
         """
         # Remove epsilons
-        word = [x for x in word if x != Epsilon()]
+        word = [to_terminal(x) for x in word if x != Epsilon()]
         if not word:
             return self._generate_epsilon()
         cnf = self.to_normal_form()

@@ -12,6 +12,7 @@ from .symbol import Symbol
 from .nondeterministic_transition_function import NondeterministicTransitionFunction
 from .regexable import Regexable
 from .finite_automaton import FiniteAutomaton
+from .finite_automaton import to_state, to_symbol
 
 
 class EpsilonNFA(Regexable, FiniteAutomaton):
@@ -42,11 +43,19 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                  start_state: AbstractSet[State] = None,
                  final_states: AbstractSet[State] = None):
         super().__init__()
+        if states is not None:
+            states = set([to_state(x) for x in states])
         self._states = states or set()
+        if input_symbols is not None:
+            input_symbols = set([to_symbol(x) for x in input_symbols])
         self._input_symbols = input_symbols or set()
         self._transition_function = transition_function or \
             NondeterministicTransitionFunction()
+        if start_state is not None:
+            start_state = set([to_state(x) for x in start_state])
         self._start_state = start_state or set()
+        if final_states is not None:
+            final_states = set([to_state(x) for x in final_states])
         self._final_states = final_states or set()
         for state in self._final_states:
             if state is not None and state not in self._states:
@@ -93,6 +102,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         is_accepted : bool
             Whether the word is accepted or not
         """
+        word = [to_symbol(x) for x in word]
         current_states = self.eclose_iterable(self._start_state)
         for symbol in word:
             if symbol == Epsilon():
@@ -114,6 +124,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         states : set of :class:`~pyformlang.finite_automaton.State`
             The epsilon closure of the source state
         """
+        states = [to_state(x) for x in states]
         res = set()
         for state in states:
             res = res.union(self.eclose(state))
@@ -132,6 +143,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         states : set of :class:`~pyformlang.finite_automaton.State`
             The epsilon closure of the source state
         """
+        state = to_state(state)
         to_process = [state]
         processed = {state}
         while to_process:

@@ -55,6 +55,15 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(enfa.accepts([plus]))
         self.assertFalse(enfa.is_deterministic())
 
+        self.assertTrue(enfa.accepts(["+", digits[1], ".", digits[9]]))
+        self.assertTrue(enfa.accepts(["-", digits[1], ".", digits[9]]))
+        self.assertTrue(enfa.accepts([digits[1], ".", digits[9]]))
+        self.assertTrue(enfa.accepts([digits[1], "."]))
+        self.assertTrue(enfa.accepts([digits[1], ".", "epsilon"]))
+        self.assertTrue(enfa.accepts([".", digits[9]]))
+        self.assertFalse(enfa.accepts(["."]))
+        self.assertFalse(enfa.accepts(["+"]))
+
     def test_deterministic(self):
         """ Tests the transformation to a dfa"""
         enfa, digits, _, plus, minus, point = get_digits_enfa()

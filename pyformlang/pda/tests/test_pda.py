@@ -73,7 +73,6 @@ class TestPDA(unittest.TestCase):
         stack_symb = StackSymbol("U")
         self.assertEqual(str(stack_symb), "StackSymbol(U)")
 
-
     def test_transition(self):
         """ Tests the creation of transition """
         pda = PDA()
@@ -207,6 +206,19 @@ class TestPDA(unittest.TestCase):
         self.assertEqual(cfg.get_number_variables(), 2)
         self.assertEqual(cfg.get_number_terminals(), 2)
         self.assertEqual(cfg.get_number_productions(), 3)
+
+        pda = PDA(states={"q"},
+                  input_symbols={"i", "e"},
+                  stack_alphabet={"Z"},
+                  start_state="q",
+                  start_stack_symbol="Z")
+        pda.add_transition("q", "i", "Z", "q", ("Z", "Z"))
+        pda.add_transition("q", "e", "Z", "q", [])
+        cfg = pda.to_cfg()
+        self.assertEqual(cfg.get_number_variables(), 2)
+        self.assertEqual(cfg.get_number_terminals(), 2)
+        self.assertEqual(cfg.get_number_productions(), 3)
+        pda.add_transition("q", "epsilon", "Z", "q", ["Z"])
 
     def test_pda_conversion(self):
         """ Tests conversions from a PDA """

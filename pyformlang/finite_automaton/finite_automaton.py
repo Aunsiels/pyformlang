@@ -1,6 +1,6 @@
 """ A general finite automaton representation """
 
-from typing import Set, List
+from typing import Set, List, Any
 
 from .epsilon import Epsilon
 from .state import State
@@ -56,6 +56,9 @@ class FiniteAutomaton(object):
         DuplicateTransitionError
             If the transition already exists
         """
+        s_from = to_state(s_from)
+        symb_by = to_symbol(symb_by)
+        s_to = to_state(s_to)
         self._states.add(s_from)
         self._states.add(s_to)
         if symb_by != Epsilon():
@@ -80,6 +83,9 @@ class FiniteAutomaton(object):
         done : int
             1 if the transition existed, 0 otherwise
         """
+        s_from = to_state(s_from)
+        symb_by = to_symbol(symb_by)
+        s_to = to_state(s_to)
         return self._transition_function.remove_transition(s_from,
                                                            symb_by,
                                                            s_to)
@@ -91,6 +97,7 @@ class FiniteAutomaton(object):
         number_states : int
             The number of states
         """
+        print(self._states)
         return len(self._states)
 
     def get_number_transitions(self) -> int:
@@ -137,6 +144,7 @@ class FiniteAutomaton(object):
         done : int
             1 is correctly added
         """
+        state = to_state(state)
         self._start_state.add(state)
         self._states.add(state)
         return 1
@@ -154,6 +162,7 @@ class FiniteAutomaton(object):
         done : int
             1 is correctly added
         """
+        state = to_state(state)
         if state in self._start_state:
             self._start_state.remove(state)
             return 1
@@ -172,6 +181,7 @@ class FiniteAutomaton(object):
         done : int
             1 is correctly added
         """
+        state = to_state(state)
         self._final_states.add(state)
         self._states.add(state)
         return 1
@@ -189,6 +199,7 @@ class FiniteAutomaton(object):
         done : int
             0 if it was not a final state, 1 otherwise
         """
+        state = to_state(state)
         if self.is_final_state(state):
             self._final_states.remove(state)
             return 1
@@ -211,6 +222,8 @@ class FiniteAutomaton(object):
             The next states
         """
         # pylint: disable=not-callable
+        state = to_state(state)
+        symbol = to_symbol(symbol)
         return self._transition_function(state, symbol)
 
     def is_final_state(self, state: State) -> bool:
@@ -226,6 +239,7 @@ class FiniteAutomaton(object):
         is_final : bool
             Whether the state is final or not
         """
+        state = to_state(state)
         return state in self._final_states
 
     def get_start_states(self) -> Set[State]:
@@ -266,4 +280,34 @@ class FiniteAutomaton(object):
         symbol : :class:`~pyformlang.finite_automaton.Symbol`
             The symbol
         """
+        symbol = to_symbol(symbol)
         self._input_symbols.add(symbol)
+
+
+def to_state(given: Any) -> State:
+    """ Transforms the input into a state
+
+    Parameters
+    ----------
+    given : any
+        What we want to transform
+    """
+    if given is None:
+        return None
+    if isinstance(given, State):
+        return given
+    return State(given)
+
+def to_symbol(given: Any) -> Symbol:
+    """ Transforms the input into a symbol
+
+    Parameters
+    ----------
+    given : any
+        What we want to transform
+    """
+    if isinstance(given, Symbol):
+        return given
+    if given == "epsilon":
+        return Epsilon()
+    return Symbol(given)
