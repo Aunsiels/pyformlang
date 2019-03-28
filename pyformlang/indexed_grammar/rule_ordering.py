@@ -1,69 +1,102 @@
+"""
+Representation of a way to order rules
+"""
+
+from typing import Iterable, Dict, Any
+
 import networkx as nx
 from queue import Queue
 import random
 
+from .reduced_rule import ReducedRule
+from .consumption_rule import ConsumptionRule
+
 
 class RuleOrdering(object):
-    """RuleOrdering A class to order rules in an indexed grammar"""
+    """A class to order rules in an indexed grammar
 
-    def __init__(self, rules, conso_rules):
-        """__init__
-        Initializes the ordering class
-        :param rules: The non consumption rules of the indexed grammar
-        :param conso_rules: The consumption rules of the indexed grammar
-        """
+    Parameters
+    ----------
+    rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+        The non consumption rules of the indexed grammar
+    conso_rules : dict of any to :class:`~pyformlang.indexed_grammar.ConsumptionRule`
+        The consumption rules of the indexed grammar
+    """
+
+    def __init__(self, rules: Iterable[ReducedRule],
+                 conso_rules: Dict[Any, ConsumptionRule]):
         self.rules = rules
         self.conso_rules = conso_rules
 
-    def reverse(self):
-        """reverse The reverser ordering, simply reverse the order. Might be
-        efficient as rules are generated in a certain order, from functions in
-        our case"""
+    def reverse(self) -> Iterable[ReducedRule]:
+        """The reverser ordering, simply reverse the order.
+
+        Returns
+        ----------
+        new_rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+            The reversed rules
+        """
         return self.rules[::1]
 
-    def get_graph(self):
-        """get_graph Get the graph of the non-terminals in the rules. If there
+    def _get_graph(self):
+        """ Get the graph of the non-terminals in the rules. If there
         there is a link between A and B (oriented), it means that modifying A
         may modify B"""
-        DG = nx.DiGraph()
+        di_graph = nx.DiGraph()
         for rule in self.rules:
-            if rule.isDuplication():
-                if rule.getRightTerms()[0] != rule.getLeftTerm():
-                    DG.add_edge(rule.getRightTerms()[0], rule.getLeftTerm())
-                if rule.getRightTerms()[1] != rule.getLeftTerm():
-                    DG.add_edge(rule.getRightTerms()[1], rule.getLeftTerm())
-            if rule.isProduction():
+            if rule.is_duplication():
+                if rule.get_right_terms()[0] != rule.get_left_term():
+                    di_graph.add_edge(rule.get_right_terms()[0], rule.get_left_term())
+                if rule.get_right_terms()[1] != rule.get_left_term():
+                    di_graph.add_edge(rule.get_right_terms()[1], rule.get_left_term())
+            if rule.is_production():
                 f_rules = self.conso_rules.setdefault(
-                    rule.getProduction(), [])
+                    rule.get_production(), [])
                 for f_rule in f_rules:
-                    if f_rule.getRight() != rule.getLeftTerm():
-                        DG.add_edge(f_rule.getRight(), rule.getLeftTerm())
-        return DG
+                    if f_rule.get_right() != rule.get_left_term():
+                        di_graph.add_edge(f_rule.get_right(), rule.get_left_term())
+        return di_graph
 
-    def order_by_core(self, reverse=False):
-        """order_by_core
-        Order the rules using the core numbers
-        :param reverse: Boolean to know if we should reverse the order
+    def order_by_core(self, reverse: bool=False) -> Iterable[ReducedRule]:
+        """Order the rules using the core numbers
+
+        Parameters
+        ----------
+        reverse : bool
+            Boolean to know if we should reverse the order
+
+        Returns
+        ----------
+        new_rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+            The rules ordered using core number
         """
         # Graph construction
-        DG = self.get_graph()
+        di_graph = self._get_graph()
         # Get core number, careful the degree is in + out
-        core_numbers = nx.core_number(DG)
+        core_numbers = nx.core_number(di_graph)
         new_order = sorted(self.rules,
                            key=lambda x: core_numbers.setdefault(
-                               x.getLeftTerm(), 0))
+                               x.get_left_term(), 0))
         if reverse:
             new_order.reverse()
         return new_order
 
-    def order_by_arborescence(self, reverse=True):
-        """order_by_arborescence
-        Order the rules using the arborescence method.
-        :param reverse: Boolean to know if we should reverse the order
+    def order_by_arborescence(self, reverse: bool=True) -> Iterable[ReducedRule]:
+        """Order the rules using the arborescence method.
+
+        Parameters
+        ----------
+        reverse : bool
+            Boolean to know if we should reverse the order
+
+        Returns
+        ----------
+        new_rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+            The rules ordered using core number
         """
-        DG = self.get_graph()
-        # arborescence = nx.minimum_spanning_arborescence(DG)
-        arborescence = nx.minimum_spanning_tree(DG.to_undirected())
+        di_graph = self._get_graph()
+        # arborescence = nx.minimum_spanning_arborescence(di_graph)
+        arborescence = nx.minimum_spanning_tree(di_graph.to_undirected())
         to_process = Queue()
         processed = set()
         res = dict()
@@ -82,36 +115,54 @@ class RuleOrdering(object):
                     to_process.put(x)
         new_order = sorted(self.rules,
                            key=lambda x: res.setdefault(
-                               x.getLeftTerm(), 0))
+                               x.get_left_term(), 0))
         if reverse:
             new_order.reverse()
         return new_order
 
-    def get_len_out(self, DG, x):
-        """get_len_out
-        Get the number of out edges of a rule (more exactly, the non terminal at
+    def _get_len_out(self, di_graph, x):
+        """Get the number of out edges of a rule (more exactly, the non terminal at
         its left.
-        :param DG: A directed graph
-        :param x: The rule
+
+        Parameters
+        ----------
+        di_graph : DiGraph
+            A directed graph
+        x : :class:`~pyformlang.indexed_grammar.ReducedRule`
+            The rule
         """
-        if x.getLeftTerm() in DG:
-            return len(DG[x.getLeftTerm()])
+        if x.get_left_term() in di_graph:
+            return len(di_graph[x.get_left_term()])
         else:
             return 0
 
     def order_by_edges(self, reverse=False):
-        """order_by_edges
-        Order using the number of edges.
-        :param reverse: Boolean to know if we should reverse the order
+        """Order using the number of edges.
+
+        Parameters
+        ----------
+        reverse : bool
+            Boolean to know if we should reverse the order
+
+        Returns
+        ----------
+        new_rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+            The rules ordered by number of edges
         """
-        DG = self.get_graph()
+        di_graph = self._get_graph()
         new_order = sorted(self.rules, key=lambda x:
-                           self.get_len_out(DG, x))
+                           self._get_len_out(di_graph, x))
         if reverse:
             new_order.reverse()
         return new_order
 
     def order_random(self):
-        """order_random The random ordering"""
+        """The random ordering
+
+        Returns
+        ----------
+        new_rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+            The rules ordered at random
+        """
         random.shuffle(self.rules)
         return self.rules

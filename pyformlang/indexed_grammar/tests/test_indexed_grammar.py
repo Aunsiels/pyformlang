@@ -13,7 +13,7 @@ from pyformlang.indexed_grammar import IndexedGrammar
 
 
 class TestIndexedGrammar(unittest.TestCase):
-
+    """ Tests the indexed grammar """
 
     def test_simple_ig_0(self):
 
@@ -34,9 +34,11 @@ class TestIndexedGrammar(unittest.TestCase):
         l_rules.append(DuplicationRule("B0", "A0", "C"))
         l_rules.append(EndRule("A0", "b"))
 
-        rules = Rules(l_rules)
-        i_grammar = IndexedGrammar(rules)
-        self.assertFalse(i_grammar.is_empty())
+        for i in range(9):
+           rules = Rules(l_rules, i)
+           i_grammar = IndexedGrammar(rules)
+           self.assertFalse(i_grammar.is_empty())
+           self.assertEqual(i_grammar.get_terminals(), {"end", "b", "epsilon"})
 
     def test_simple_ig_1(self):
 

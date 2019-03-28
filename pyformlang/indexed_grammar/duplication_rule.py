@@ -1,52 +1,85 @@
+"""
+A representation of a duplication rule, i.e. a rule that duplicates the stack
+"""
+
+from typing import Any, Iterable, AbstractSet
+
 from .reduced_rule import ReducedRule
 
 
 class DuplicationRule(ReducedRule):
-    """DuplicationRule
-    Represents a duplication rule, i.e. a rule of the form:
+    """Represents a duplication rule, i.e. a rule of the form:
         A[sigma] -> B[sigma] C[sigma]
+
+    Parameters
+    ----------
+    left_term : any
+        The non-terminal on the left of the rule (A here)
+    right_term0 : any
+        The first non-terminal on the right of the rule (B here)
+    right_term1 : any
+        The second non-terminal on the right of the rule (C here)
     """
 
-    def isDuplication(self):
-        """isDuplication Proves it is a duplication rule"""
+    def __init__(self, left_term, right_term0, right_term1):
+        self.left_term = left_term
+        self.right_terms = (right_term0, right_term1)
+
+    def is_duplication(self) -> bool:
+        """Whether the rule is a duplication rule or not
+
+        Returns
+        ----------
+        is_duplication : bool
+            Whether the rule is a duplication rule or not
+        """
         return True
 
-    def getRightTerms(self):
-        """getRightTerms Gives the non-terminals on the right of the rule
-        as a tuple"""
-        return self.rightTerms
+    def get_right_terms(self) -> Iterable[Any]:
+        """Gives the non-terminals on the right of the rule
 
-    def getLeftTerm(self):
-        """getLeftTerm Gives the non-terminal on the left of the rule"""
-        return self.leftTerm
-
-    def __init__(self, leftTerm, rightTerm0, rightTerm1):
-        """__init__
-        Initialises the duplication rule of the form:
-            A[sigma] -> B[sigma] C[sigma]
-        :param leftTerm: The non-terminal on the left of the rule (A here)
-        :param rightTerm0: The first non-terminal on the right of the rule
-        (B here)
-        :param rightTerm1: The second non-terminal on the right of the rule
-        (C here)
+        Returns
+        ---------
+        right_terms : iterable of any
+            The right terms of the rule
         """
-        self.leftTerm = leftTerm
-        self.rightTerms = (rightTerm0, rightTerm1)
+        return self.right_terms
 
-    def getNonTerminals(self):
-        """getNonTerminals Gives the set of non-terminals used in this rule"""
-        return [self.leftTerm, self.rightTerms[0], self.rightTerms[1]]
+    def get_left_term(self) -> Any:
+        """Gives the non-terminal on the left of the rule
 
-    def getTerminals(self):
-        """getTerminals Gets the terminals used in the rule"""
+        Returns
+        ---------
+        left_term : any
+            The left term of the rule
+        """
+        return self.left_term
+
+    def get_non_terminals(self) -> Iterable[Any]:
+        """Gives the set of non-terminals used in this rule
+
+        Returns
+        ---------
+        non_terminals : iterable of any
+            The non terminals used in this rule
+        """
+        return [self.left_term, self.right_terms[0], self.right_terms[1]]
+
+    def get_terminals(self) -> AbstractSet[Any]:
+        """Gets the terminals used in the rule
+
+        Returns
+        ----------
+        terminals : set of any
+            The terminals used in this rule
+        """
         return {}
 
     def __repr__(self):
-        """__repr__ Gives a string representation of the rule, ignoring the
-        sigmas"""
-        return self.leftTerm + " -> " + self.rightTerms[0] + \
-            " " + self.rightTerms[1]
+        """Gives a string representation of the rule, ignoring the sigmas"""
+        return self.left_term + " -> " + self.right_terms[0] + \
+            " " + self.right_terms[1]
 
     def __eq__(self, other):
-        return other.isDuplication() and other.getLeftTerm() == \
-            self.getLeftTerm() and other.getRightTerms() == self.getRightTerms()
+        return other.is_duplication() and other.get_left_term() == \
+            self.get_left_term() and other.get_right_terms() == self.get_right_terms()

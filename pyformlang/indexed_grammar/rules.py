@@ -1,114 +1,45 @@
+"""
+Representations of rules in a indexed grammar
+"""
+
+from typing import Iterable, Dict, Any
+
 from .production_rule import ProductionRule
 from .consumption_rule import ConsumptionRule
 from .rule_ordering import RuleOrdering
+from .reduced_rule import ReducedRule
 
 
 class Rules(object):
-    """Rules
-    Use to store a set of rules
+    """Store a set of rules and manipulate them
+
+    Parameters
+    ----------
+    rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+        A list of all the rules
+    optim : int
+        Optimization of the order of the rules
+        0 -> given order
+        1 -> reverse order
+        2 -> order by core number
+        3 -> reverse order of core number
+        4 -> reverse order by arborescence
+        5 -> order by arborescence
+        6 -> order by number of edges
+        7 -> reverse order by number of edges
+        8 -> random order
     """
 
-    def getRules(self):
-        """getRules Gets the non consumption rules"""
-        return self.rules
-
-    def get_length(self):
-        """get_length Get the total number of rules"""
-        return (len(self.rules), len(self.consumptionRules.values()))
-
-    def getConsumptionRules(self):
-        """getConsumptionRules Gets the consumption rules"""
-        return self.consumptionRules
-
-    def getTerminals(self):
-        """getTerminals Gets all the terminals used by all the rules"""
-        terminals = set()
-        for temp_rule in self.consumptionRules.values():
-            for rule in temp_rule:
-                terminals = terminals.union(rule.getTerminals())
-        for rule in self.rules:
-            terminals = terminals.union(rule.getTerminals())
-        return list(terminals)
-
-    def getNonTerminals(self):
-        """getNonTerminals Gets all the non-terminals used by all the rules"""
-        terminals = set()
-        for temp_rule in self.consumptionRules.values():
-            for rule in temp_rule:
-                terminals = terminals.union(set(rule.getNonTerminals()))
-        for rule in self.rules:
-            terminals = terminals.union(set(rule.getNonTerminals()))
-        return list(terminals)
-
-    def getNonTerminalsList(self):
-        terminals = list()
-        for temp_rule in self.consumptionRules.values():
-            for rule in temp_rule:
-                terminals = terminals + rule.getNonTerminals()
-        for rule in self.rules:
-            terminals = terminals + rule.getNonTerminals()
-        return terminals
-
-    def remove_production(self, left, right, prod):
-        """remove_production
-        Remove the production rule:
-            left[sigma] -> right[prod sigma]
-        :param left: The left non-terminal in the rule
-        :param right: The right non-terminal in the rule
-        :param prod: The production used in the rule
-        """
-        self.rules = list(filter(lambda x: not(x.isProduction() and
-                                 x.getLeftTerm() == left and
-                                 x.getRightTerm() == right and
-                                 x.getProduction() == prod), self.rules))
-
-    def add_production(self, left, right, prod):
-        """add_production
-        Add the production rule:
-            left[sigma] -> right[prod sigma]
-        :param left: The left non-terminal in the rule
-        :param right: The right non-terminal in the rule
-        :param prod: The production used in the rule
-        """
-        self.rules.append(ProductionRule(left, right, prod))
-
-    def remove_consumption(self, prod, left, right):
-        """remove_consumption
-        Remove the consumption rule:
-            left[prod sigma] -> right[sigma]
-        :param prod: The production used in the rule
-        :param left: The left non-terminal in the rule
-        :param right: The right non-terminal in the rule
-        """
-        self.rules = list(filter(lambda x: not(x.isConsumption() and
-                                 x.getLeftTerm() == left and
-                                 x.getRight() == right and
-                                 x.getF() == prod), self.rules))
-
-    def add_consumption(self, prod, left, right):
-        """add_consumption
-        Add the consumption rule:
-            left[prod sigma] -> right[sigma]
-        :param prod: The production used in the rule
-        :param left: The left non-terminal in the rule
-        :param right: The right non-terminal in the rule
-        """
-        self.rules.append(ConsumptionRule(prod, left, right))
-
-    def __init__(self, rules, optim=7):
-        """__init__
-        Initializes the rules.
-        :param rules: A list of all the rules
-        """
+    def __init__(self, rules: Iterable[ReducedRule], optim: int=7):
         self.rules = []
         self.consumptionRules = dict()
         for rule in rules:
             # We separate consumption rule from other
-            if rule.isConsumption():
-                temp = self.consumptionRules.setdefault(rule.getF(), [])
+            if rule.is_consumption():
+                temp = self.consumptionRules.setdefault(rule.get_f(), [])
                 if rule not in temp:
                     temp.append(rule)
-                self.consumptionRules[rule.getF()] = temp
+                self.consumptionRules[rule.get_f()] = temp
             else:
                 if rule not in self.rules:
                     self.rules.append(rule)
@@ -129,3 +60,100 @@ class Rules(object):
             self.rules = ro.order_by_edges(reverse=True)
         elif optim == 8:
             self.rules = ro.order_random()
+
+    def get_rules(self) -> Iterable[ReducedRule]:
+        """Gets the non consumption rules
+
+        Returns
+        ----------
+        non_consumption_rules :  iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+            The non consumption rules
+        """
+        return self.rules
+
+    def get_length(self) -> (int, int):
+        """Get the total number of rules
+
+        Returns
+        ---------
+        number_rules : couple of int
+            A couple with first the number of non consumption rules and then\
+                the number of consumption rules
+        """
+        return (len(self.rules), len(self.consumptionRules.values()))
+
+    def get_consumption_rules(self) -> Dict[Any, ConsumptionRule]:
+        """Gets the consumption rules
+
+        Returns
+        ----------
+        consumption_rules : dict of any to :class:`~pyformlang.indexed_grammar.ConsumptionRule`
+            A dictionary contains the consumption rules gathered by consumed symbols
+        """
+        return self.consumptionRules
+
+    def get_terminals(self) -> Iterable[Any]:
+        """Gets all the terminals used by all the rules
+
+        Returns
+        ----------
+        terminals : iterable of any
+            The terminals used in the rules
+        """
+        terminals = set()
+        for temp_rule in self.consumptionRules.values():
+            for rule in temp_rule:
+                terminals = terminals.union(rule.get_terminals())
+        for rule in self.rules:
+            terminals = terminals.union(rule.get_terminals())
+        return terminals
+
+    def get_non_terminals(self) -> Iterable[Any]:
+        """Gets all the non-terminals used by all the rules
+
+        Returns
+        ----------
+        non_terminals : iterable of any
+            The non terminals used in the rule
+        """
+        terminals = set()
+        for temp_rule in self.consumptionRules.values():
+            for rule in temp_rule:
+                terminals = terminals.union(set(rule.get_non_terminals()))
+        for rule in self.rules:
+            terminals = terminals.union(set(rule.get_non_terminals()))
+        return list(terminals)
+
+    def remove_production(self, left: Any, right: Any, prod: Any):
+        """Remove the production rule:
+            left[sigma] -> right[prod sigma]
+
+        Parameters
+        -----------
+        left : any
+            The left non-terminal in the rule
+        right : any
+            The right non-terminal in the rule
+        prod : any
+            The production used in the rule
+        """
+        self.rules = list(filter(lambda x: not(x.is_production() and
+                                 x.get_left_term() == left and
+                                 x.get_right_term() == right and
+                                 x.get_production() == prod), self.rules))
+
+    def add_production(self, left: Any, right: Any, prod: Any):
+        """Add the production rule:
+            left[sigma] -> right[prod sigma]
+
+        Parameters
+        -----------
+        left : any
+            The left non-terminal in the rule
+        right : any
+            The right non-terminal in the rule
+        prod : any
+            The production used in the rule
+        """
+        self.rules.append(ProductionRule(left, right, prod))
+
