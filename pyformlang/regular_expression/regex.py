@@ -331,11 +331,19 @@ def preprocess_regex(regex: str) -> str:
     res = []
     pos = 0
     for current_c in regex:
-        if not current_c.isalnum() and current_c != " " and \
+        if (current_c in CONCATENATION_SYMBOLS \
+                or current_c in UNION_SYMBOLS \
+                or current_c in KLEENE_STAR_SYMBOLS \
+                or current_c in EPSILON_SYMBOLS \
+                or current_c in [")", "("]) and \
                 pos != 0 and res[-1] != " ":
             res.append(" ")
         res.append(current_c)
-        if not current_c.isalnum() and current_c != " " and \
+        if (current_c in CONCATENATION_SYMBOLS \
+                or current_c in UNION_SYMBOLS \
+                or current_c in KLEENE_STAR_SYMBOLS \
+                or current_c in EPSILON_SYMBOLS \
+                or current_c in [")", "("]) and \
                 pos != len(regex) - 1 and regex[pos+1] != " ":
             res.append(" ")
         pos += 1

@@ -59,6 +59,9 @@ class TestRegex(unittest.TestCase):
             Regex("(a b))")
         with self.assertRaises(MisformedRegexError):
             Regex("| a b")
+        regex = Regex("(a-|a a b)")
+        self.assertEqual(regex.get_number_symbols(), 4)
+        self.assertEqual(regex.get_number_operators(), 3)
 
     def test_to_enfa0(self):
         """ Tests the transformation to a regex """
