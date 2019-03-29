@@ -20,14 +20,13 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         A finite set of states
     input_symbols : set of :class:`~pyformlang.finite_automaton.Symbol`, optional
         A finite set of input symbols
-    transition_function : :class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`
-, optional
+    transition_function : :class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`\
+        , optional
         Takes as arguments a state and an input symbol and returns a state.
     start_state : :class:`~pyformlang.finite_automaton.State`, optional
         A start state, element of states
     final_states : set of :class:`~pyformlang.finite_automaton.State`, optional
         A set of final or accepting states. It is a subset of states.
-
     """
 
     def accepts(self, word: Iterable[Symbol]) -> bool:

@@ -19,6 +19,29 @@ Finite Automaton
 .. automodule:: pyformlang.finite_automaton
    :members:
 
+Regular Expression
+==================
+
+.. automodule:: pyformlang.regular_expression
+   :members:
+
+Context Free Grammar
+====================
+
+.. automodule:: pyformlang.cfg
+   :members:
+
+Push-Down Automata
+==================
+
+.. automodule:: pyformlang.pda
+   :members:
+
+Indexed Grammar
+===============
+
+.. automodule:: pyformlang.indexed_grammar
+   :members:
 
 Indices and tables
 ==================
