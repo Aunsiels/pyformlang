@@ -421,6 +421,51 @@ class TestCFG(unittest.TestCase):
         self.assertFalse(cfg.contains([ter_b, ter_c, ter_a]))
         self.assertFalse(cfg.contains([ter_b, ter_b, ter_c, ter_a, ter_a]))
 
+    def test_generation_words(self):
+        """ Tests the generation of word """
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        var_S = Variable("S")
+        productions = {Production(var_S, [ter_a, var_S, ter_b]),
+                       Production(var_S, [])}
+        cfg = CFG(productions=productions, start_symbol=var_S)
+        words0 = list(cfg.get_words(max_length=0))
+        self.assertIn([], words0)
+        self.assertEqual(len(words0), 1)
+        words1 = list(cfg.get_words(max_length=1))
+        self.assertIn([], words1)
+        self.assertEqual(len(words1), 1)
+        words2 = list(cfg.get_words(max_length=2))
+        self.assertIn([], words2)
+        self.assertIn([ter_a, ter_b], words2)
+        self.assertEqual(len(words2), 2)
+        words3 = list(cfg.get_words(max_length=3))
+        self.assertIn([], words3)
+        self.assertIn([ter_a, ter_b], words3)
+        self.assertEqual(len(words3), 2)
+        words4 = list(cfg.get_words(max_length=4))
+        self.assertIn([], words4)
+        self.assertIn([ter_a, ter_a, ter_b, ter_b], words4)
+        self.assertEqual(len(words4), 3)
+
+    def test_generation_words2(self):
+        """ Tests the generation of word """
+        ter_a = Terminal("a")
+        var_S = Variable("S")
+        var_S1 = Variable("S1")
+        var_S2 = Variable("S2")
+        productions = {Production(var_S, [var_S1, ter_a]),
+                       Production(var_S1, [var_S2, ter_a]),
+                       Production(var_S1, []),
+                       Production(var_S2, []),
+                       Production(var_S, [])}
+        cfg = CFG(productions=productions, start_symbol=var_S)
+        words0 = list(cfg.get_words())
+        self.assertIn([], words0)
+        self.assertIn([ter_a], words0)
+        self.assertIn([ter_a, ter_a], words0)
+        self.assertEqual(len(words0), 3)
+
 
     def test_intersection(self):
         """ Tests the intersection with a regex """
