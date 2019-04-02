@@ -466,6 +466,22 @@ class TestCFG(unittest.TestCase):
         self.assertIn([ter_a, ter_a], words0)
         self.assertEqual(len(words0), 3)
 
+    def test_finite(self):
+        """ Tests whether a grammar is finite or not """
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        var_S = Variable("S")
+        var_A = Variable("A")
+        var_B = Variable("B")
+        prod0 = {Production(var_S, [var_A, var_B]),
+                 Production(var_A, [ter_a]),
+                 Production(var_B, [ter_b])}
+        cfg = CFG(productions=prod0, start_symbol=var_S)
+        self.assertTrue(cfg.is_finite())
+        prod0.add(Production(var_A, [var_S]))
+        cfg = CFG(productions=prod0, start_symbol=var_S)
+        self.assertFalse(cfg.is_finite())
+
 
     def test_intersection(self):
         """ Tests the intersection with a regex """

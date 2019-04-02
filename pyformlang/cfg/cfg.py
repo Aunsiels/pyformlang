@@ -2,6 +2,8 @@
 
 from typing import AbstractSet, List, Iterable, Tuple, Dict, Any
 
+import networkx as nx
+
 from .variable import Variable
 from .terminal import Terminal
 from .production import Production
@@ -756,6 +758,26 @@ class CFG(object):
             if total_no_modification > current_length / 2:
                 return
 
+    def is_finite(self) -> bool:
+        """ Tests if the grammar is finite or not
+
+        Returns
+        ----------
+        is_finite : bool
+            Whether the grammar is finite or not
+        """
+        normal = self.to_normal_form()
+        di_graph = nx.DiGraph()
+        for production in normal.get_productions():
+            body = production.get_body()
+            if len(body) == 2:
+                di_graph.add_edge(production.get_head(), body[0])
+                di_graph.add_edge(production.get_head(), body[1])
+        try:
+            nx.find_cycle(di_graph, orientation="original")
+        except:
+            return True
+        return False
 
 def to_pda_object(cfgobject: CFGObject, to_type) -> "pda.Symbol":
     """ Turns the object to a PDA symbol """
