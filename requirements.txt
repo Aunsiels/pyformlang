@@ -7,3 +7,4 @@ wheel
 twine
 Tqdm
 networkx
+sphinx_rtd_theme
