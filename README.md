@@ -1,6 +1,7 @@
 # pyformlang
 
 [![Build Status](https://jenkins.r2.enst.fr/job/pyformlang/job/master/badge/icon)](https://jenkins.r2.enst.fr/job/pyformlang/job/master/)
+[![pypi](https://img.shields.io/pypi/v/pyformlang.svg)](https://pypi.org/project/pyformlang/)
 
 A python library to manipulate formal grammar. In general, it can be used to better understand algorithms in a formal way.
 
