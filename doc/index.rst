@@ -11,8 +11,9 @@ Welcome to pyformlang's documentation!
    :caption: Contents:
 
    installation
+   usage
    modules/modules
-   authors.rst
+   authors
 
 Indices and tables
 ==================
