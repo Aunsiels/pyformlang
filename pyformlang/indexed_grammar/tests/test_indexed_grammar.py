@@ -221,3 +221,76 @@ class TestIndexedGrammar(unittest.TestCase):
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
         self.assertFalse(i_grammar.is_empty())
+
+    def test_simple_ig6(self):
+        """ Test number 6 """
+        l_rules = []
+        l_rules.append(DuplicationRule("S", "S", "B"))
+        rules = Rules(l_rules)
+        i_grammar = IndexedGrammar(rules)
+        self.assertTrue(i_grammar.is_empty())
+
+        l_rules = []
+        l_rules.append(DuplicationRule("S", "B", "S"))
+        rules = Rules(l_rules)
+        i_grammar = IndexedGrammar(rules)
+        self.assertTrue(i_grammar.is_empty())
+
+        l_rules = []
+        l_rules.append(DuplicationRule("S", "A", "B"))
+        l_rules.append(EndRule("A", "a"))
+        l_rules.append(EndRule("B", "b"))
+        rules = Rules(l_rules)
+        i_grammar = IndexedGrammar(rules)
+        self.assertFalse(i_grammar.is_empty())
+
+    def test_simple_ig7(self):
+        """ Test 7 """
+        l_rules = []
+        l_rules.append(ProductionRule("S", "A", "end"))
+        l_rules.append(ConsumptionRule("end", "A", "S"))
+        l_rules.append(DuplicationRule("A", "B", "C"))
+        l_rules.append(EndRule("B", "b"))
+        l_rules.append(EndRule("C", "c"))
+        rules = Rules(l_rules)
+        i_grammar = IndexedGrammar(rules)
+        self.assertFalse(i_grammar.is_empty())
+
+    def test_simple_ig8(self):
+        """ Tests 8 """
+        l_rules = []
+        l_rules.append(ProductionRule("S", "Q", "end"))
+        l_rules.append(ProductionRule("Q", "A", "end"))
+        l_rules.append(ConsumptionRule("end", "A", "B"))
+        l_rules.append(ConsumptionRule("end", "A", "C"))
+        l_rules.append(ConsumptionRule("end", "A", "D"))
+        l_rules.append(DuplicationRule("C", "G", "E"))
+        l_rules.append(DuplicationRule("E", "G", "F"))
+        l_rules.append(DuplicationRule("F", "G", "G"))
+        l_rules.append(EndRule("G", "G"))
+        rules = Rules(l_rules)
+        i_grammar = IndexedGrammar(rules)
+        self.assertFalse(i_grammar.is_empty())
+
+    def test_simple_ig9(self):
+        """ Tests 9 {a^n b^n c^n}"""
+        l_rules = []
+        l_rules.append(ProductionRule("S", "T", "g"))
+        l_rules.append(ProductionRule("T", "T", "f"))
+        l_rules.append(DuplicationRule("T", "AB", "C"))
+        l_rules.append(DuplicationRule("AB", "A", "B"))
+        l_rules.append(ConsumptionRule("f", "A", "A2"))
+        l_rules.append(ConsumptionRule("f", "B", "B2"))
+        l_rules.append(ConsumptionRule("f", "C", "C2"))
+        l_rules.append(DuplicationRule("A2", "Afinal", "A"))
+        l_rules.append(DuplicationRule("B2", "Bfinal", "B"))
+        l_rules.append(DuplicationRule("C2", "Cfinal", "C"))
+        l_rules.append(EndRule("Afinal", "a"))
+        l_rules.append(EndRule("Bfinal", "b"))
+        l_rules.append(EndRule("Cfinal", "c"))
+        l_rules.append(ConsumptionRule("g", "A", "Afinal"))
+        l_rules.append(ConsumptionRule("g", "B", "Bfinal"))
+        l_rules.append(ConsumptionRule("g", "C", "Cfinal"))
+        rules = Rules(l_rules)
+        i_grammar = IndexedGrammar(rules)
+        self.assertFalse(i_grammar.is_empty())

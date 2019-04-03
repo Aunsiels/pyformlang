@@ -104,6 +104,7 @@ class IndexedGrammar(object):
         # End condition
         if frozenset() in self.marked["S"]:
             return (was_modified, True)
+        # Is it useful?
         if rule.get_right_term() in marked_symbols:
             for s in l_temp:
                 if rule.get_right_term() == s[0]:
