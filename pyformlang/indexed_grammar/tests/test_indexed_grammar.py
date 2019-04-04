@@ -294,3 +294,20 @@ class TestIndexedGrammar(unittest.TestCase):
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
         self.assertFalse(i_grammar.is_empty())
+
+    def test_start_symbol(self):
+        """ Tests the change of the start symbol """
+        l_rules = []
+        l_rules.append(EndRule("S", "s"))
+        rules = Rules(l_rules)
+        i_grammar = IndexedGrammar(rules, "S2")
+        self.assertTrue(i_grammar.is_empty())
+
+        i_grammar = IndexedGrammar(rules, "S")
+        self.assertFalse(i_grammar.is_empty())
+
+        l_rules = []
+        l_rules.append(EndRule("S2", "s"))
+        rules = Rules(l_rules)
+        i_grammar = IndexedGrammar(rules, start_variable="S2")
+        self.assertFalse(i_grammar.is_empty())

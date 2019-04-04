@@ -15,12 +15,18 @@ class IndexedGrammar(object):
     ----------
     rules : :class:`~pyformlang.indexed_grammar.Rules`
         The rules of the grammar, in reduced form put into a Rule
+    start_variable : Any, optional
+        The start symbol of the indexed grammar
     """
 
-    def __init__(self, rules: Rules):
+    def __init__(self,
+                 rules: Rules,
+                 start_variable: Any="S"):
         self.rules = rules
+        self.start_variable=start_variable
         # Precompute all non-terminals
         self.non_terminals = rules.get_non_terminals()
+        self.non_terminals.append(self.start_variable)
         # We cache the marked items in case of future update of the query
         self.marked = dict()
         # Initialize the marked symboles
@@ -70,7 +76,7 @@ class IndexedGrammar(object):
                     else:
                         self.marked[rule.get_left_term()].add(temp)
                     # Stop condition, no need to continuer
-                    if rule.get_left_term() == "S" and len(temp) == 0:
+                    if rule.get_left_term() == self.start_variable and len(temp) == 0:
                         need_stop = True
             for temp in right_term_marked1:
                 self.marked[rule.get_right_terms()[1]].add(temp)
@@ -102,7 +108,7 @@ class IndexedGrammar(object):
                                    self.marked[rule.get_left_term()],
                                    self.marked[rule.get_right_term()])
         # End condition
-        if frozenset() in self.marked["S"]:
+        if frozenset() in self.marked[self.start_variable]:
             return (was_modified, True)
         # Is it useful?
         if rule.get_right_term() in marked_symbols:
@@ -113,7 +119,7 @@ class IndexedGrammar(object):
                                 self.marked[rule.get_left_term()]:
                             was_modified = True
                             self.marked[rule.get_left_term()].add(sc)
-                            if rule.get_left_term() == "S" and len(sc) == 0:
+                            if rule.get_left_term() == self.start_variable and len(sc) == 0:
                                 return (was_modified, True)
         # Edge case
         if frozenset() in self.marked[rule.get_right_term()]:
@@ -148,6 +154,8 @@ class IndexedGrammar(object):
                     if prod_res[1]:
                         return False
                     was_modified |= prod_res[0]
+        if frozenset() in self.marked[self.start_variable]:
+            return False
         return True
 
 
