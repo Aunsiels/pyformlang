@@ -10,6 +10,7 @@ from .epsilon import Epsilon
 from .transition_function import TransitionFunction, DuplicateTransitionError
 from .nondeterministic_transition_function import NondeterministicTransitionFunction
 from .epsilon_nfa import EpsilonNFA
+from .finite_automaton import FiniteAutomaton
 
 __all__ = ["DeterministicFiniteAutomaton",
            "NondeterministicFiniteAutomaton",
@@ -19,4 +20,5 @@ __all__ = ["DeterministicFiniteAutomaton",
            "Epsilon",
            "TransitionFunction",
            "NondeterministicTransitionFunction",
-           "DuplicateTransitionError"]
+           "DuplicateTransitionError",
+           "FiniteAutomaton"]

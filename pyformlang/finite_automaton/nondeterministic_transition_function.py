@@ -123,3 +123,18 @@ class NondeterministicTransitionFunction(object):
                 if len(self._transitions[s_from][symb]) > 1:
                     return False
         return True
+
+    def get_edges(self):
+        """ Gets the edges
+
+        Returns
+        ----------
+        edges : generator of (:class:`~pyformlang.finite_automaton.State`, \
+            :class:`~pyformlang.finite_automaton.Symbol`,\
+            :class:`~pyformlang.finite_automaton.State`)
+            A generator of edges
+        """
+        for state in self._transitions:
+            for symbol in self._transitions[state]:
+                for next_state in self._transitions[state][symbol]:
+                    yield (state, symbol, next_state)

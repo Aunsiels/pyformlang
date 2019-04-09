@@ -14,7 +14,7 @@ class FST(object):
         self._output_symbols = set()  # Set of output symnols
         # Dict from _states x _input_symbols U {epsilon} into a subset of _states X _output_symbols*
         self._delta = dict()
-        self._start_state = None
+        self._start_states = set()
         self._final_states = set()  # _final_statesinal states
 
     def get_number_states(self) -> int:
@@ -67,6 +67,17 @@ class FST(object):
         """
         return sum([len(x) for x in self._delta.values()])
 
+    def get_number_start_states(self) -> int:
+        """ Get the number of start states in the FST
+
+        Returns
+        ----------
+        n_start_states : int
+            The number of start states
+        """
+        return len(self._start_states)
+
+
     def add_transition(self, s_from: Any,
                        input_symbol: Any,
                        s_to: Any,
@@ -97,8 +108,8 @@ class FST(object):
         else:
             self._delta[head] = [(s_to, output_symbols)]
 
-    def set_start_state(self, start_state: Any):
-        """ Sets the start state
+    def add_start_state(self, start_state: Any):
+        """ Add a start state
 
         Parameters
         ----------
@@ -106,7 +117,7 @@ class FST(object):
             The start state
         """
         self._states.add(start_state)
-        self._start_state = start_state
+        self._start_states.add(start_state)
 
     def add_final_state(self, final_state: Any):
         """ Add a final state
@@ -136,7 +147,9 @@ class FST(object):
             The translation of the input word
         """
         # (remaining in the input, generated so far, current_state)
-        to_process = [(input_word, [], self._start_state)]
+        to_process = []
+        for start_state in self._start_states:
+            to_process.append((input_word, [], start_state))
         while to_process:
             remaining, generated, current_state = to_process.pop()
             if len(remaining) == 0 and current_state in self._final_states:
@@ -150,9 +163,10 @@ class FST(object):
             if max_length == -1 or len(generated) < max_length:
                 for next_state, output_string in self._delta.get((current_state, "epsilon"),
                                                                  []):
-                    to_process.append((remaining[1:], generated + output_string, next_state))
+                    to_process.append((remaining, generated + output_string, next_state))
 
-    def intersect(self, indexed_grammar):
+    def intersection(self, indexed_grammar):
+        """ Compute the intersection with an other object """
         rules = indexed_grammar.rules
         new_rules = []
         terminals = rules.get_terminals()
@@ -222,10 +236,11 @@ class FST(object):
                 str((p, "epsilon", p)),
                 "epsilon"))
         for p in self._final_states:
-            new_rules.append(DuplicationRule(
-                "S",
-                str((self._start_state, "S", p)),
-                "T"))
+            for start_state in self._start_states:
+                new_rules.append(DuplicationRule(
+                    "S",
+                    str((start_state, "S", p)),
+                    "T"))
         print(len(new_rules))
         rules = Rules(new_rules)
         return IndexedGrammar(rules).remove_useless_rules()

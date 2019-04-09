@@ -309,6 +309,27 @@ class IndexedGrammar(object):
         rules = Rules(l_rules, self.rules.optim)
         return IndexedGrammar(rules)
 
+    def intersection(self, other: Any) -> "IndexedGrammar":
+        """ Computes the intersection of the current indexed grammar with the other object
+
+        Parameters
+        ----------
+        other : any
+            The object to intersect with
+
+        Returns
+        ----------
+        i_grammar : :class:`~pyformlang.indexed_grammar.IndexedGrammar`
+            The indexed grammar which useless rules
+        """
+        import pyformlang
+        if isinstance(other, pyformlang.regular_expression.Regex):
+            other = other.to_epsilon_nfa()
+        if isinstance(other, pyformlang.finite_automaton.FiniteAutomaton):
+            fst = other.to_fst()
+            return fst.intersection(self)
+
+
 def exists(l, f):
     """exists
     Check whether at least an element x of l is True for f(x)
@@ -344,8 +365,7 @@ def addrec_bis(l_sets, markedLeft, markedRight):
     return was_modified
 
 
-def addrec_ter(l_sets, markedLeft, markedRight, temp=frozenset(),
-               temp_in=frozenset()):
+def addrec_ter(l_sets, markedLeft, markedRight):
     """addrec
     Explores all possible combination of consumption rules to mark a
     production rule.
@@ -357,28 +377,40 @@ def addrec_ter(l_sets, markedLeft, markedRight, temp=frozenset(),
     left of the production rule
     :param markedRight: Sets which are marked for the non-terminal on the
     right of the production rule
-    :param temp: Contains the union of all sets considered up to that point
-    :param temp_in: Contains the non-terminals on the left of consumption
-    rules which have been considered up to that point
     :return Whether an element was actually marked
     """
     # End condition, nothing left to process
-    if len(l_sets) == 0:
-        # Check if at least one non-terminal was considered, then if the set
-        # of non-terminals considered is marked of the right non-terminal in
-        # the production rule, then if a new set is marked or not
-        if temp not in markedLeft:
-            markedLeft.add(temp)
-            return True
-        return False
+    temp_in = [x[0] for x in l_sets]
+    exists_after = [exists(l_sets[index + 1:], lambda x: x[0] == l_sets[index][0])
+                    for index in range(len(l_sets))]
+    exists_before = [l_sets[index][0] in temp_in[:index]
+                     for index in range(len(l_sets))]
     res = False
-    if l_sets[0][0] in temp_in or \
-            exists(l_sets[1:], lambda x: x[0] == l_sets[0][0]):
-        res |= addrec_ter(l_sets[1:], markedLeft, markedRight, temp, temp_in)
-    if l_sets[0][0] not in temp_in:
-        # For all sets which were marked for the current comsumption rule
-        for s in l_sets[0][1]:
-            res |= addrec_ter(l_sets[1:], markedLeft, markedRight,
-                              temp.union(s),
-                              temp_in.union({l_sets[0][0]}))
+    # index, temp
+    to_process = []
+    to_process.append((0, frozenset()))
+    done = set()
+    while to_process:
+        index, new_temp = to_process.pop()
+        if index >= len(l_sets):
+            # Check if at least one non-terminal was considered, then if the set
+            # of non-terminals considered is marked of the right non-terminal in
+            # the production rule, then if a new set is marked or not
+            new_temp = frozenset(new_temp)
+            if new_temp not in markedLeft:
+                markedLeft.add(new_temp)
+                res = True
+            continue
+        if exists_before[index] or exists_after[index]:
+            to_append = (index + 1, new_temp)
+            if to_append not in done:
+                done.add(to_append)
+                to_process.append(to_append)
+        if not exists_before[index]:
+            # For all sets which were marked for the current comsumption rule
+            for s in l_sets[index][1]:
+                to_append = (index + 1, new_temp.union(s))
+                if to_append not in done:
+                    done.add(to_append)
+                    to_process.append(to_append)
     return res

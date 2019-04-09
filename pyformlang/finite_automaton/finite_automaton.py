@@ -283,6 +283,30 @@ class FiniteAutomaton(object):
         symbol = to_symbol(symbol)
         self._input_symbols.add(symbol)
 
+    def to_fst(self) -> "FST":
+        """ Turns the finite automaton into a finite state transducer
+
+        The transducers accepts only the words in the language of the automaton\
+            and output the input word
+
+        Returns
+        ----------
+        fst : :class:`~pyformlang.fst.FST`
+            The equivalent FST
+        """
+        from pyformlang.fst import FST
+        fst = FST()
+        for start_state in self._start_state:
+            fst.add_start_state(start_state.get_value())
+        for final_state in self._final_states:
+            fst.add_final_state(final_state.get_value())
+        for s_from, symb_by, s_to in self._transition_function.get_edges():
+            fst.add_transition(s_from.get_value(),
+                               symb_by.get_value(),
+                               s_to.get_value(),
+                               [symb_by.get_value()])
+        return fst
+
 
 def to_state(given: Any) -> State:
     """ Transforms the input into a state

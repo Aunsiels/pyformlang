@@ -50,6 +50,7 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa.add_transition(state0, symb, state1)
         self.assertEqual(dfa.get_number_states(), 2)
         self.assertEqual(dfa.get_number_symbols(), 1)
+        self.assertEqual(len(list(dfa._transition_function.get_edges())), 1)
 
     def test_add_remove_start_final(self):
         """ Tests the addition and removal of initial state and final states

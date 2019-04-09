@@ -29,6 +29,7 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertEqual(len(enfa.eclose(states[2])), 3)
         self.assertEqual(len(enfa.eclose(states[5])), 2)
         self.assertEqual(len(enfa.eclose(states[6])), 1)
+        self.assertEqual(len(list(enfa._transition_function.get_edges())), 7)
         self.assertEqual(enfa.remove_transition(states[1], epsilon, states[4]),
                          1)
         self.assertFalse(enfa.is_deterministic())
@@ -389,6 +390,73 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(enfa.is_deterministic())
         self.assertEqual(enfa.get_number_states(), 0)
         self.assertFalse(enfa.accepts([]))
+
+    def test_to_fst(self):
+        """ Tests to turn a ENFA into a FST """
+        enfa = EpsilonNFA()
+        fst = enfa.to_fst()
+        self.assertEqual(fst.get_number_states(), 0)
+        self.assertEqual(fst.get_number_final_states(), 0)
+        self.assertEqual(fst.get_number_start_states(), 0)
+        self.assertEqual(fst.get_number_input_symbols(), 0)
+        self.assertEqual(fst.get_number_output_symbols(), 0)
+        self.assertEqual(fst.get_number_transitions(), 0)
+
+        s0 = State("q0")
+        s0bis = State("q0bis")
+        enfa.add_start_state(s0)
+        enfa.add_start_state(s0bis)
+        fst = enfa.to_fst()
+        self.assertEqual(fst.get_number_states(), 2)
+        self.assertEqual(fst.get_number_final_states(), 0)
+        self.assertEqual(fst.get_number_start_states(), 2)
+        self.assertEqual(fst.get_number_input_symbols(), 0)
+        self.assertEqual(fst.get_number_output_symbols(), 0)
+        self.assertEqual(fst.get_number_transitions(), 0)
+
+        sfinal = State("qfinal")
+        sfinalbis = State("qfinalbis")
+        enfa.add_final_state(sfinal)
+        enfa.add_final_state(sfinalbis)
+        fst = enfa.to_fst()
+        self.assertEqual(fst.get_number_states(), 4)
+        self.assertEqual(fst.get_number_final_states(), 2)
+        self.assertEqual(fst.get_number_start_states(), 2)
+        self.assertEqual(fst.get_number_input_symbols(), 0)
+        self.assertEqual(fst.get_number_output_symbols(), 0)
+        self.assertEqual(fst.get_number_transitions(), 0)
+
+        enfa.add_transition(s0, Symbol("a"), sfinal)
+        enfa.add_transition(sfinal, Symbol("b"), sfinal)
+        enfa.add_transition(s0, Symbol("c"), sfinalbis)
+        fst = enfa.to_fst()
+        self.assertEqual(fst.get_number_states(), 4)
+        self.assertEqual(fst.get_number_final_states(), 2)
+        self.assertEqual(fst.get_number_start_states(), 2)
+        self.assertEqual(fst.get_number_input_symbols(), 3)
+        self.assertEqual(fst.get_number_output_symbols(), 3)
+        self.assertEqual(fst.get_number_transitions(), 3)
+
+        enfa.add_transition(s0, Epsilon(), sfinalbis)
+        fst = enfa.to_fst()
+        self.assertEqual(fst.get_number_states(), 4)
+        self.assertEqual(fst.get_number_final_states(), 2)
+        self.assertEqual(fst.get_number_start_states(), 2)
+        self.assertEqual(fst.get_number_input_symbols(), 3)
+        self.assertEqual(fst.get_number_output_symbols(), 3)
+        self.assertEqual(fst.get_number_transitions(), 4)
+
+        trans0 = list(fst.translate(["a"]))
+        self.assertEqual(trans0, [["a"]])
+
+        trans0 = list(fst.translate(["a", "b", "b"]))
+        self.assertEqual(trans0, [["a", "b", "b"]])
+
+        trans0 = list(fst.translate(["b", "b"]))
+        self.assertEqual(trans0, [])
+
+        trans0 = list(fst.translate(["c"]))
+        self.assertEqual(trans0, [["c"]])
 
 
 def get_digits_enfa():

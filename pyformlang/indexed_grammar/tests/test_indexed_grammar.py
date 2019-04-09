@@ -10,6 +10,7 @@ from pyformlang.indexed_grammar import EndRule
 from pyformlang.indexed_grammar import ProductionRule
 from pyformlang.indexed_grammar import DuplicationRule
 from pyformlang.indexed_grammar import IndexedGrammar
+from pyformlang.regular_expression import Regex
 
 
 class TestIndexedGrammar(unittest.TestCase):
@@ -365,3 +366,17 @@ class TestIndexedGrammar(unittest.TestCase):
         self.assertFalse(i_grammar.is_empty())
         self.assertEqual(i_grammar2.non_terminals, i_grammar2.get_generating_non_terminals())
         self.assertEqual(i_grammar2.non_terminals, i_grammar2.get_reachable_non_terminals())
+
+    def test_intersection(self):
+        """ Tests the intersection of indexed grammar with regex """
+        l_rules = []
+        l_rules.append(ProductionRule("S", "D", "f"))
+        l_rules.append(DuplicationRule("D", "A", "B"))
+        l_rules.append(ConsumptionRule("f", "A", "Afinal"))
+        l_rules.append(ConsumptionRule("f", "B", "Bfinal"))
+        l_rules.append(EndRule("Afinal", "a"))
+        l_rules.append(EndRule("Bfinal", "b"))
+        rules = Rules(l_rules)
+        indexed_grammar = IndexedGrammar(rules)
+        i_inter = indexed_grammar.intersection(Regex("(a|b)*"))
+        self.assertFalse(i_inter.is_empty())

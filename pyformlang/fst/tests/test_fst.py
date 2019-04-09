@@ -19,7 +19,7 @@ class TestFST(unittest.TestCase):
         self.assertEqual(fst.get_number_transitions(), 0)
         self.assertEqual(fst.get_number_final_states(), 0)
 
-        fst.set_start_state("q0")
+        fst.add_start_state("q0")
         self.assertEqual(fst.get_number_states(), 1)
 
         fst.add_transition("q0", "a", "q1", ["bc"])
@@ -53,7 +53,7 @@ class TestFST(unittest.TestCase):
     def test_translate(self):
         """ Test a translation """
         fst = FST()
-        fst.set_start_state("q0")
+        fst.add_start_state("q0")
         translation = list(fst.translate(["a"]))
         self.assertEqual(len(translation), 0)
 
@@ -79,7 +79,7 @@ class TestFST(unittest.TestCase):
         rules = Rules(l_rules)
         indexed_grammar = IndexedGrammar(rules)
         fst = FST()
-        intersection = fst.intersect(indexed_grammar)
+        intersection = fst.intersection(indexed_grammar)
         self.assertTrue(intersection.is_empty())
 
         l_rules.append(ProductionRule("S", "D", "f"))
@@ -91,12 +91,12 @@ class TestFST(unittest.TestCase):
 
         rules = Rules(l_rules)
         indexed_grammar = IndexedGrammar(rules)
-        intersection = fst.intersect(indexed_grammar)
+        intersection = fst.intersection(indexed_grammar)
         self.assertTrue(intersection.is_empty())
 
-        fst.set_start_state("q0")
+        fst.add_start_state("q0")
         fst.add_final_state("final")
         fst.add_transition("q0", "a", "q1", ["a"])
         fst.add_transition("q1", "b", "final", ["b"])
-        intersection = fst.intersect(indexed_grammar)
+        intersection = fst.intersection(indexed_grammar)
         self.assertFalse(intersection.is_empty())
