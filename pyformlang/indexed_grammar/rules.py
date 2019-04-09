@@ -33,6 +33,7 @@ class Rules(object):
     def __init__(self, rules: Iterable[ReducedRule], optim: int=7):
         self.rules = []
         self.consumptionRules = dict()
+        self.optim = optim
         for rule in rules:
             # We separate consumption rule from other
             if rule.is_consumption():
@@ -82,12 +83,13 @@ class Rules(object):
         """
         return (len(self.rules), len(self.consumptionRules.values()))
 
-    def get_consumption_rules(self) -> Dict[Any, ConsumptionRule]:
+    def get_consumption_rules(self) -> Dict[Any, Iterable[ConsumptionRule]]:
         """Gets the consumption rules
 
         Returns
         ----------
-        consumption_rules : dict of any to :class:`~pyformlang.indexed_grammar.ConsumptionRule`
+        consumption_rules : dict of any to iterable of \
+            :class:`~pyformlang.indexed_grammar.ConsumptionRule`
             A dictionary contains the consumption rules gathered by consumed symbols
         """
         return self.consumptionRules

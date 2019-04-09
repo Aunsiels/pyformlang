@@ -311,3 +311,57 @@ class TestIndexedGrammar(unittest.TestCase):
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules, start_variable="S2")
         self.assertFalse(i_grammar.is_empty())
+
+    def test_reachable(self):
+        """ Tests the reachable symbols """
+        l_rules = []
+        l_rules.append(DuplicationRule("S", "A", "B"))
+        l_rules.append(ProductionRule("A", "D", "f"))
+        l_rules.append(ProductionRule("E", "D", "f"))
+        l_rules.append(ProductionRule("E", "K", "f"))
+        l_rules.append(EndRule("D", "d"))
+        l_rules.append(DuplicationRule("D", "D", "D"))
+        l_rules.append(DuplicationRule("D", "D", "A"))
+        l_rules.append(ConsumptionRule("f", "B", "G"))
+        l_rules.append(ConsumptionRule("f", "B", "A"))
+        rules = Rules(l_rules)
+        i_grammar = IndexedGrammar(rules, start_variable="S")
+        reachable = i_grammar.get_reachable_non_terminals()
+        self.assertEqual(reachable, {"S", "A", "B", "D", "G"})
+
+    def test_generating(self):
+        """ Tests the generating symbols """
+        l_rules = []
+        l_rules.append(DuplicationRule("S", "A", "B"))
+        l_rules.append(ProductionRule("A", "D", "f"))
+        l_rules.append(ProductionRule("E", "D", "f"))
+        l_rules.append(EndRule("D", "d"))
+        l_rules.append(ConsumptionRule("f", "B", "G"))
+        l_rules.append(ConsumptionRule("f", "X", "G"))
+        l_rules.append(DuplicationRule("Q", "A", "E"))
+        l_rules.append(DuplicationRule("Q", "A", "D"))
+        l_rules.append(DuplicationRule("Q", "D", "E"))
+        rules = Rules(l_rules)
+        i_grammar = IndexedGrammar(rules, start_variable="S")
+        generating = i_grammar.get_generating_non_terminals()
+        self.assertEqual(generating, {"D", "A", "E", "Q"})
+
+    def test_removal_useless(self):
+        """ Tests the removal of useless symbols """
+        l_rules = []
+
+        l_rules.append(ProductionRule("S", "D", "f"))
+        l_rules.append(DuplicationRule("D", "A", "B"))
+        l_rules.append(ConsumptionRule("f", "A", "Afinal"))
+        l_rules.append(ConsumptionRule("f", "B", "Bfinal"))
+        l_rules.append(EndRule("Afinal", "a"))
+        l_rules.append(EndRule("Bfinal", "b"))
+        l_rules.append(ConsumptionRule("f", "A", "Q"))
+        l_rules.append(EndRule("R", "b"))
+
+        rules = Rules(l_rules)
+        i_grammar = IndexedGrammar(rules, start_variable="S")
+        i_grammar2 = i_grammar.remove_useless_rules()
+        self.assertFalse(i_grammar.is_empty())
+        self.assertEqual(i_grammar2.non_terminals, i_grammar2.get_generating_non_terminals())
+        self.assertEqual(i_grammar2.non_terminals, i_grammar2.get_reachable_non_terminals())

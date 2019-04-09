@@ -2,7 +2,7 @@
 Representation of an indexed grammar
 """
 
-from typing import Any, Iterable
+from typing import Any, Iterable, AbstractSet
 
 from .duplication_rule import DuplicationRule
 from .production_rule import ProductionRule
@@ -27,6 +27,7 @@ class IndexedGrammar(object):
         # Precompute all non-terminals
         self.non_terminals = rules.get_non_terminals()
         self.non_terminals.append(self.start_variable)
+        self.non_terminals = set(self.non_terminals)
         # We cache the marked items in case of future update of the query
         self.marked = dict()
         # Initialize the marked symboles
@@ -158,6 +159,155 @@ class IndexedGrammar(object):
             return False
         return True
 
+    def get_reachable_non_terminals(self) -> AbstractSet[Any]:
+        """ Get the reachable symbols
+
+        Returns
+        ----------
+        reachables : set of any
+            The reachable symbols from the start state
+        """
+        # Preprocess
+        reachable_from = dict()
+        consumption_rules = self.rules.get_consumption_rules()
+        for rule in self.rules.get_rules():
+            if rule.is_duplication():
+                left = rule.get_left_term()
+                right0 = rule.get_right_terms()[0]
+                right1 = rule.get_right_terms()[1]
+                if left in reachable_from:
+                    reachable_from[left].add(right0)
+                    reachable_from[left].add(right1)
+                else:
+                    reachable_from[left] = {right0, right1}
+            if rule.is_production():
+                left = rule.get_left_term()
+                right = rule.get_right_term()
+                if left in reachable_from:
+                    reachable_from[left].add(right)
+                else:
+                    reachable_from[left] = {right}
+        for key in consumption_rules:
+            for rule in consumption_rules[key]:
+                left = rule.get_left_term()
+                right = rule.get_right()
+                if left in reachable_from:
+                    reachable_from[left].add(right)
+                else:
+                    reachable_from[left] = {right}
+        # Processing
+        to_process = [self.start_variable]
+        reachables = {self.start_variable}
+        while to_process:
+            current = to_process.pop()
+            for symbol in reachable_from.get(current, []):
+                if symbol not in reachables:
+                    reachables.add(symbol)
+                    to_process.append(symbol)
+        return reachables
+
+    def get_generating_non_terminals(self) -> AbstractSet[Any]:
+        """ Get the generating symbols
+
+        Returns
+        ----------
+        generating : set of any
+            The generating symbols from the start state
+        """
+        # Preprocess
+        generating_from = dict()
+        duplication_pointer = dict()
+        generating = set()
+        to_process = []
+        consumption_rules = self.rules.get_consumption_rules()
+        for rule in self.rules.get_rules():
+            if rule.is_duplication():
+                left = rule.get_left_term()
+                right0 = rule.get_right_terms()[0]
+                right1 = rule.get_right_terms()[1]
+                temp = [left, 2]
+                if right0 in duplication_pointer:
+                    duplication_pointer[right0].append(temp)
+                else:
+                    duplication_pointer[right0] = [temp]
+                if right1 in duplication_pointer:
+                    duplication_pointer[right1].append(temp)
+                else:
+                    duplication_pointer[right1] = [temp]
+            if rule.is_production():
+                left = rule.get_left_term()
+                right = rule.get_right_term()
+                if right in generating_from:
+                    generating_from[right].add(left)
+                else:
+                    generating_from[right] = {left}
+            if rule.is_end_rule():
+                left = rule.get_left_term()
+                if left not in generating:
+                    generating.add(left)
+                    to_process.append(left)
+        for key in consumption_rules:
+            for rule in consumption_rules[key]:
+                left = rule.get_left_term()
+                right = rule.get_right()
+                if right in generating_from:
+                    generating_from[right].add(left)
+                else:
+                    generating_from[right] = {left}
+        # Processing
+        while to_process:
+            current = to_process.pop()
+            for symbol in generating_from.get(current, []):
+                if symbol not in generating:
+                    generating.add(symbol)
+                    to_process.append(symbol)
+            for duplication in duplication_pointer.get(current, []):
+                duplication[1] -= 1
+                if duplication[1] == 0:
+                    if duplication[0] not in generating:
+                        generating.add(duplication[0])
+                        to_process.append(duplication[0])
+        return generating
+
+    def remove_useless_rules(self) -> "IndexedGrammar":
+        """ Remove useless rules in the grammar
+
+        More precisely, we remove rules which do not contain only generating or reachable \
+            non terminals.
+
+        Returns
+        ----------
+        i_grammar : :class:`~pyformlang.indexed_grammar.IndexedGrammar`
+            The indexed grammar which useless rules
+        """
+        l_rules = []
+        generating = self.get_generating_non_terminals()
+        reachables = self.get_reachable_non_terminals()
+        consumption_rules = self.rules.get_consumption_rules()
+        for rule in self.rules.get_rules():
+            if rule.is_duplication():
+                left = rule.get_left_term()
+                right0 = rule.get_right_terms()[0]
+                right1 = rule.get_right_terms()[1]
+                if all([x in generating and x in reachables for x in [left, right0, right1]]):
+                    l_rules.append(rule)
+            if rule.is_production():
+                left = rule.get_left_term()
+                right = rule.get_right_term()
+                if all([x in generating and x in reachables for x in [left, right]]):
+                    l_rules.append(rule)
+            if rule.is_end_rule():
+                left = rule.get_left_term()
+                if left in generating and left in reachables:
+                    l_rules.append(rule)
+        for key in consumption_rules:
+            for rule in consumption_rules[key]:
+                left = rule.get_left_term()
+                right = rule.get_right()
+                if all([x in generating and x in reachables for x in [left, right]]):
+                    l_rules.append(rule)
+        rules = Rules(l_rules, self.rules.optim)
+        return IndexedGrammar(rules)
 
 def exists(l, f):
     """exists
