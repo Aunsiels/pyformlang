@@ -385,8 +385,13 @@ def addrec_ter(l_sets, markedLeft, markedRight):
                     for index in range(len(l_sets))]
     exists_before = [l_sets[index][0] in temp_in[:index]
                      for index in range(len(l_sets))]
+    marked_sets = [l_sets[index][1] for index in range(len(l_sets))]
+    # Try to optimize by having an order of the sets
+    zipped = zip(exists_after, exists_before, marked_sets)
+    sorted_zip = sorted(zipped, key=lambda x: -len(x[2]))
+    exists_after, exists_before, marked_sets = zip(*sorted_zip)
     res = False
-    # index, temp
+    # contains tuples of index, temp_set
     to_process = []
     to_process.append((0, frozenset()))
     done = set()
@@ -403,12 +408,10 @@ def addrec_ter(l_sets, markedLeft, markedRight):
             continue
         if exists_before[index] or exists_after[index]:
             to_append = (index + 1, new_temp)
-            if to_append not in done:
-                done.add(to_append)
-                to_process.append(to_append)
+            to_process.append(to_append)
         if not exists_before[index]:
             # For all sets which were marked for the current comsumption rule
-            for s in l_sets[index][1]:
+            for s in marked_sets[index]:
                 to_append = (index + 1, new_temp.union(s))
                 if to_append not in done:
                     done.add(to_append)

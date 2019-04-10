@@ -12,7 +12,7 @@ test-code-xml:
 test-code-profiling:
 	$(PYTEST) --showlocals -v pyformlang --profile
 
-test-code-profiling:
+test-code-profiling-svg:
 	$(PYTEST) --showlocals -v pyformlang --profile-svg
 
 test-coverage:
