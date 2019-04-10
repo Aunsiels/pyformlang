@@ -25,7 +25,7 @@ class ConsumptionRule(ReducedRule):
     def __init__(self, f : Any, left : Any, right : Any):
         self.f = f
         self.right = right
-        self.left = left
+        self.left_term = left
 
     def is_consumption(self) -> bool:
         """Whether the rule is a consumption rule or not
@@ -61,7 +61,7 @@ class ConsumptionRule(ReducedRule):
         left : any
             The left symbol of the rule
         """
-        return self.left
+        return self.left_term
 
     def get_non_terminals(self) -> Iterable[Any]:
         """Gets the non-terminals used in the rule
@@ -69,7 +69,7 @@ class ConsumptionRule(ReducedRule):
         non_terminals : iterable of any
             The non_terminals used in the rule
         """
-        return [self.left, self.right]
+        return [self.left_term, self.right]
 
     def get_terminals(self) -> AbstractSet[Any]:
         """Gets the terminals used in the rule
@@ -80,7 +80,7 @@ class ConsumptionRule(ReducedRule):
         return {self.f}
 
     def __repr__(self):
-        return self.left + " [ " + self.f + " ] -> " + self.right
+        return self.left_term + " [ " + self.f + " ] -> " + self.right
 
     def __eq__(self, other):
         return other.is_consumption() and other.get_left_term() == \

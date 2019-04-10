@@ -39,7 +39,7 @@ class IndexedGrammar(object):
         # Mark all end symboles
         for A in self.non_terminals:
             if exists(self.rules.get_rules(),
-                      lambda x: x.is_end_rule() and x.get_left_term() == A):
+                      lambda x: x.is_end_rule() and x.left_term == A):
                 self.marked[A].add(frozenset())
 
     def get_terminals(self) -> Iterable[Any]:
@@ -68,16 +68,16 @@ class IndexedGrammar(object):
             for y in self.marked[rule.get_right_terms()[1]]:
                 temp = x.union(y)
                 # Check if it was marked before
-                if temp not in self.marked[rule.get_left_term()]:
+                if temp not in self.marked[rule.left_term]:
                     was_modified = True
-                    if rule.get_left_term() == rule.get_right_terms()[0]:
+                    if rule.left_term == rule.get_right_terms()[0]:
                         right_term_marked0.append(temp)
-                    elif rule.get_left_term() == rule.get_right_terms()[1]:
+                    elif rule.left_term == rule.get_right_terms()[1]:
                         right_term_marked1.append(temp)
                     else:
-                        self.marked[rule.get_left_term()].add(temp)
+                        self.marked[rule.left_term].add(temp)
                     # Stop condition, no need to continuer
-                    if rule.get_left_term() == self.start_variable and len(temp) == 0:
+                    if rule.left_term == self.start_variable and len(temp) == 0:
                         need_stop = True
             for temp in right_term_marked1:
                 self.marked[rule.get_right_terms()[1]].add(temp)
@@ -101,12 +101,12 @@ class IndexedGrammar(object):
             rule.get_production(), [])
         # l_rules contains the left symbol plus what is marked on
         # the right side
-        l_temp = [(x.get_left_term(),
+        l_temp = [(x.left_term,
                   self.marked[x.get_right()]) for x in f_rules]
-        marked_symbols = [x.get_left_term() for x in f_rules]
+        marked_symbols = [x.left_term for x in f_rules]
         # Process all combinations of consumption rule
         was_modified |= addrec_bis(l_temp,
-                                   self.marked[rule.get_left_term()],
+                                   self.marked[rule.left_term],
                                    self.marked[rule.get_right_term()])
         # End condition
         if frozenset() in self.marked[self.start_variable]:
@@ -117,16 +117,16 @@ class IndexedGrammar(object):
                 if rule.get_right_term() == s[0]:
                     for sc in s[1]:
                         if sc not in\
-                                self.marked[rule.get_left_term()]:
+                                self.marked[rule.left_term]:
                             was_modified = True
-                            self.marked[rule.get_left_term()].add(sc)
-                            if rule.get_left_term() == self.start_variable and len(sc) == 0:
+                            self.marked[rule.left_term].add(sc)
+                            if rule.left_term == self.start_variable and len(sc) == 0:
                                 return (was_modified, True)
         # Edge case
         if frozenset() in self.marked[rule.get_right_term()]:
-            if frozenset() not in self.marked[rule.get_left_term()]:
+            if frozenset() not in self.marked[rule.left_term]:
                 was_modified = True
-                self.marked[rule.get_left_term()].add(frozenset())
+                self.marked[rule.left_term].add(frozenset())
         return (was_modified, False)
 
     def is_empty(self) -> bool:
@@ -172,7 +172,7 @@ class IndexedGrammar(object):
         consumption_rules = self.rules.get_consumption_rules()
         for rule in self.rules.get_rules():
             if rule.is_duplication():
-                left = rule.get_left_term()
+                left = rule.left_term
                 right0 = rule.get_right_terms()[0]
                 right1 = rule.get_right_terms()[1]
                 if left in reachable_from:
@@ -181,7 +181,7 @@ class IndexedGrammar(object):
                 else:
                     reachable_from[left] = {right0, right1}
             if rule.is_production():
-                left = rule.get_left_term()
+                left = rule.left_term
                 right = rule.get_right_term()
                 if left in reachable_from:
                     reachable_from[left].add(right)
@@ -189,7 +189,7 @@ class IndexedGrammar(object):
                     reachable_from[left] = {right}
         for key in consumption_rules:
             for rule in consumption_rules[key]:
-                left = rule.get_left_term()
+                left = rule.left_term
                 right = rule.get_right()
                 if left in reachable_from:
                     reachable_from[left].add(right)
@@ -222,7 +222,7 @@ class IndexedGrammar(object):
         consumption_rules = self.rules.get_consumption_rules()
         for rule in self.rules.get_rules():
             if rule.is_duplication():
-                left = rule.get_left_term()
+                left = rule.left_term
                 right0 = rule.get_right_terms()[0]
                 right1 = rule.get_right_terms()[1]
                 temp = [left, 2]
@@ -235,20 +235,20 @@ class IndexedGrammar(object):
                 else:
                     duplication_pointer[right1] = [temp]
             if rule.is_production():
-                left = rule.get_left_term()
+                left = rule.left_term
                 right = rule.get_right_term()
                 if right in generating_from:
                     generating_from[right].add(left)
                 else:
                     generating_from[right] = {left}
             if rule.is_end_rule():
-                left = rule.get_left_term()
+                left = rule.left_term
                 if left not in generating:
                     generating.add(left)
                     to_process.append(left)
         for key in consumption_rules:
             for rule in consumption_rules[key]:
-                left = rule.get_left_term()
+                left = rule.left_term
                 right = rule.get_right()
                 if right in generating_from:
                     generating_from[right].add(left)
@@ -286,23 +286,23 @@ class IndexedGrammar(object):
         consumption_rules = self.rules.get_consumption_rules()
         for rule in self.rules.get_rules():
             if rule.is_duplication():
-                left = rule.get_left_term()
+                left = rule.left_term
                 right0 = rule.get_right_terms()[0]
                 right1 = rule.get_right_terms()[1]
                 if all([x in generating and x in reachables for x in [left, right0, right1]]):
                     l_rules.append(rule)
             if rule.is_production():
-                left = rule.get_left_term()
+                left = rule.left_term
                 right = rule.get_right_term()
                 if all([x in generating and x in reachables for x in [left, right]]):
                     l_rules.append(rule)
             if rule.is_end_rule():
-                left = rule.get_left_term()
+                left = rule.left_term
                 if left in generating and left in reachables:
                     l_rules.append(rule)
         for key in consumption_rules:
             for rule in consumption_rules[key]:
-                left = rule.get_left_term()
+                left = rule.left_term
                 right = rule.get_right()
                 if all([x in generating and x in reachables for x in [left, right]]):
                     l_rules.append(rule)

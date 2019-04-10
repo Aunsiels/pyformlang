@@ -81,5 +81,5 @@ class DuplicationRule(ReducedRule):
             " " + self.right_terms[1]
 
     def __eq__(self, other):
-        return other.is_duplication() and other.get_left_term() == \
-            self.get_left_term() and other.get_right_terms() == self.get_right_terms()
+        return other.is_duplication() and other.left_term == \
+            self.left_term and other.get_right_terms() == self.get_right_terms()
