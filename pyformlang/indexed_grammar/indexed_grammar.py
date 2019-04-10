@@ -66,7 +66,12 @@ class IndexedGrammar(object):
         for x in self.marked[rule.get_right_terms()[0]]:
             right_term_marked1 = []
             for y in self.marked[rule.get_right_terms()[1]]:
-                temp = x.union(y)
+                if x <= y:
+                    temp = y
+                elif y <= x:
+                    temp = x
+                else:
+                    temp = x.union(y)
                 # Check if it was marked before
                 if temp not in self.marked[rule.left_term]:
                     was_modified = True
@@ -414,6 +419,8 @@ def addrec_ter(l_sets, markedLeft, markedRight):
             for s in marked_sets[index]:
                 if s <= new_temp:
                     to_append = (index + 1, new_temp)
+                elif new_temp <= s:
+                    to_append = (index + 1, s)
                 else:
                     to_append = (index + 1, new_temp.union(s))
                 if to_append not in done:
