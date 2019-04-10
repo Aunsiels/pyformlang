@@ -412,7 +412,10 @@ def addrec_ter(l_sets, markedLeft, markedRight):
         if not exists_before[index]:
             # For all sets which were marked for the current comsumption rule
             for s in marked_sets[index]:
-                to_append = (index + 1, new_temp.union(s))
+                if s <= new_temp:
+                    to_append = (index + 1, new_temp)
+                else:
+                    to_append = (index + 1, new_temp.union(s))
                 if to_append not in done:
                     done.add(to_append)
                     to_process.append(to_append)
