@@ -406,7 +406,6 @@ def addrec_ter(l_sets, markedLeft, markedRight):
             # Check if at least one non-terminal was considered, then if the set
             # of non-terminals considered is marked of the right non-terminal in
             # the production rule, then if a new set is marked or not
-            new_temp = frozenset(new_temp)
             if new_temp not in markedLeft:
                 markedLeft.add(new_temp)
                 res = True
