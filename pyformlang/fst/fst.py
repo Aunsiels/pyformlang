@@ -241,6 +241,5 @@ class FST(object):
                     "S",
                     str((start_state, "S", p)),
                     "T"))
-        print(len(new_rules))
-        rules = Rules(new_rules)
+        rules = Rules(new_rules, rules.optim)
         return IndexedGrammar(rules).remove_useless_rules()

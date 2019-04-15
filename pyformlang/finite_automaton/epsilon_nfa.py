@@ -350,9 +350,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                 state_to = []
                 eclose = self.eclose(state)
                 for state0 in eclose:
-                    print(state0, state)
                     state_to += self._transition_function(state0, symbol)
-                print(state_to)
                 if not state_to:
                     enfa.add_transition(state, symbol, trash)
         for symbol in self._input_symbols:
@@ -550,7 +548,6 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                 out_states = out_states.copy()
                 symbol_str = str(symbol.get_value())
                 for out_state in out_states:
-                    print(state, out_state)
                     self.remove_transition(state, symbol, out_state)
                     base = new_transitions.setdefault(out_state, "")
                     if "+" in symbol_str:

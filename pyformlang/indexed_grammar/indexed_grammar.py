@@ -391,6 +391,7 @@ def addrec_ter(l_sets, markedLeft, markedRight):
     exists_before = [l_sets[index][0] in temp_in[:index]
                      for index in range(len(l_sets))]
     marked_sets = [l_sets[index][1] for index in range(len(l_sets))]
+    marked_sets = [sorted(x, key=lambda x: -len(x)) for x in marked_sets]
     # Try to optimize by having an order of the sets
     zipped = zip(exists_after, exists_before, marked_sets)
     sorted_zip = sorted(zipped, key=lambda x: -len(x[2]))

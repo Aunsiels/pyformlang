@@ -119,3 +119,6 @@ test-reports/
 
 # Profiler
 prof/
+
+*xml
+*iml

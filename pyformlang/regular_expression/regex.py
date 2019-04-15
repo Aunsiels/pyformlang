@@ -2,10 +2,17 @@
 Representation of a regular expression
 """
 
-from typing import Iterable
 import re
 
 from pyformlang import finite_automaton
+
+
+def _find_first_complete_closing_if_possible(parenthesis_depths):
+    try:
+        first_complete_closing = parenthesis_depths.index(0)
+    except ValueError:
+        first_complete_closing = -2
+    return first_complete_closing
 
 
 class Regex(object):
@@ -27,33 +34,134 @@ class Regex(object):
     def __init__(self, regex: str):
         regex = preprocess_regex(regex)
         self._regex = regex
-        regex_l = regex.split(" ")
-        regex_l = remove_extreme_parenthesis(regex_l)
-        regex_l = compute_precedence(regex_l)
-        regex_l = remove_extreme_parenthesis(regex_l)
-        self.sons = []
-        if not regex:
-            self.head = to_node("")
-        elif len(regex_l) == 1:
-            first = to_node(regex_l[0])
-            if not isinstance(first, Symbol):
-                raise MisformedRegexError("The regex is misformed here.", regex)
-            self.head = first
+        self.components = get_regex_componants(regex)
+        self._pre_process_input_regex_componants()
+        self._setup_sons()
+        self._setup_from_regex_componants()
+
+    def _pre_process_input_regex_componants(self):
+        self._remove_useless_extreme_parenthesis_from_components()
+        self._compute_precedence()
+        self._remove_useless_extreme_parenthesis_from_components()
+
+    def _remove_useless_extreme_parenthesis_from_components(self):
+        if self._begins_with_parenthesis_components():
+            self._remove_useless_expreme_parenthesis_from_componants_when_starting_with_parenthesis()
+
+    def _remove_useless_expreme_parenthesis_from_componants_when_starting_with_parenthesis(self):
+        if self._is_surrounded_by_parenthesis():
+            self.components = self.components[1:-1]
+            self._remove_useless_extreme_parenthesis_from_components()
+
+    def _is_surrounded_by_parenthesis(self):
+        parenthesis_depths = self._get_parenthesis_depths()
+        first_complete_closing = _find_first_complete_closing_if_possible(parenthesis_depths)
+        return first_complete_closing == len(self.components) - 1
+
+    def _get_parenthesis_depths(self):
+        depths = [0]
+        for component in self.components:
+            depths.append(depths[-1] + self._get_parenthesis_value(component))
+        return depths[1:]
+
+    @staticmethod
+    def _get_parenthesis_value(component):
+        if component == "(":
+            return 1
+        elif component == ")":
+            return -1
         else:
-            end_first_group = get_end_first_group(regex_l)
-            next_node = to_node(regex_l[end_first_group])
-            if isinstance(next_node, KleeneStar):
-                self.head = next_node
-                self.sons.append(Regex(" ".join(regex_l[:end_first_group])))
+            return 0
+
+    def _begins_with_parenthesis_components(self):
+        return self.components[0] == "("
+
+    def _compute_precedence(self):
+        """ Add parenthesis for the first group in indicate precedence """
+        if len(self.components) <= 1:
+            return
+        end_group = self._get_end_first_group_in_components()
+        if end_group == len(self.components):
+            return
+        next_node = to_node(self.components[end_group])
+        if isinstance(next_node, KleeneStar):
+            self._add_parenthesis_around_part_of_componants(0, end_group + 1)
+            self._compute_precedence()
+        elif not isinstance(next_node, Union):
+            while self._found_no_union(end_group, next_node):
+                if isinstance(next_node, Operator):
+                    end_group += 1
+                end_group += self._get_end_first_group_in_components(end_group)
+                if end_group < len(self.components):
+                    next_node = to_node(self.components[end_group])
+            if isinstance(next_node, Union):
+                self._add_parenthesis_around_part_of_componants(0, end_group)
+
+    def _found_no_union(self, end_group, next_node):
+        return end_group < len(self.components) and not isinstance(next_node, Union)
+
+    def _add_parenthesis_around_part_of_componants(self, index_opening, index_closing):
+        self.components.insert(index_opening, "(")
+        # Add 1 as something was added before
+        self.components.insert(index_closing + 1, ")")
+
+    def _get_end_first_group_in_components(self, idx_from=0) -> int:
+        """ Gives the end of the first group """
+        if idx_from >= len(self.components):
+            return 0
+        if self.components[idx_from] == ")":
+            raise MisformedRegexError("Wrong parenthesis regex", " ".join(self.components))
+        if self.components[idx_from] == "(":
+            counter = 1
+            for i in range(idx_from + 1, len(self.components)):
+                if self.components[i] == "(":
+                    counter += 1
+                elif self.components[i] == ")":
+                    counter -= 1
+                if counter == 0:
+                    return i + 1
+            raise MisformedRegexError("Wrong parenthesis regex", " ".join(self.components))
+        else:
+            return 1
+
+    def _setup_from_regex_componants(self):
+        if not self.components:
+            self._setup_empty_regex()
+        elif len(self.components) == 1:
+            self._setup_one_symbol_regex()
+        else:
+            self._setup_non_trivial_regex()
+
+    def _setup_non_trivial_regex(self):
+        end_first_group = self._get_end_first_group_in_components()
+        next_node = to_node(self.components[end_first_group])
+        if isinstance(next_node, KleeneStar):
+            self.head = next_node
+            self.sons.append(process_sub_regex(self.components, 0, end_first_group))
+        else:
+            begin_second_group = end_first_group
+            if isinstance(next_node, Symbol):
+                self.head = Concatenation()
             else:
-                begin_second_group = end_first_group
-                if isinstance(next_node, Symbol):
-                    self.head = Concatenation()
-                else:
-                    self.head = next_node
-                    begin_second_group += 1
-                self.sons.append(Regex(" ".join(regex_l[:end_first_group])))
-                self.sons.append(Regex(" ".join(regex_l[begin_second_group:])))
+                self.head = next_node
+                begin_second_group += 1
+            self.sons.append(process_sub_regex(self.components, 0, end_first_group))
+            self.sons.append(process_sub_regex(self.components, begin_second_group, len(self.components)))
+
+    def _setup_empty_regex(self):
+        self.head = to_node("")
+
+    def _setup_one_symbol_regex(self):
+        first_symbol = to_node(self.components[0])
+        self._check_is_valid_single_first_symbol(first_symbol)
+        self.head = first_symbol
+
+    def _check_is_valid_single_first_symbol(self, first_symbol):
+        if not isinstance(first_symbol, Symbol):
+            raise MisformedRegexError("The regex is misformed here.", self._regex)
+
+    def _setup_sons(self):
+        self.sons = []
 
     def get_number_symbols(self) -> int:
         """ Gives the number of symbols in the regex
@@ -250,68 +358,8 @@ def to_node(value: str) -> Node:
     return Symbol(value)
 
 
-def remove_extreme_parenthesis(value_l: Iterable[str]) -> Iterable[str]:
-    """ Remove useless extreme parenthesis """
-    if value_l[0] != "(":
-        return value_l
-    counter = 0
-    pos = 0
-    for value in value_l:
-        if value == "(":
-            counter += 1
-        elif value == ")":
-            counter -= 1
-        if counter == 0 and pos == len(value_l) - 1:
-            return remove_extreme_parenthesis(value_l[1:-1])
-        elif counter == 0:
-            break
-        pos += 1
-    return value_l
 
 
-def get_end_first_group(value_l: Iterable[str]) -> int:
-    """ Gives the end of the first group """
-    if not value_l:
-        return 0
-    if value_l[0] == ")":
-        raise MisformedRegexError("Wrong parenthesis regex", " ".join(value_l))
-    if value_l[0] == "(":
-        counter = 1
-        for i in range(1, len(value_l)):
-            if value_l[i] == "(":
-                counter += 1
-            elif value_l[i] == ")":
-                counter -= 1
-            if counter == 0:
-                return i + 1
-        raise MisformedRegexError("Wrong parenthesis regex", " ".join(value_l))
-    else:
-        return 1
-
-
-def compute_precedence(value_l: Iterable[str]) -> Iterable[str]:
-    """ Add parenthesis for the first group in indicate precedence """
-    if len(value_l) <= 1:
-        return value_l
-    end_group = get_end_first_group(value_l)
-    if end_group == len(value_l):
-        return value_l
-    next_node = to_node(value_l[end_group])
-    if isinstance(next_node, KleeneStar):
-        return compute_precedence(["("] + value_l[:end_group+1] + [")"] + value_l[end_group+1:])
-    elif isinstance(next_node, Union):
-        return value_l
-    else:
-        # Try to see if there is a union somewhere
-        while end_group < len(value_l) and not isinstance(next_node, Union):
-            if isinstance(next_node, Operator):
-                end_group += 1
-            end_group += get_end_first_group(value_l[end_group:])
-            if end_group < len(value_l):
-                next_node = to_node(value_l[end_group])
-        if isinstance(next_node, Union):
-            return ["("] + value_l[:end_group] + [")"] + value_l[end_group:]
-    return value_l
 
 
 def preprocess_regex(regex: str) -> str:
@@ -422,3 +470,10 @@ class MisformedRegexError(Exception):
     def __init__(self, message: str, regex: str):
         super().__init__(message + " Regex: " + regex)
         self._regex = regex
+
+
+def get_regex_componants(regex):
+    return regex.split(" ")
+
+def process_sub_regex(regex_componants, idx_from, idx_to):
+    return Regex(" ".join(regex_componants[idx_from:idx_to]))
