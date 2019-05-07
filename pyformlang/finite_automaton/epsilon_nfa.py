@@ -4,7 +4,7 @@ Nondeterminsitic Automaton with epsilon transitions
 
 from typing import Set, Iterable, AbstractSet
 
-from pyformlang import finite_automaton, regular_expression
+from pyformlang import finite_automaton
 
 from .epsilon import Epsilon
 from .state import State
@@ -254,6 +254,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         regex : :class:`~pyformlang.regular_expression.Regex`
             A regular expression equivalent to the current Epsilon NFA
         """
+        from pyformlang import regular_expression
         enfas = [self.copy() for _ in self._final_states]
         final_states = list(self._final_states)
         for i in range(len(self._final_states)):
