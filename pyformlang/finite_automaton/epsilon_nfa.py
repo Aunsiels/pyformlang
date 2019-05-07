@@ -59,7 +59,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         self._final_states = final_states or set()
         for state in self._final_states:
             if state is not None and state not in self._states:
-                self._states.add(start_state)
+                self._states.add(state)
         for state in self._start_state:
             if state is not None and state not in self._states:
                 self._states.add(state)
