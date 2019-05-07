@@ -174,29 +174,28 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                     disting.add((state, final))
             disting.add((None, final))
             disting.add((final, None))
-        was_modified = True
-        while was_modified:
-            was_modified = False
-            for state0 in self._states:
-                for state1 in self._states:
-                    if (state0, state1) in disting:
-                        continue
-                    for symbol in self._input_symbols:
-                        next0 = self._transition_function(state0, symbol)
-                        next1 = self._transition_function(state1, symbol)
-                        if next0:
-                            next0 = next0[0]
-                        else:
-                            next0 = None
-                        if next1:
-                            next1 = next1[0]
-                        else:
-                            next1 = None
-                        if (next0, next1) in disting:
+        previous_d = dict()
+        for state in self._states:
+            for symbol in self._input_symbols:
+                next0 = self._transition_function(state, symbol)
+                if next0:
+                    next0 = next0[0]
+                else:
+                    next0 = None
+                if (next0, symbol) in previous_d:
+                    previous_d[(next0, symbol)].append(state)
+                else:
+                    previous_d[(next0, symbol)] = [state]
+        to_process = list(disting)
+        while to_process:
+            next0, next1 = to_process.pop()
+            for symbol in self._input_symbols:
+                for state0 in previous_d.setdefault((next0, symbol), []):
+                    for state1 in previous_d.setdefault((next1, symbol), []):
+                        if (state0, state1) not in disting:
                             disting.add((state0, state1))
+                            to_process.append((state0, state1))
                             disting.add((state1, state0))
-                            was_modified = True
-                            break
         return disting
 
     def _get_reachable_states(self) -> AbstractSet[State]:
