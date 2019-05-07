@@ -367,7 +367,7 @@ class TestIndexedGrammar(unittest.TestCase):
         self.assertEqual(i_grammar2.non_terminals, i_grammar2.get_generating_non_terminals())
         self.assertEqual(i_grammar2.non_terminals, i_grammar2.get_reachable_non_terminals())
 
-    def test_intersection(self):
+    def _test_intersection(self):
         """ Tests the intersection of indexed grammar with regex
         Long to run!
         """

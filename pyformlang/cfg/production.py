@@ -4,6 +4,7 @@ from typing import Iterable
 
 from .variable import Variable
 from .cfg_object import CFGObject
+from .epsilon import Epsilon
 
 
 class Production(object):
@@ -19,7 +20,7 @@ class Production(object):
 
     def __init__(self, head: Variable, body: Iterable[CFGObject]):
         self._head = head
-        self._body = tuple(body)
+        self._body = tuple([x for x in body if x != Epsilon()])
 
     def get_head(self) -> Variable:
         return self._head

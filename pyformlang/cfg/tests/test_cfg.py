@@ -5,6 +5,9 @@ import unittest
 from pyformlang.cfg import Production, Variable, Terminal, CFG, Epsilon
 from pyformlang.regular_expression import Regex
 from pyformlang.finite_automaton import Symbol
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton
+from pyformlang.finite_automaton import State
+from pyformlang.finite_automaton import Symbol
 
 class TestCFG(unittest.TestCase):
     """ Tests the production """
@@ -503,4 +506,96 @@ class TestCFG(unittest.TestCase):
         cfg_i = cfg.intersection(regex)
         self.assertTrue(cfg_i.contains([ter_a, ter_a, ter_b, ter_b]))
         self.assertFalse(cfg_i.contains([ter_a, ter_a, ter_b]))
+        self.assertTrue(cfg_i.contains([]))
+
+    def test_intersection_dfa(self):
+        state0 =  State(0)
+        state1 = State(1)
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        dfa = DeterministicFiniteAutomaton({state0, state1},
+                                           {symb_a, symb_b},
+                                           start_state = state0,
+                                           final_states = {state0, state1})
+        dfa.add_transition(state0, symb_a, state0)
+        dfa.add_transition(state0, symb_b, state1)
+        dfa.add_transition(state1, symb_b, state1)
+        self.assertTrue(dfa.accepts([symb_a, symb_a, symb_b, symb_b]))
+        self.assertFalse(dfa.accepts([symb_b, symb_b, symb_a]))
+
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        var_S = Variable("S")
+        productions = {Production(var_S, [ter_a, var_S, ter_b]),
+                       Production(var_S, [ter_b, var_S, ter_a]),
+                       Production(var_S, [])}
+        cfg = CFG(productions=productions, start_symbol=var_S)
+        self.assertTrue(cfg.contains([ter_a, ter_a, ter_b, ter_b]))
+        self.assertFalse(cfg.contains([ter_a, ter_a, ter_b]))
+        cfg_i = cfg.intersection(dfa)
+        self.assertTrue(cfg_i.contains([ter_a, ter_a, ter_b, ter_b]))
+        self.assertFalse(cfg_i.contains([ter_a, ter_a, ter_b]))
+        self.assertTrue(cfg_i.contains([]))
+
+    def test_intersection_with_epsilon(self):
+        state0 = State(0)
+        state1 = State(1)
+        symb_a = Symbol("a")
+        dfa = DeterministicFiniteAutomaton({state0, state1},
+                                           {symb_a},
+                                           start_state = state0,
+                                           final_states = {state1})
+        dfa.add_transition(state0, symb_a, state1)
+        self.assertTrue(dfa.accepts([symb_a]))
+
+        ter_a = Terminal("a")
+        var_S = Variable("S")
+        var_L = Variable("L")
+        var_T = Variable("T")
+        productions = {Production(var_S, [var_L, var_T]),
+                       Production(var_L, [Epsilon()]),
+                       Production(var_T, [ter_a])}
+        cfg = CFG(productions=productions, start_symbol=var_S)
+        self.assertFalse(cfg.is_empty())
+        self.assertTrue(cfg.contains([ter_a]))
+
+        cfg_temp = cfg.to_pda().to_cfg()
+        self.assertFalse(cfg_temp.is_empty())
+        self.assertTrue(cfg_temp.contains([ter_a]))
+
+        cfg_temp = cfg.to_pda().to_final_state().to_empty_stack().to_cfg()
+        self.assertFalse(cfg_temp.is_empty())
+        self.assertTrue(cfg_temp.contains([ter_a]))
+
+        cfg_i = cfg.intersection(dfa)
+        self.assertFalse(cfg_i.is_empty())
+
+    def test_intersection_dfa2(self):
+        state0 =  State(0)
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        dfa = DeterministicFiniteAutomaton({state0},
+                                           {symb_a, symb_b},
+                                           start_state = state0,
+                                           final_states = {state0})
+        dfa.add_transition(state0, symb_a, state0)
+        dfa.add_transition(state0, symb_b, state0)
+        self.assertTrue(dfa.accepts([symb_a, symb_a, symb_b, symb_b]))
+
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        var_S = Variable("S")
+        var_S1 = Variable("S1")
+        var_L = Variable("L")
+        productions = {Production(var_S, [var_L, var_S1]),
+                       Production(var_L, [Epsilon()]),
+                       Production(var_S1, [ter_a, var_S1, ter_b]),
+                       Production(var_S1, [ter_b, var_S1, ter_a]),
+                       Production(var_S1, [])}
+        cfg = CFG(productions=productions, start_symbol=var_S)
+        self.assertTrue(cfg.contains([ter_a, ter_a, ter_b, ter_b]))
+        self.assertFalse(cfg.contains([ter_a, ter_a, ter_b]))
+        cfg_i = cfg.intersection(dfa)
+        self.assertFalse(cfg_i.is_empty())
+        self.assertTrue(cfg_i.contains([ter_a, ter_a, ter_b, ter_b]))
         self.assertTrue(cfg_i.contains([]))

@@ -356,7 +356,9 @@ class PDA(object):
 
 def to_pda_combined_state(state_pda, state_other):
     """ To PDA state in the intersection function """
-    return State(state_pda.get_value() + "###" + state_other.get_value())
+    return State(str(state_pda.get_value()) +
+                 "###" +
+                 str(state_other.get_value()))
 
 def to_cfg_combined_variable(state0, stack_symbol, state1):
     """ Convertion used in the to_pda method """
