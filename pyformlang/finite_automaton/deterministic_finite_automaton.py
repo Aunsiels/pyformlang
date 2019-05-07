@@ -254,9 +254,9 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                 for next_node in self._transition_function(state, symbol):
                     if next_node in states:
                         next_node = to_new_states[next_node]
-                        if next_node not in done:
+                        if (next_node, symbol) not in done:
                             dfa.add_transition(new_state, symbol, next_node)
-                            done.add(next_node)
+                            done.add((next_node, symbol))
         return dfa
 
 
