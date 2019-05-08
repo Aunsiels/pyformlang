@@ -10,6 +10,7 @@ from .transition_function import TransitionFunction
 from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
 from .epsilon_nfa import to_single_state
 from .finite_automaton import to_state, to_symbol
+from .distinguishable_states import DistinguishableStates
 
 
 class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
@@ -166,14 +167,15 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                 :class:`~pyformlang.finite_automaton.State`)
             The pair of distinguishable
         """
-        disting = set()
+        disting = DistinguishableStates(len(self._states))
+        to_process = []
         for final in self._final_states:
             for state in self._states:
                 if state not in self._final_states:
                     disting.add((final, state))
-                    disting.add((state, final))
+                    to_process.append((final, state))
             disting.add((None, final))
-            disting.add((final, None))
+            to_process.append((None, final))
         previous_d = dict()
         for state in self._states:
             for symbol in self._input_symbols:
@@ -186,7 +188,6 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                     previous_d[(next0, symbol)].append(state)
                 else:
                     previous_d[(next0, symbol)] = [state]
-        to_process = list(disting)
         while to_process:
             next0, next1 = to_process.pop()
             for symbol in self._input_symbols:
@@ -195,7 +196,6 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                         if (state0, state1) not in disting:
                             disting.add((state0, state1))
                             to_process.append((state0, state1))
-                            disting.add((state1, state0))
         return disting
 
     def _get_reachable_states(self) -> AbstractSet[State]:

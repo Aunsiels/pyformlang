@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='pyformlang',
-    version='0.1.5',
+    version='0.1.6',
     #scripts=['pyformlang'] ,
     author="Julien Romero",
     author_email="romerojulien34@gmail.com",
