@@ -21,4 +21,5 @@ RUN pip3 install pytest \
     wheel \
     twine \
     Tqdm \
-    networkx
+    networkx \
+    bitarray
