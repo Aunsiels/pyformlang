@@ -215,6 +215,12 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                     previous_d[key].append(state)
                 else:
                     previous_d[key] = [state]
+        for symbol in self._input_symbols:
+            key = (None, symbol)
+            if key in previous_d:
+                previous_d[key].append(None)
+            else:
+                previous_d[key] = [None]
         return previous_d
 
     def _get_reachable_states(self) -> AbstractSet[State]:
