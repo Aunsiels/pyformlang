@@ -140,6 +140,18 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         self.assertTrue(dfa_comp.accepts([]))
         self.assertFalse(dfa_comp.accepts([symb_a, symb_b]))
 
+    def test_big_minimize(self):
+        dfa = DeterministicFiniteAutomaton()
+        size = 100
+        symb = Symbol("s")
+        dfa.add_start_state(State(0))
+        dfa.add_final_state(State(size))
+        for i in range(size):
+            dfa.add_transition(State(i), symb, State(i+1))
+        dfa = dfa.minimize()
+        self.assertEqual(dfa.get_number_states(), size + 1)
+        self.assertFalse(dfa.accepts([symb]))
+
 
 def get_example0():
     """ Gives a dfa """

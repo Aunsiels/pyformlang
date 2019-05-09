@@ -3,6 +3,8 @@ Representation of a deterministic finite automaton
 """
 
 from typing import AbstractSet, Iterable
+from collections import deque
+from itertools import product
 
 from .state import State
 from .symbol import Symbol
@@ -168,7 +170,28 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             The pair of distinguishable
         """
         disting = DistinguishableStates(len(self._states))
-        to_process = []
+        to_process = self._initialize_distinguishable_states_to_process(disting)
+        previous_d = self._get_previous_transitions()
+        append = to_process.append
+        not_contains_and_add = disting.not_contains_and_add
+        get = previous_d.get
+        symbols = self._input_symbols
+        pop = to_process.pop
+        emptylist = []
+        while to_process:
+            next0, next1 = pop()
+            for symbol in symbols:
+                next_states0 = get((next0, symbol), emptylist)
+                next_states1 = get((next1, symbol), emptylist)
+                for state0 in next_states0:
+                    for state1 in next_states1:
+                        state_combined = (state0, state1)
+                        if not_contains_and_add(state_combined):
+                            append(state_combined)
+        return disting
+
+    def _initialize_distinguishable_states_to_process(self, disting):
+        to_process = deque()
         for final in self._final_states:
             for state in self._states:
                 if state not in self._final_states:
@@ -176,6 +199,9 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                     to_process.append((final, state))
             disting.add((None, final))
             to_process.append((None, final))
+        return to_process
+
+    def _get_previous_transitions(self):
         previous_d = dict()
         for state in self._states:
             for symbol in self._input_symbols:
@@ -184,19 +210,12 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                     next0 = next0[0]
                 else:
                     next0 = None
-                if (next0, symbol) in previous_d:
-                    previous_d[(next0, symbol)].append(state)
+                key = (next0, symbol)
+                if key in previous_d:
+                    previous_d[key].append(state)
                 else:
-                    previous_d[(next0, symbol)] = [state]
-        while to_process:
-            next0, next1 = to_process.pop()
-            for symbol in self._input_symbols:
-                for state0 in previous_d.setdefault((next0, symbol), []):
-                    for state1 in previous_d.setdefault((next1, symbol), []):
-                        if (state0, state1) not in disting:
-                            disting.add((state0, state1))
-                            to_process.append((state0, state1))
-        return disting
+                    previous_d[key] = [state]
+        return previous_d
 
     def _get_reachable_states(self) -> AbstractSet[State]:
         """ Get all states which are reachable """
@@ -264,17 +283,14 @@ def get_groups(states, distinguishable) -> Iterable[AbstractSet[State]]:
     groups = []
     were_grouped = set()
     states = list(states)
-    for i, state0 in enumerate(states):
-        for _, state1 in enumerate(states[i+1:]):
-            if (state0, state1) in distinguishable:
-                continue
-            were_grouped.add(state0)
-            were_grouped.add(state1)
-            new_groups = [{state0, state1}]
-            for group in groups:
-                if state0 in group or state1 in group:
-                    new_groups[0] = new_groups[0].union(group)
-                else:
-                    new_groups.append(group)
-            groups = new_groups
+    for state0, state1 in distinguishable.get_non_distinguishable():
+        were_grouped.add(state0)
+        were_grouped.add(state1)
+        new_groups = [{state0, state1}]
+        for group in groups:
+            if state0 in group or state1 in group:
+                new_groups[0] = new_groups[0].union(group)
+            else:
+                new_groups.append(group)
+        groups = new_groups
     return (groups, were_grouped)

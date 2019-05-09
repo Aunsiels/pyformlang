@@ -27,10 +27,16 @@ class State(FiniteAutomatonObject): # pylint: disable=too-few-public-methods
     ----------
     """
 
+    def __init__(self, value):
+        super().__init__(value)
+        self.index = None
+
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, State):
-            return self._value == other.get_value()
+            return self._value == other._value
         return False
 
     def __hash__(self) -> int:
-        return hash(self._value)
+        if self._hash is None:
+            self._hash = hash(self._value)
+        return self._hash
