@@ -19,20 +19,23 @@ class Production(object):
     """
 
     def __init__(self, head: Variable, body: Iterable[CFGObject]):
-        self._head = head
-        self._body = tuple([x for x in body if x != Epsilon()])
+        self._head_body = [x for x in body if not isinstance(x, Epsilon)]
+        self._head_body.append(head)
+        self._hash = None
 
-    def get_head(self) -> Variable:
-        return self._head
+    def get_head(self) -> CFGObject:
+        return self._head_body[-1]
 
     def get_body(self) -> Iterable[CFGObject]:
-        return self._body
+        return self._head_body[:-1]
 
     def __repr__(self):
-        return str(self._head) +  " -> " + " ".join([str(x) for x in self._body])
+        return str(self.get_head()) +  " -> " + " ".join([str(x) for x in self.get_body()])
 
     def __hash__(self):
-        return hash(self._head) + hash(self._body)
+        if self._hash is None:
+            self._hash = sum(map(hash, self._head_body))
+        return self._hash
 
     def __eq__(self, other):
-        return self._head == other.get_head() and self._body == other.get_body()
+        return self.get_head() == other.get_head() and self.get_body() == other.get_body()

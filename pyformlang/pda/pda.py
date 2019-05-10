@@ -1,6 +1,8 @@
 """ We represent here a pushdown automaton """
 
 from typing import AbstractSet, List, Iterable, Any
+from itertools import product
+import numpy as np
 
 from .state import State
 from .symbol import Symbol
@@ -10,6 +12,26 @@ from .transition_function import TransitionFunction
 from .utils import to_state, to_symbol, to_stack_symbol
 from pyformlang import finite_automaton
 from pyformlang.regular_expression import Regex
+from pyformlang import cfg
+
+INPUT_SYMBOL = 1
+
+STACK_FROM = 2
+
+INPUT = 0
+
+STATE = 0
+
+NEW_STACK = 1
+
+OUTPUT = 1
+
+
+def _prepend_input_symbol_to_the_bodies(bodies, transition):
+    to_prepend = cfg.Terminal(transition[INPUT][INPUT_SYMBOL].get_value())
+    for body in bodies:
+        body.insert(0, to_prepend)
+
 
 class PDA(object):
     """ Representation of a pushdown automaton
@@ -70,6 +92,7 @@ class PDA(object):
         self._final_states = set(self._final_states)
         for state in self._final_states:
             self._states.add(state)
+        self._cfg_variable_converter = None
 
     def add_final_state(self, state: State):
         """ Adds a final state to the automaton
@@ -190,8 +213,8 @@ class PDA(object):
         new_stack_alphabet.add(new_stack_symbol)
         new_tf = self._transition_function.copy()
         new_tf.add_transition(new_start, Epsilon(), new_stack_symbol,
-                              self._start_state, (self._start_stack_symbol,
-                                                  new_stack_symbol))
+                              self._start_state, [self._start_stack_symbol,
+                                                  new_stack_symbol])
         for state in self._states:
             new_tf.add_transition(state, Epsilon(), new_stack_symbol,
                                   new_end, [])
@@ -221,15 +244,15 @@ class PDA(object):
         new_stack_alphabet.add(new_stack_symbol)
         new_tf = self._transition_function.copy()
         new_tf.add_transition(new_start, Epsilon(), new_stack_symbol,
-                              self._start_state, (self._start_stack_symbol,
-                                                  new_stack_symbol))
+                              self._start_state, [self._start_stack_symbol,
+                                                  new_stack_symbol])
         for state in self._final_states:
             for stack_symbol in new_stack_alphabet:
                 new_tf.add_transition(state, Epsilon(), stack_symbol,
                                       new_end, [])
         for stack_symbol in new_stack_alphabet:
             new_tf.add_transition(new_end, Epsilon(), stack_symbol,
-                                new_end, [])
+                                  new_end, [])
         return PDA(new_states,
                    self._input_symbols.copy(),
                    new_stack_alphabet,
@@ -238,19 +261,21 @@ class PDA(object):
                    new_stack_symbol)
 
     def _generate_all_rules(self, s_from: State, s_to: State,
-                            ss_by: Iterable[StackSymbol]) -> Iterable[Iterable["cfg.Variable"]]:
+                            ss_by: List[StackSymbol]) -> Iterable[Iterable["cfg.Variable"]]:
         """ Generates the rules in the CFG conversion """
-        if len(ss_by) == 0:
+        if not ss_by:
             return [[]]
         if len(ss_by) == 1:
-            return [[to_cfg_combined_variable(s_from, ss_by[0], s_to)]]
+            return [[self._cfg_variable_converter.to_cfg_combined_variable(s_from, ss_by[0], s_to)]]
         res = []
-        for state in self._states:
-            all_next = self._generate_all_rules(s_from, state, ss_by[:-1])
-            current = to_cfg_combined_variable(state, ss_by[-1], s_to)
-            for next_l in all_next:
-                next_l.append(current)
-            res += all_next
+        for states in product(self._states, repeat=len(ss_by) - 1):
+            last_one = s_from
+            temp = []
+            for i in range(len(ss_by) - 1):
+                temp.append(self._cfg_variable_converter.to_cfg_combined_variable(last_one, ss_by[i], states[i]))
+                last_one = states[i]
+            temp.append(self._cfg_variable_converter.to_cfg_combined_variable(last_one, ss_by[-1], s_to))
+            res.append(temp)
         return res
 
     def to_cfg(self) -> "cfg.CFG":
@@ -262,31 +287,47 @@ class PDA(object):
             The equivalent CFG
         """
         from pyformlang import cfg
+        self._cfg_variable_converter = CFGVariableConverter(self._states, self._stack_alphabet)
         start = cfg.Variable("#StartCFG#")
-        productions = set()
-        for state in self._states:
-            productions.add(cfg.Production(start,
-                                           [to_cfg_combined_variable(self._start_state,
-                                                                     self._start_stack_symbol,
-                                                                     state)]))
+        productions = self._initialize_production_from_start_in_to_cfg(start)
         states = self._states
         for transition in self._transition_function:
             for state in states:
-                if len(transition[1][1]) == 0 and state != transition[1][0]:
-                    continue
-                head = to_cfg_combined_variable(transition[0][0],
-                                                transition[0][2],
-                                                state)
-                bodies = self._generate_all_rules(transition[1][0],
-                                                  state,
-                                                  transition[1][1])
-                if transition[0][1] != Epsilon():
-                    to_prepend = cfg.Terminal(transition[0][1].get_value())
-                    for i, body in enumerate(bodies):
-                        bodies[i] = [to_prepend] + body
-                for body in bodies:
-                    productions.add(cfg.Production(head, body))
+                self._process_transition_and_state_to_cfg(productions, state, transition)
         return cfg.CFG(start_symbol=start, productions=productions)
+
+    def _process_transition_and_state_to_cfg(self, productions, state, transition):
+        current_state_has_empty_new_stack = len(transition[OUTPUT][NEW_STACK]) == 0 and \
+                                            state != transition[OUTPUT][STATE]
+        if not current_state_has_empty_new_stack:
+            self._process_transition_and_state_to_cfg_safe(productions, state, transition)
+
+    def _process_transition_and_state_to_cfg_safe(self, productions, state, transition):
+        head = self._get_head_from_state_and_transition(state, transition)
+        bodies = self._get_all_bodies_from_state_and_transition(state, transition)
+        if transition[INPUT][INPUT_SYMBOL] != Epsilon():
+            _prepend_input_symbol_to_the_bodies(bodies, transition)
+        for body in bodies:
+            productions.append(cfg.Production(head, body))
+
+    def _get_all_bodies_from_state_and_transition(self, state, transition):
+        return self._generate_all_rules(transition[OUTPUT][STATE],
+                                        state,
+                                        transition[OUTPUT][NEW_STACK])
+
+    def _get_head_from_state_and_transition(self, state, transition):
+        return self._cfg_variable_converter.to_cfg_combined_variable(transition[INPUT][STATE],
+                                        transition[INPUT][STACK_FROM],
+                                        state)
+
+    def _initialize_production_from_start_in_to_cfg(self, start):
+        productions = []
+        for state in self._states:
+            productions.append(cfg.Production(start,
+                                              [self._cfg_variable_converter.to_cfg_combined_variable(self._start_state,
+                                                                        self._start_stack_symbol,
+                                                                        state)]))
+        return productions
 
     def intersection(self, other:Any) -> "PDA":
         """ Gets the intersection of the current PDA with something else
@@ -360,12 +401,29 @@ def to_pda_combined_state(state_pda, state_other):
                  "###" +
                  str(state_other.get_value()))
 
-def to_cfg_combined_variable(state0, stack_symbol, state1):
-    """ Convertion used in the to_pda method """
-    from pyformlang import cfg
-    return cfg.Variable(str(state0.get_value()) + "#!#" +
-                        str(stack_symbol.get_value()) + "#!#" +
-                        str(state1.get_value()))
+
+class CFGVariableConverter(object):
+
+    def __init__(self, states, stack_symbols):
+        self._counter = 0
+        self._inverse_states_d = dict()
+        for i, state in enumerate(states):
+            self._inverse_states_d[state] = i
+        self._inverse_stack_symbol_d = dict()
+        for i, symbol in enumerate(stack_symbols):
+            self._inverse_stack_symbol_d[symbol] = i
+        self._conversions = np.empty((len(states), len(stack_symbols), len(states)), dtype=object)
+
+    def to_cfg_combined_variable(self, state0, stack_symbol, state1):
+        """ Convertion used in the to_pda method """
+        i_state0 = self._inverse_states_d[state0]
+        i_stack_symbol = self._inverse_stack_symbol_d[stack_symbol]
+        i_state1 = self._inverse_states_d[state1]
+        if self._conversions[i_state0, i_stack_symbol, i_state1] is None:
+            self._conversions[i_state0, i_stack_symbol, i_state1] = cfg.Variable(self._counter)
+            self._counter += 1
+        return self._conversions[i_state0, i_stack_symbol, i_state1]
+
 
 def get_next_free(prefix, type_generating, to_check):
     """ Get free next state or symbol """

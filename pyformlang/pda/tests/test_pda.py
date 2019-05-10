@@ -48,12 +48,11 @@ class TestPDA(unittest.TestCase):
         self.assertEqual(pda.get_number_final_states(), 0)
 
         pda = PDA(stack_alphabet={StackSymbol("A"), StackSymbol("A"),
-                                  StackSymbol("B"),
-                                  State("B")})
+                                  StackSymbol("B")})
         self.assertIsNotNone(pda)
         self.assertEqual(pda.get_number_states(), 0)
         self.assertEqual(pda.get_number_input_symbols(), 0)
-        self.assertEqual(pda.get_number_stack_symbols(), 3)
+        self.assertEqual(pda.get_number_stack_symbols(), 2)
         self.assertEqual(pda.get_number_final_states(), 0)
 
         pda = PDA(input_symbols={Epsilon()})

@@ -31,7 +31,7 @@ class CFG(object):
                  variables: AbstractSet[Variable] = None,
                  terminals: AbstractSet[Terminal] = None,
                  start_symbol: Variable = None,
-                 productions: AbstractSet[Production] = None):
+                 productions: Iterable[Production] = None):
         if variables is not None:
             variables = set([to_variable(x) for x in variables])
         self._variables = variables or set()
@@ -46,16 +46,18 @@ class CFG(object):
         if start_symbol is not None:
             self._variables.add(start_symbol)
         self._productions = productions or set()
-        self._productions = set(self._productions)
+        self._productions = self._productions
         for production in self._productions:
-            self._variables.add(production.get_head())
-            for cfg_object in production.get_body():
-                if isinstance(cfg_object, Terminal):
-                    if cfg_object != Epsilon():
-                        self._terminals.add(cfg_object)
-                else:
-                    self._variables.add(cfg_object)
+            self.__initialize_production_in_cfg(production)
         self._normal_form = None
+
+    def __initialize_production_in_cfg(self, production):
+        self._variables.add(production.get_head())
+        for cfg_object in production.get_body():
+            if isinstance(cfg_object, Terminal):
+                self._terminals.add(cfg_object)
+            else:
+                self._variables.add(cfg_object)
 
     def get_number_variables(self) -> int:
         """ Returns the number of Variables
@@ -309,10 +311,10 @@ class CFG(object):
                 temp = tuple(body[i+1:])
                 if temp in done:
                     new_productions.append(Production(head,
-                                                      (body[i], done[temp])))
+                                                      [body[i], done[temp]]))
                     stopped = True
                     break
-                new_productions.append(Production(head, (body[i], new_var[i])))
+                new_productions.append(Production(head, [body[i], new_var[i]]))
                 done[temp] = new_var[i]
                 head = new_var[i]
             if not stopped:

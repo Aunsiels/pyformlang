@@ -424,6 +424,20 @@ class TestCFG(unittest.TestCase):
         self.assertFalse(cfg.contains([ter_b, ter_c, ter_a]))
         self.assertFalse(cfg.contains([ter_b, ter_b, ter_c, ter_a, ter_a]))
 
+    def test_profiling_conversions(self):
+        """ Tests multiple conversions """
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        ter_c = Terminal("c")
+        var_S = Variable("S")
+        productions = {Production(var_S, [ter_a, var_S, ter_b]),
+                       Production(var_S, [ter_c])}
+        cfg = CFG(productions=productions, start_symbol=var_S)
+        cfg = cfg.to_pda().to_final_state().to_empty_stack().to_cfg()
+        cfg = cfg.to_pda().to_final_state().to_empty_stack().to_cfg()
+        cfg = cfg.to_pda().to_final_state().to_empty_stack().to_cfg()
+        self.assertTrue(True)
+
     def test_generation_words(self):
         """ Tests the generation of word """
         ter_a = Terminal("a")
