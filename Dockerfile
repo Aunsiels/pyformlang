@@ -22,4 +22,5 @@ RUN pip3 install pytest \
     twine \
     Tqdm \
     networkx \
-    bitarray
+    bitarray \
+    numpy

@@ -8,3 +8,4 @@ twine
 Tqdm
 networkx
 sphinx_rtd_theme
+numpy
