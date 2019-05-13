@@ -1,5 +1,5 @@
 """ A context free grammar """
-
+from copy import deepcopy
 from typing import AbstractSet, List, Iterable, Tuple, Dict, Any
 
 import networkx as nx
@@ -50,6 +50,11 @@ class CFG(object):
         for production in self._productions:
             self.__initialize_production_in_cfg(production)
         self._normal_form = None
+        self._generating_symbols = None
+        self._nullable_symbols = None
+        self._impacts = None
+        self._remaining_lists = None
+        self._added_impacts = None
 
     def __initialize_production_in_cfg(self, production):
         self._variables.add(production.get_head())
@@ -97,44 +102,98 @@ class CFG(object):
         generating_symbols : set of :class:`~pyformlang.cfg.CFGObject`
             The generating symbols of the CFG
         """
-        return self._get_generating_or_nullable(False)
+        if self._generating_symbols is None:
+            self._generating_symbols = self._get_generating_or_nullable(False)
+        return self._generating_symbols
 
     def _get_generating_or_nullable(self, nullable=False):
         """ Merge of nullable and generating """
-        g_symbols = set()
-        g_symbols.add(Epsilon())
-        productions = list(self._productions)
-        to_process = []
-        to_process.append(Epsilon())
+        g_symbols = {Epsilon()}
+        to_process = [Epsilon()]
+
+        self._get_impacts_and_remaining_lists(g_symbols)
+        for symbol in self._added_impacts:
+            if symbol not in g_symbols:
+                g_symbols.add(symbol)
+                to_process.append(symbol)
+
         if not nullable:
             for terminal in self._terminals:
                 g_symbols.add(terminal)
                 to_process.append(terminal)
-        symb_to_prod = dict()
-        prod_occured = []
-        prod_required = []
-        prod_head = []
-        for i, production in enumerate(productions):
-            for member in production.get_body():
-                if member in symb_to_prod:
-                    symb_to_prod[member].append(i)
-                else:
-                    symb_to_prod[member] = [i]
-            prod_occured.append(0)
-            prod_required.append(len(production.get_body()))
-            prod_head.append(production.get_head())
-            if prod_required[-1] == 0 and prod_head[-1] not in g_symbols:
-                g_symbols.add(prod_head[-1])
-                to_process.append(prod_head[-1])
+
+        processed_with_modification = []
         while to_process:
             current = to_process.pop()
-            for i in symb_to_prod.get(current, []):
-                prod_occured[i] += 1
-                if prod_occured[i] == prod_required[i] and prod_head[i] not in g_symbols:
-                    g_symbols.add(prod_head[i])
-                    to_process.append(prod_head[i])
+            for symbol_impact, index_impact in self._impacts.get(current, []):
+                if symbol_impact in g_symbols:
+                    continue
+                processed_with_modification.append((symbol_impact, index_impact))
+                self._remaining_lists[symbol_impact][index_impact] -= 1
+                if self._remaining_lists[symbol_impact][index_impact] == 0:
+                    g_symbols.add(symbol_impact)
+                    to_process.append(symbol_impact)
+        # Repare modifications
+        for symbol_impact, index_impact in processed_with_modification:
+            self._remaining_lists[symbol_impact][index_impact] += 1
         g_symbols.remove(Epsilon())
         return g_symbols
+
+    def _get_impacts_and_remaining_lists(self, g_symbols):
+        if self._impacts is not None:
+            return self._impacts, self._remaining_lists
+        self._added_impacts = set()
+        self._remaining_lists = dict()
+        self._impacts = dict()
+        for production in self._productions:
+            head = production.get_head()
+            if head in g_symbols:
+                continue
+            body = production.get_body()
+            if not body:
+                self._added_impacts.add(head)
+                continue
+            temp = self._remaining_lists.setdefault(head, [])
+            temp.append(len(body))
+            index_impact = len(temp) - 1
+            for symbol in body:
+                self._impacts.setdefault(symbol, []).append((head, index_impact))
+
+    def _generate_epsilon(self):
+        """ Whether the grammar generates epsilon or not
+
+        Returns
+        ----------
+        generate_epsilon : bool
+            Whether epsilon is generated or not by the CFG
+        """
+        generate_epsilon = {Epsilon()}
+        to_process = [Epsilon()]
+
+        self._get_impacts_and_remaining_lists(generate_epsilon)
+
+        for symbol in self._added_impacts:
+            if symbol == self._start_symbol:
+                return True
+            if symbol not in generate_epsilon:
+                generate_epsilon.add(symbol)
+                to_process.append(symbol)
+        remaining_lists = self._remaining_lists
+        impacts = self._impacts
+        remaining_lists = deepcopy(remaining_lists)
+
+        while to_process:
+            current = to_process.pop()
+            for symbol_impact, index_impact in impacts.get(current, []):
+                if symbol_impact in generate_epsilon:
+                    continue
+                remaining_lists[symbol_impact][index_impact] -= 1
+                if remaining_lists[symbol_impact][index_impact] == 0:
+                    if symbol_impact == self._start_symbol:
+                        return True
+                    generate_epsilon.add(symbol_impact)
+                    to_process.append(symbol_impact)
+        return False
 
     def get_reachable_symbols(self) -> AbstractSet[CFGObject]:
         """ Gives the objects which are reachable in the CFG
@@ -146,20 +205,19 @@ class CFG(object):
         """
         r_symbols = set()
         r_symbols.add(self._start_symbol)
-        productions = self._productions.copy()
-        found_modification = True
-        while found_modification:
-            found_modification = False
-            used_productions = []
-            for production in productions:
-                if production.get_head() in r_symbols:
-                    found_modification = True
-                    used_productions.append(production)
-                    for symbol in production.get_body():
-                        if symbol != Epsilon():
-                            r_symbols.add(symbol)
-            for production in used_productions:
-                productions.remove(production)
+        reachable_transition_d = dict()
+        for production in self._productions:
+            temp = reachable_transition_d.setdefault(production.get_head(), [])
+            for symbol in production.get_body():
+                if not isinstance(symbol, Epsilon):
+                    temp.append(symbol)
+        to_process = [self._start_symbol]
+        while to_process:
+            current = to_process.pop()
+            for next_symbol in reachable_transition_d.get(current, []):
+                if next_symbol not in r_symbols:
+                    r_symbols.add(next_symbol)
+                    to_process.append(next_symbol)
         return r_symbols
 
     def remove_useless_symbols(self) -> "CFG":
@@ -192,7 +250,9 @@ class CFG(object):
         nullable_symbols : set of :class:`~pyformlang.cfg.CFGObject`
             The nullable symbols of the CFG
         """
-        return self._get_generating_or_nullable(True)
+        if self._nullable_symbols is None:
+            self._nullable_symbols = self._get_generating_or_nullable(True)
+        return self._nullable_symbols
 
     def remove_epsilon(self) -> "CFG":
         """ Removes the epsilon of a cfg
@@ -209,7 +269,7 @@ class CFG(object):
         return CFG(self._variables,
                    self._terminals,
                    self._start_symbol,
-                   set(new_productions))
+                   new_productions)
 
     def get_unit_pairs(self) -> AbstractSet[Tuple[Variable, Variable]]:
         """ Finds all the unit pairs
@@ -247,15 +307,13 @@ class CFG(object):
         productions = [x for x in self._productions if len(x.get_body()) != 1 or\
                                                        not isinstance(x.get_body()[0], Variable)]
         productions_d = get_productions_d(productions)
-        new_productions = set()
         for var_A, var_B in unit_pairs:
             for production in productions_d.get(var_B, []):
-                new_productions.add(Production(var_A,
-                                               production.get_body()))
+                productions.append(Production(var_A, production.get_body(), filtering=False))
         return CFG(self._variables,
                    self._terminals,
                    self._start_symbol,
-                   set(productions).union(new_productions))
+                   productions)
 
     def _get_productions_with_only_single_terminals(self):
         """ Remove the terminals involved in a body of length more than 1 """
@@ -341,7 +399,9 @@ class CFG(object):
             if len(self._productions) == 0:
                 self._normal_form = self
                 return self
-            new_cfg = self.remove_epsilon()\
+            new_cfg = self.remove_useless_symbols()\
+                          .remove_epsilon() \
+                          .remove_useless_symbols()\
                           .eliminate_unit_productions()\
                           .remove_useless_symbols()
             cfg = new_cfg.to_normal_form()
@@ -573,31 +633,6 @@ class CFG(object):
         """
         return self._start_symbol not in self.get_generating_symbols()
 
-    def _generate_epsilon(self):
-        """ Whether the grammar generates epsilon or not
-
-        Returns
-        ----------
-        generate_epsilon : bool
-            Whether epsilon is generated or not by the CFG
-        """
-        generate_epsilon = {Epsilon()}
-        productions = self._productions.copy()
-        found_modification = True
-        while found_modification:
-            found_modification = False
-            used_productions = []
-            for production in productions:
-                if all([x in generate_epsilon for x in production.get_body()]):
-                    if production.get_head() == self._start_symbol:
-                        return True
-                    generate_epsilon.add(production.get_head())
-                    found_modification = True
-                    used_productions.append(production)
-            for production in used_productions:
-                productions.remove(production)
-        return False
-
     def contains(self, word: Iterable[Terminal]) -> bool:
         """ Gives the membership of a word to the grammar
 
@@ -781,6 +816,7 @@ class CFG(object):
             return True
         return False
 
+
 def to_pda_object(cfgobject: CFGObject, to_type) -> "pda.Symbol":
     """ Turns the object to a PDA symbol """
     from pyformlang import pda
@@ -792,6 +828,8 @@ def to_pda_object(cfgobject: CFGObject, to_type) -> "pda.Symbol":
         return to_type("#Term#" + str(cfgobject.get_value()))
     elif isinstance(cfgobject, Variable):
         return to_type("#Var#" + str(cfgobject.get_value()))
+
+
 def remove_nullable_production_sub(body: Iterable[CFGObject],
                                    nullables: AbstractSet[CFGObject]) -> List[List[CFGObject]]:
     """ Recursive sub function to remove nullable objects """
@@ -806,6 +844,7 @@ def remove_nullable_production_sub(body: Iterable[CFGObject],
             res.append([body[0]] + body_temp.copy())
     return res
 
+
 def remove_nullable_production(production: Production,
                                nullables: AbstractSet[CFGObject]) -> List[Production]:
     """ Get all combinations of productions rules after removing nullable """
@@ -817,6 +856,7 @@ def remove_nullable_production(production: Production,
             res.append(Production(production.get_head(),
                                   prod_l))
     return res
+
 
 def get_productions_d(productions):
     """ Get productions as a dictionary """

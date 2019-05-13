@@ -89,6 +89,7 @@ class FiniteAutomaton(object):
         return self._transition_function.remove_transition(s_from,
                                                            symb_by,
                                                            s_to)
+
     def get_number_states(self) -> int:
         """ Gives the total number of states
 
@@ -98,6 +99,16 @@ class FiniteAutomaton(object):
             The number of states
         """
         return len(self._states)
+
+    def get_states(self):
+        """ Gives the states
+
+        Returns
+        ----------
+        states : set of :class:`~pyformlang.finite_automaton.State`
+            The states
+        """
+        return self._states
 
     def get_number_transitions(self) -> int:
         """ Gives the number of transitions

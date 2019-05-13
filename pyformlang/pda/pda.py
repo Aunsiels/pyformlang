@@ -308,7 +308,7 @@ class PDA(object):
         if transition[INPUT][INPUT_SYMBOL] != Epsilon():
             _prepend_input_symbol_to_the_bodies(bodies, transition)
         for body in bodies:
-            productions.append(cfg.Production(head, body))
+            productions.append(cfg.Production(head, body, filtering=False))
 
     def _get_all_bodies_from_state_and_transition(self, state, transition):
         return self._generate_all_rules(transition[OUTPUT][STATE],
@@ -351,10 +351,11 @@ class PDA(object):
         start_state_other = other.get_start_states()
         if len(start_state_other) == 0:
             return PDA()
+        pda_state_converter = PDAStateConverter(self._states, other.get_states())
         start_state_other = list(start_state_other)[0]
         final_state_other = other.get_final_states()
-        start = to_pda_combined_state(self._start_state,
-                                      start_state_other)
+        start = pda_state_converter.to_pda_combined_state(self._start_state,
+                                                          start_state_other)
         pda = PDA(start_state=start,
                   start_stack_symbol=self._start_stack_symbol)
         symbols = self._input_symbols.copy()
@@ -364,7 +365,7 @@ class PDA(object):
         while to_process:
             state_in, state_dfa = to_process.pop()
             if state_in in self._final_states and state_dfa in final_state_other:
-                pda.add_final_state(to_pda_combined_state(state_in, state_dfa))
+                pda.add_final_state(pda_state_converter.to_pda_combined_state(state_in, state_dfa))
             for symbol in symbols:
                 if symbol == Epsilon():
                     symbol_dfa = finite_automaton.Epsilon()
@@ -382,12 +383,12 @@ class PDA(object):
                                                                  stack_symbol)
                     for next_state, next_stack in next_states_self:
                         for next_state_dfa in next_states_dfa:
-                            pda.add_transition(to_pda_combined_state(state_in,
-                                                                     state_dfa),
+                            pda.add_transition(pda_state_converter.to_pda_combined_state(state_in,
+                                                                                         state_dfa),
                                                symbol,
                                                stack_symbol,
-                                               to_pda_combined_state(next_state,
-                                                                     next_state_dfa),
+                                               pda_state_converter.to_pda_combined_state(next_state,
+                                                                                         next_state_dfa),
                                                next_stack)
                             if (next_state, next_state_dfa) not in processed:
                                 to_process.append((next_state, next_state_dfa))
@@ -395,11 +396,24 @@ class PDA(object):
         return pda
 
 
-def to_pda_combined_state(state_pda, state_other):
-    """ To PDA state in the intersection function """
-    return State(str(state_pda.get_value()) +
-                 "###" +
-                 str(state_other.get_value()))
+class PDAStateConverter(object):
+
+    def __init__(self, states_pda, states_dfa):
+        self._inverse_state_pda = dict()
+        for i, state in enumerate(states_pda):
+            self._inverse_state_pda[state] = i
+        self._inverse_state_dfa = dict()
+        for i, state in enumerate(states_dfa):
+            self._inverse_state_dfa[state] = i
+        self._conversions = np.empty((len(states_pda), len(states_dfa)), dtype=object)
+
+    def to_pda_combined_state(self, state_pda, state_other):
+        """ To PDA state in the intersection function """
+        i_state_pda = self._inverse_state_pda[state_pda]
+        i_state_other = self._inverse_state_dfa[state_other]
+        if self._conversions[i_state_pda, i_state_other] is None:
+            self._conversions[i_state_pda, i_state_other] = State((state_pda, state_other))
+        return self._conversions[i_state_pda, i_state_other]
 
 
 class CFGVariableConverter(object):
@@ -415,7 +429,7 @@ class CFGVariableConverter(object):
         self._conversions = np.empty((len(states), len(stack_symbols), len(states)), dtype=object)
 
     def to_cfg_combined_variable(self, state0, stack_symbol, state1):
-        """ Convertion used in the to_pda method """
+        """ Conversion used in the to_pda method """
         i_state0 = self._inverse_states_d[state0]
         i_stack_symbol = self._inverse_stack_symbol_d[stack_symbol]
         i_state1 = self._inverse_states_d[state1]

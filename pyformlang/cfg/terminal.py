@@ -19,4 +19,6 @@ class Terminal(CFGObject): # pylint: disable=too-few-public-methods
         return "Terminal(" + str(self.get_value()) + ")"
 
     def __hash__(self):
-        return hash(self.get_value())
+        if self._hash is None:
+            self._hash = hash(self.get_value())
+        return self._hash

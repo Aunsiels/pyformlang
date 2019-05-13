@@ -18,23 +18,26 @@ class Production(object):
         The body of the production
     """
 
-    def __init__(self, head: Variable, body: Iterable[CFGObject]):
-        self._head_body = [x for x in body if not isinstance(x, Epsilon)]
-        self._head_body.append(head)
+    def __init__(self, head: Variable, body: Iterable[CFGObject], filtering=True):
+        if filtering:
+            self._body = [x for x in body if not isinstance(x, Epsilon)]
+        else:
+            self._body = body
+        self._head = head
         self._hash = None
 
     def get_head(self) -> CFGObject:
-        return self._head_body[-1]
+        return self._head
 
     def get_body(self) -> Iterable[CFGObject]:
-        return self._head_body[:-1]
+        return self._body
 
     def __repr__(self):
         return str(self.get_head()) +  " -> " + " ".join([str(x) for x in self.get_body()])
 
     def __hash__(self):
         if self._hash is None:
-            self._hash = sum(map(hash, self._head_body))
+            self._hash = sum(map(hash, self._body)) + hash(self._head)
         return self._hash
 
     def __eq__(self, other):

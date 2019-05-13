@@ -129,7 +129,7 @@ class TestCFG(unittest.TestCase):
         new_cfg = cfg.remove_epsilon()
         self.assertEqual(new_cfg.get_number_variables(), 3)
         self.assertEqual(new_cfg.get_number_terminals(), 2)
-        self.assertEqual(new_cfg.get_number_productions(), 9)
+        self.assertEqual(len(set(new_cfg._productions)), 9)
         self.assertEqual(len(new_cfg.get_nullable_symbols()), 0)
         self.assertFalse(cfg.is_empty())
 
@@ -176,7 +176,7 @@ class TestCFG(unittest.TestCase):
                           (var_F, var_I),
                           (var_I, var_I)})
         new_cfg = cfg.eliminate_unit_productions()
-        self.assertEqual(new_cfg.get_number_productions(), 30)
+        self.assertEqual(len(set(new_cfg._productions)), 30)
 
     def test_cnf(self):
         """ Tests the conversion to CNF form """
@@ -424,7 +424,7 @@ class TestCFG(unittest.TestCase):
         self.assertFalse(cfg.contains([ter_b, ter_c, ter_a]))
         self.assertFalse(cfg.contains([ter_b, ter_b, ter_c, ter_a, ter_a]))
 
-    def test_profiling_conversions(self):
+    def _test_profiling_conversions(self):
         """ Tests multiple conversions """
         ter_a = Terminal("a")
         ter_b = Terminal("b")
@@ -610,6 +610,35 @@ class TestCFG(unittest.TestCase):
         self.assertTrue(cfg.contains([ter_a, ter_a, ter_b, ter_b]))
         self.assertFalse(cfg.contains([ter_a, ter_a, ter_b]))
         cfg_i = cfg.intersection(dfa)
+        self.assertFalse(cfg_i.is_empty())
+        self.assertTrue(cfg_i.contains([ter_a, ter_a, ter_b, ter_b]))
+        self.assertTrue(cfg_i.contains([]))
+
+    def _test_profiling_intersection(self):
+        state0 =  State(0)
+        symb_a = Symbol("a")
+        symb_b = Symbol("b")
+        dfa = DeterministicFiniteAutomaton({state0},
+                                           {symb_a, symb_b},
+                                           start_state = state0,
+                                           final_states = {state0})
+        dfa.add_transition(state0, symb_a, state0)
+        dfa.add_transition(state0, symb_b, state0)
+
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        var_S = Variable("S")
+        var_S1 = Variable("S1")
+        var_L = Variable("L")
+        productions = {Production(var_S, [var_L, var_S1]),
+                       Production(var_L, [Epsilon()]),
+                       Production(var_S1, [ter_a, var_S1, ter_b]),
+                       Production(var_S1, [ter_b, var_S1, ter_a]),
+                       Production(var_S1, [])}
+        cfg = CFG(productions=productions, start_symbol=var_S)
+        cfg_i = cfg.intersection(dfa)
+        cfg_i = cfg_i.intersection(dfa)
+        cfg_i = cfg_i.intersection(dfa)
         self.assertFalse(cfg_i.is_empty())
         self.assertTrue(cfg_i.contains([ter_a, ter_a, ter_b, ter_b]))
         self.assertTrue(cfg_i.contains([]))

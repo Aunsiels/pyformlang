@@ -12,9 +12,12 @@ class State(object):
 
     def __init__(self, value):
         self._value = value
+        self._hash = None
 
     def __hash__(self):
-        return hash(str(self._value))
+        if self._hash is None:
+            self._hash = hash(self._value)
+        return self._hash
 
     def get_value(self):
         """ Returns the value of the state
