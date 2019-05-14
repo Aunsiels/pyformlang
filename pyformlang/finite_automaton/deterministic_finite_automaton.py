@@ -4,7 +4,8 @@ Representation of a deterministic finite automaton
 
 from typing import AbstractSet, Iterable
 from collections import deque
-from itertools import product
+
+import numpy as np
 
 from .state import State
 from .symbol import Symbol
@@ -13,6 +14,35 @@ from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
 from .epsilon_nfa import to_single_state
 from .finite_automaton import to_state, to_symbol
 from .distinguishable_states import DistinguishableStates
+from .partition import Partition
+from .hopcroft_processing_list import HopcroftProcessingList
+
+
+class PreviousTransitions(object):
+
+    def __init__(self, states, symbols):
+        self._to_index_state = dict()
+        self._to_index_state[None] = 0
+        for i, state in enumerate(states):
+            self._to_index_state[state] = i + 1
+        self._to_index_symbol = dict()
+        for i, symbol in enumerate(symbols):
+            self._to_index_symbol[symbol] = i
+        self._conversion = np.empty((len(states) + 1, len(symbols)), dtype=object)
+
+    def add(self, next0, symbol, state):
+        i_next0 = self._to_index_state[next0]
+        i_symbol = self._to_index_symbol[symbol]
+        if self._conversion[i_next0, i_symbol] is None:
+            self._conversion[i_next0, i_symbol] = [state]
+        else:
+            self._conversion[i_next0, i_symbol].append(state)
+
+    def get(self, next0, symbol):
+        i_next0 = self._to_index_state[next0]
+        i_symbol = self._to_index_symbol[symbol]
+        return self._conversion[i_next0, i_symbol] or []
+
 
 
 class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
@@ -171,18 +201,17 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         """
         disting = DistinguishableStates(len(self._states))
         to_process = self._initialize_distinguishable_states_to_process(disting)
-        previous_d = self._get_previous_transitions()
+        previous_transitions = self._get_previous_transitions()
         append = to_process.append
         not_contains_and_add = disting.not_contains_and_add
-        get = previous_d.get
+        get = previous_transitions.get
         symbols = self._input_symbols
         pop = to_process.pop
-        emptylist = []
         while to_process:
             next0, next1 = pop()
             for symbol in symbols:
-                next_states0 = get((next0, symbol), emptylist)
-                next_states1 = get((next1, symbol), emptylist)
+                next_states0 = get(next0, symbol)
+                next_states1 = get(next1, symbol)
                 for state0 in next_states0:
                     for state1 in next_states1:
                         state_combined = (state0, state1)
@@ -202,7 +231,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         return to_process
 
     def _get_previous_transitions(self):
-        previous_d = dict()
+        previous_transitions = PreviousTransitions(self._states, self._input_symbols)
         for state in self._states:
             for symbol in self._input_symbols:
                 next0 = self._transition_function(state, symbol)
@@ -210,18 +239,10 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                     next0 = next0[0]
                 else:
                     next0 = None
-                key = (next0, symbol)
-                if key in previous_d:
-                    previous_d[key].append(state)
-                else:
-                    previous_d[key] = [state]
+                previous_transitions.add(next0, symbol, state)
         for symbol in self._input_symbols:
-            key = (None, symbol)
-            if key in previous_d:
-                previous_d[key].append(None)
-            else:
-                previous_d[key] = [None]
-        return previous_d
+            previous_transitions.add(None, symbol, None)
+        return previous_transitions
 
     def _get_reachable_states(self) -> AbstractSet[State]:
         """ Get all states which are reachable """
@@ -254,17 +275,14 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         reachables = self._get_reachable_states()
         states = self._states.intersection(reachables)
         # Group the equivalent states
-        distinguishable = self._get_distinguishable_states()
-        groups, were_grouped = get_groups(states, distinguishable)
+        partition = self._get_partition()
+        groups = partition.get_groups()
         # Create a state for this
         to_new_states = dict()
         for group in groups:
             new_state = to_single_state(group)
             for state in group:
                 to_new_states[state] = new_state
-        for state in states:
-            if state not in were_grouped:
-                to_new_states[state] = state
         # Build the DFA
         dfa = DeterministicFiniteAutomaton()
         for state in self._start_state:
@@ -282,6 +300,40 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                             dfa.add_transition(new_state, symbol, next_node)
                             done.add((next_node, symbol))
         return dfa
+
+    def _get_partition(self):
+        previous_transitions = self._get_previous_transitions()
+        finals = []
+        non_finals = []
+        for state in self._states:
+            if state in self._final_states:
+                finals.append(state)
+            else:
+                non_finals.append(state)
+        partition = Partition(len(self._states))
+        partition.add_class(finals)
+        partition.add_class(non_finals)
+        processing_list = HopcroftProcessingList(len(self._states), self._input_symbols)
+        to_add = 0 # 0 is the index of finals, 1 of non_finals
+        if len(non_finals) < len(finals):
+            to_add = 1
+        for symbol in self._input_symbols:
+            processing_list.insert(to_add, symbol)
+        while not processing_list.is_empty():
+            current_class, current_symbol = processing_list.pop()
+            inverse = []
+            for element in partition.part[current_class]:
+                inverse += previous_transitions.get(element.value, current_symbol)
+            for valid_set in partition.get_valid_sets(inverse):
+                new_class = partition.split(valid_set, inverse)
+                for symbol in self._input_symbols:
+                    if processing_list.contains(valid_set, symbol):
+                        processing_list.insert(new_class, symbol)
+                    elif len(partition.part[valid_set]) < len(partition.part[valid_set]):
+                        processing_list.insert(valid_set, symbol)
+                    else:
+                        processing_list.insert(new_class, symbol)
+        return partition
 
 
 def get_groups(states, distinguishable) -> Iterable[AbstractSet[State]]:

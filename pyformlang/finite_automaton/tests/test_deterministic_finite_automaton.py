@@ -142,7 +142,7 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
 
     def test_big_minimize(self):
         dfa = DeterministicFiniteAutomaton()
-        size = 100
+        size = 10000
         symb = Symbol("s")
         dfa.add_start_state(State(0))
         dfa.add_final_state(State(size))
