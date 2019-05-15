@@ -142,7 +142,7 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
 
     def test_big_minimize(self):
         dfa = DeterministicFiniteAutomaton()
-        size = 10000
+        size = 1000
         symb = Symbol("s")
         dfa.add_start_state(State(0))
         dfa.add_final_state(State(size))
@@ -151,6 +151,42 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa = dfa.minimize()
         self.assertEqual(dfa.get_number_states(), size + 1)
         self.assertFalse(dfa.accepts([symb]))
+
+    def test_big_minimize_reduce(self):
+        dfa = DeterministicFiniteAutomaton()
+        symb_0 = Symbol("0")
+        symb_0_minus = Symbol("0-")
+        symb_1 = Symbol("1")
+        symb_1_minus = Symbol("1-")
+        symb_star = Symbol("STAR")
+        start = State("start")
+        states = [State(str(x)) for x in range(10)]
+        dfa.add_start_state(start)
+        dfa.add_final_state(states[2])
+        dfa.add_final_state(states[3])
+        dfa.add_final_state(states[4])
+        dfa.add_final_state(states[8])
+        dfa.add_final_state(states[7])
+        dfa.add_final_state(states[9])
+        dfa.add_transition(start, symb_0, states[0])
+        dfa.add_transition(states[1], symb_0, states[2])
+        dfa.add_transition(states[2], symb_0, states[0])
+        dfa.add_transition(states[3], symb_0, states[0])
+        dfa.add_transition(states[4], symb_0, states[0])
+        dfa.add_transition(states[8], symb_0, states[0])
+        dfa.add_transition(states[7], symb_0, states[0])
+        dfa.add_transition(states[9], symb_0, states[0])
+        dfa.add_transition(states[0], symb_star, states[1])
+        dfa.add_transition(states[5], symb_star, states[6])
+        dfa.add_transition(states[7], symb_star, states[9])
+        dfa.add_transition(states[2], symb_star, states[3])
+        dfa.add_transition(states[4], symb_star, states[8])
+        dfa.add_transition(states[1], symb_0_minus, states[5])
+        dfa.add_transition(states[6], symb_0_minus, states[7])
+        dfa.add_transition(states[3], symb_1_minus, states[4])
+        self.assertFalse(dfa.accepts(["0", "STAR", "0-", "STAR", "0-", "0", "STAR", "0", "0", "STAR", "0-", "STAR", "0-", "1-"]))
+        dfa = dfa.minimize()
+        self.assertFalse(dfa.accepts(["0", "STAR", "0-", "STAR", "0-", "0", "STAR", "0", "0", "STAR", "0-", "STAR", "0-", "1-"]))
 
     def test_minimize_repetition(self):
         dfa = DeterministicFiniteAutomaton()

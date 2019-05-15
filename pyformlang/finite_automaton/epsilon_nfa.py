@@ -622,7 +622,10 @@ def to_single_state(l_states: Iterable[State]) -> State:
     """
     values = []
     for state in l_states:
-        values.append(str(state.get_value()))
+        if state is not None:
+            values.append(str(state.get_value()))
+        else:
+            values.append("TRASH")
     values = sorted(values)
     return State(";".join(values))
 

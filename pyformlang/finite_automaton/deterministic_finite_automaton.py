@@ -310,10 +310,14 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                 finals.append(state)
             else:
                 non_finals.append(state)
-        partition = Partition(len(self._states))
+        # None is the trash node
+        non_finals.append(None)
+        # + 1 for trash node
+        partition = Partition(len(self._states) + 1)
         partition.add_class(finals)
         partition.add_class(non_finals)
-        processing_list = HopcroftProcessingList(len(self._states), self._input_symbols)
+        # + 1 for trash node
+        processing_list = HopcroftProcessingList(len(self._states) + 1, self._input_symbols)
         to_add = 0 # 0 is the index of finals, 1 of non_finals
         if len(non_finals) < len(finals):
             to_add = 1
