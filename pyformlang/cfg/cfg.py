@@ -686,10 +686,12 @@ class CFG(object):
         """
         from pyformlang import pda
         state = pda.State("q")
-        input_symbols = [to_pda_object(x, pda.Symbol) for x in self._terminals]
-        stack_alphabet = [to_pda_object(x, pda.StackSymbol)
+        pda_object_creator = PDAObjectCreator(self._terminals, self._variables)
+        input_symbols = [pda_object_creator.get_symbol_from(x)
+                         for x in self._terminals]
+        stack_alphabet = [pda_object_creator.get_stack_symbol_from(x)
                           for x in self._terminals.union(self._variables)]
-        start_stack_symbol = to_pda_object(self._start_symbol, pda.StackSymbol)
+        start_stack_symbol = pda_object_creator.get_stack_symbol_from(self._start_symbol)
         new_pda = pda.PDA(states={state},
                           input_symbols=input_symbols,
                           stack_alphabet=stack_alphabet,
@@ -697,14 +699,14 @@ class CFG(object):
                           start_stack_symbol=start_stack_symbol)
         for production in self._productions:
             new_pda.add_transition(state, pda.Epsilon(),
-                                   to_pda_object(production.get_head(),
-                                                 pda.StackSymbol),
+                                   pda_object_creator.get_stack_symbol_from(
+                                       production.get_head()),
                                    state,
-                                   [to_pda_object(x, pda.StackSymbol)
+                                   [pda_object_creator.get_stack_symbol_from(x)
                                     for x in production.get_body()])
         for terminal in self._terminals:
-            new_pda.add_transition(state, to_pda_object(terminal, pda.Symbol),
-                                   to_pda_object(terminal, pda.StackSymbol),
+            new_pda.add_transition(state, pda_object_creator.get_symbol_from(terminal),
+                                   pda_object_creator.get_stack_symbol_from(terminal),
                                    state, [])
         return new_pda
 
@@ -817,17 +819,41 @@ class CFG(object):
         return False
 
 
-def to_pda_object(cfgobject: CFGObject, to_type) -> "pda.Symbol":
-    """ Turns the object to a PDA symbol """
-    from pyformlang import pda
-    if isinstance(cfgobject, Epsilon):
-        return pda.Epsilon()
-    elif isinstance(cfgobject, Terminal):
-        if to_type == pda.Symbol:
-            return to_type(cfgobject.get_value())
-        return to_type("#Term#" + str(cfgobject.get_value()))
-    elif isinstance(cfgobject, Variable):
-        return to_type("#Var#" + str(cfgobject.get_value()))
+
+class PDAObjectCreator(object):
+
+    def __init__(self, terminals, variables):
+        self._inverse_symbol = dict()
+        self._inverse_stack_symbol = dict()
+        for terminal in terminals:
+            self._inverse_symbol[terminal] = None
+            self._inverse_stack_symbol[terminal] = None
+        for variable in variables:
+            self._inverse_stack_symbol[variable] = None
+
+    def get_symbol_from(self, symbol):
+        from pyformlang import pda
+        if isinstance(symbol, Epsilon):
+            return pda.Epsilon()
+        if self._inverse_symbol[symbol] is None:
+            value = str(symbol.get_value())
+            temp = pda.Symbol(value)
+            self._inverse_symbol[symbol] = temp
+            return temp
+        return self._inverse_symbol[symbol]
+
+    def get_stack_symbol_from(self, stack_symbol):
+        from pyformlang import pda
+        if isinstance(stack_symbol, Epsilon):
+            return pda.Epsilon()
+        if self._inverse_stack_symbol[stack_symbol] is None:
+            value = str(stack_symbol.get_value())
+            if isinstance(stack_symbol, Terminal):
+                value = "#TERM#" + value
+            temp = pda.StackSymbol(value)
+            self._inverse_stack_symbol[stack_symbol] = temp
+            return temp
+        return self._inverse_stack_symbol[stack_symbol]
 
 
 def remove_nullable_production_sub(body: Iterable[CFGObject],

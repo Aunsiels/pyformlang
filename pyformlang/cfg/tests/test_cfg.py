@@ -499,7 +499,6 @@ class TestCFG(unittest.TestCase):
         cfg = CFG(productions=prod0, start_symbol=var_S)
         self.assertFalse(cfg.is_finite())
 
-
     def test_intersection(self):
         """ Tests the intersection with a regex """
         regex = Regex("a*b*")
@@ -614,31 +613,32 @@ class TestCFG(unittest.TestCase):
         self.assertTrue(cfg_i.contains([ter_a, ter_a, ter_b, ter_b]))
         self.assertTrue(cfg_i.contains([]))
 
-    def _test_profiling_intersection(self):
-        state0 =  State(0)
+    def test_profiling_intersection(self):
+        size = 20
+        states = [State(i) for i in range(size * 2 + 1)]
         symb_a = Symbol("a")
         symb_b = Symbol("b")
-        dfa = DeterministicFiniteAutomaton({state0},
+        dfa = DeterministicFiniteAutomaton(states,
                                            {symb_a, symb_b},
-                                           start_state = state0,
-                                           final_states = {state0})
-        dfa.add_transition(state0, symb_a, state0)
-        dfa.add_transition(state0, symb_b, state0)
+                                           start_state = states[0],
+                                           final_states = {states[-1]})
+        for i in range(size):
+            dfa.add_transition(states[i], symb_a, states[i+1])
+        for i in range(size, size * 2):
+            dfa.add_transition(states[i], symb_b, states[i+1])
 
         ter_a = Terminal("a")
         ter_b = Terminal("b")
         var_S = Variable("S")
         var_S1 = Variable("S1")
         var_L = Variable("L")
-        productions = {Production(var_S, [var_L, var_S1]),
+        productions = [Production(var_S, [var_L, var_S1]),
                        Production(var_L, [Epsilon()]),
                        Production(var_S1, [ter_a, var_S1, ter_b]),
                        Production(var_S1, [ter_b, var_S1, ter_a]),
-                       Production(var_S1, [])}
+                       Production(var_S1, [])]
         cfg = CFG(productions=productions, start_symbol=var_S)
         cfg_i = cfg.intersection(dfa)
-        cfg_i = cfg_i.intersection(dfa)
-        cfg_i = cfg_i.intersection(dfa)
         self.assertFalse(cfg_i.is_empty())
-        self.assertTrue(cfg_i.contains([ter_a, ter_a, ter_b, ter_b]))
-        self.assertTrue(cfg_i.contains([]))
+        self.assertTrue(cfg_i.contains([ter_a] * size + [ter_b] * size))
+        self.assertFalse(cfg_i.contains([]))

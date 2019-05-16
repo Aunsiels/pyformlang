@@ -13,6 +13,7 @@ class StackSymbol(object):
     def __init__(self, value):
         self._value = value
         self._hash = None
+        self.index_cfg_converter = None
 
     def __hash__(self):
         if self._hash is None:

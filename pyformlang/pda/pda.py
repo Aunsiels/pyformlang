@@ -27,12 +27,6 @@ NEW_STACK = 1
 OUTPUT = 1
 
 
-def _prepend_input_symbol_to_the_bodies(bodies, transition):
-    to_prepend = cfg.Terminal(transition[INPUT][INPUT_SYMBOL].get_value())
-    for body in bodies:
-        body.insert(0, to_prepend)
-
-
 class PDA(object):
     """ Representation of a pushdown automaton
 
@@ -260,24 +254,6 @@ class PDA(object):
                    new_start,
                    new_stack_symbol)
 
-    def _generate_all_rules(self, s_from: State, s_to: State,
-                            ss_by: List[StackSymbol]) -> Iterable[Iterable["cfg.Variable"]]:
-        """ Generates the rules in the CFG conversion """
-        if not ss_by:
-            return [[]]
-        if len(ss_by) == 1:
-            return [[self._cfg_variable_converter.to_cfg_combined_variable(s_from, ss_by[0], s_to)]]
-        res = []
-        for states in product(self._states, repeat=len(ss_by) - 1):
-            last_one = s_from
-            temp = []
-            for i in range(len(ss_by) - 1):
-                temp.append(self._cfg_variable_converter.to_cfg_combined_variable(last_one, ss_by[i], states[i]))
-                last_one = states[i]
-            temp.append(self._cfg_variable_converter.to_cfg_combined_variable(last_one, ss_by[-1], s_to))
-            res.append(temp)
-        return res
-
     def to_cfg(self) -> "cfg.CFG":
         """ Turns this PDA on empty stack accepting into a CFG
 
@@ -291,6 +267,11 @@ class PDA(object):
         start = cfg.Variable("#StartCFG#")
         productions = self._initialize_production_from_start_in_to_cfg(start)
         states = self._states
+        for transition in self._transition_function:
+            for state in states:
+                self._cfg_variable_converter.set_valid(transition[INPUT][STATE],
+                                                       transition[INPUT][STACK_FROM],
+                                                       state)
         for transition in self._transition_function:
             for state in states:
                 self._process_transition_and_state_to_cfg(productions, state, transition)
@@ -315,10 +296,42 @@ class PDA(object):
                                         state,
                                         transition[OUTPUT][NEW_STACK])
 
+    def _generate_all_rules(self, s_from: State, s_to: State,
+                            ss_by: List[StackSymbol]) -> Iterable[Iterable["cfg.Variable"]]:
+        """ Generates the rules in the CFG conversion """
+        if not ss_by:
+            return [[]]
+        if len(ss_by) == 1:
+            state = self._cfg_variable_converter.is_valid_and_get(s_from, ss_by[0], s_to)
+            if state is not None:
+                return [[state]]
+            else:
+                return []
+        res = []
+        for states in product(self._states, repeat=len(ss_by) - 1):
+            last_one = s_from
+            temp = []
+            stopped = False
+            for i in range(len(ss_by) - 1):
+                new_variable = self._cfg_variable_converter.is_valid_and_get(last_one, ss_by[i], states[i])
+                if new_variable is None:
+                    stopped = True
+                    break
+                temp.append(new_variable)
+                last_one = states[i]
+            if stopped:
+                continue
+            new_variable = self._cfg_variable_converter.is_valid_and_get(last_one, ss_by[-1], s_to)
+            if new_variable is None:
+                continue
+            temp.append(new_variable)
+            res.append(temp)
+        return res
+
     def _get_head_from_state_and_transition(self, state, transition):
         return self._cfg_variable_converter.to_cfg_combined_variable(transition[INPUT][STATE],
-                                        transition[INPUT][STACK_FROM],
-                                        state)
+                                                                     transition[INPUT][STACK_FROM],
+                                                                     state)
 
     def _initialize_production_from_start_in_to_cfg(self, start):
         productions = []
@@ -396,6 +409,12 @@ class PDA(object):
         return pda
 
 
+def _prepend_input_symbol_to_the_bodies(bodies, transition):
+    to_prepend = cfg.Terminal(transition[INPUT][INPUT_SYMBOL].get_value())
+    for body in bodies:
+        body.insert(0, to_prepend)
+
+
 class PDAStateConverter(object):
 
     def __init__(self, states_pda, states_dfa):
@@ -423,20 +442,56 @@ class CFGVariableConverter(object):
         self._inverse_states_d = dict()
         for i, state in enumerate(states):
             self._inverse_states_d[state] = i
+            state.index_cfg_converter = i
         self._inverse_stack_symbol_d = dict()
         for i, symbol in enumerate(stack_symbols):
             self._inverse_stack_symbol_d[symbol] = i
-        self._conversions = np.empty((len(states), len(stack_symbols), len(states)), dtype=object)
+            symbol.index_cfg_converter = i
+        self._conversions = [[[(False, None) for _ in range(len(states))] for _ in range(len(stack_symbols))] for _ in
+                             range(len(states))]
+
+    def get_state_index(self, state):
+        if state.index_cfg_converter is None:
+            state.index_cfg_converter = self._inverse_states_d[state]
+        return state.index_cfg_converter
+
+    def get_symbol_index(self, symbol):
+        if symbol.index_cfg_converter is None:
+            symbol.index_cfg_converter = self._inverse_stack_symbol_d[symbol]
+        return symbol.index_cfg_converter
 
     def to_cfg_combined_variable(self, state0, stack_symbol, state1):
         """ Conversion used in the to_pda method """
-        i_state0 = self._inverse_states_d[state0]
-        i_stack_symbol = self._inverse_stack_symbol_d[stack_symbol]
-        i_state1 = self._inverse_states_d[state1]
-        if self._conversions[i_state0, i_stack_symbol, i_state1] is None:
-            self._conversions[i_state0, i_stack_symbol, i_state1] = cfg.Variable(self._counter)
-            self._counter += 1
-        return self._conversions[i_state0, i_stack_symbol, i_state1]
+        i_state0 = self.get_state_index(state0)
+        i_stack_symbol = self.get_symbol_index(stack_symbol)
+        i_state1 = self.get_state_index(state1)
+        prev = self._conversions[i_state0][i_stack_symbol][i_state1]
+        if prev[1] is None:
+            self._create_new_variable(i_stack_symbol, i_state0, i_state1)
+        return self._conversions[i_state0][i_stack_symbol][i_state1][1]
+
+    def _create_new_variable(self, i_stack_symbol, i_state0, i_state1):
+        prev = self._conversions[i_state0][i_stack_symbol][i_state1]
+        self._conversions[i_state0][i_stack_symbol][i_state1] = (prev[0], cfg.Variable(self._counter))
+        self._counter += 1
+
+    def set_valid(self, state0, stack_symbol, state1):
+        i_state0 = self.get_state_index(state0)
+        i_stack_symbol = self.get_symbol_index(stack_symbol)
+        i_state1 = self.get_state_index(state1)
+        prev = self._conversions[i_state0][i_stack_symbol][i_state1]
+        self._conversions[i_state0][i_stack_symbol][i_state1] = (True, prev[1])
+
+    def is_valid_and_get(self, state0, stack_symbol, state1):
+        i_state0 = self.get_state_index(state0)
+        i_stack_symbol = self.get_symbol_index(stack_symbol)
+        i_state1 = self.get_state_index(state1)
+        current = self._conversions[i_state0][i_stack_symbol][i_state1]
+        if not current[0]:
+            return None
+        if current[1] is None:
+            self._create_new_variable(i_stack_symbol, i_state0, i_state1)
+        return self._conversions[i_state0][i_stack_symbol][i_state1][1]
 
 
 def get_next_free(prefix, type_generating, to_check):
