@@ -19,6 +19,8 @@ Most algorithms come from Introduction to *Automata Theory, Languages, and Compu
 
 Indexed grammars come from the original paper *Index Grammars - An Extension of Context-free grammars* by Alfred V. Aho.
 
+On the implementation of Hopcroft minimization algorithm: [Implementation of Hopcroft's Algorithm, Hang Zhou](https://www.irif.fr/~carton/Enseignement/Complexite/ENS/Redaction/2009-2010/hang.zhou.pdf)
+
 ## Usage
 
 ### Regular expression

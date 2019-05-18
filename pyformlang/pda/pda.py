@@ -9,7 +9,7 @@ from .symbol import Symbol
 from .stack_symbol import StackSymbol
 from .epsilon import Epsilon
 from .transition_function import TransitionFunction
-from .utils import to_state, to_symbol, to_stack_symbol
+from .utils import PDAObjectCreator
 from pyformlang import finite_automaton
 from pyformlang.regular_expression import Regex
 from pyformlang import cfg
@@ -57,18 +57,19 @@ class PDA(object):
                  start_state: State = None,
                  start_stack_symbol: StackSymbol = None,
                  final_states: AbstractSet[State] = None):
+        self._pda_obj_creator = PDAObjectCreator()
         if states is not None:
-            states = set([to_state(x) for x in states])
+            states = set([self._pda_obj_creator.to_state(x) for x in states])
         if input_symbols is not None:
-            input_symbols = set([to_symbol(x) for x in input_symbols])
+            input_symbols = set([self._pda_obj_creator.to_symbol(x) for x in input_symbols])
         if stack_alphabet is not None:
-            stack_alphabet = set([to_stack_symbol(x) for x in stack_alphabet])
+            stack_alphabet = set([self._pda_obj_creator.to_stack_symbol(x) for x in stack_alphabet])
         if start_state is not None:
-            start_state = to_state(start_state)
+            start_state = self._pda_obj_creator.to_state(start_state)
         if start_stack_symbol is not None:
-            start_stack_symbol = to_stack_symbol(start_stack_symbol)
+            start_stack_symbol = self._pda_obj_creator.to_stack_symbol(start_stack_symbol)
         if final_states is not None:
-            final_states = set([to_state(x) for x in final_states])
+            final_states = set([self._pda_obj_creator.to_state(x) for x in final_states])
         self._states = states or set()
         self._states = set(self._states)
         self._input_symbols = input_symbols or set()
@@ -96,7 +97,7 @@ class PDA(object):
         state : :class:`~pyformlang.pda.State`
             The state to add
         """
-        state = to_state(state)
+        state = self._pda_obj_creator.to_state(state)
         self._final_states.add(state)
 
     def get_number_states(self) -> int:
@@ -170,11 +171,11 @@ class PDA(object):
         stack_to : list of :class:`~pyformlang.pda.StackSymbol`
             The string of stack symbol which replace the stack_from
         """
-        s_from = to_state(s_from)
-        input_symbol = to_symbol(input_symbol)
-        stack_from = to_stack_symbol(stack_from)
-        s_to = to_state(s_to)
-        stack_to = [to_stack_symbol(x) for x in stack_to]
+        s_from = self._pda_obj_creator.to_state(s_from)
+        input_symbol = self._pda_obj_creator.to_symbol(input_symbol)
+        stack_from = self._pda_obj_creator.to_stack_symbol(stack_from)
+        s_to = self._pda_obj_creator.to_state(s_to)
+        stack_to = [self._pda_obj_creator.to_stack_symbol(x) for x in stack_to]
         self._states.add(s_from)
         self._states.add(s_to)
         if input_symbol != Epsilon():
@@ -302,18 +303,19 @@ class PDA(object):
         if not ss_by:
             return [[]]
         if len(ss_by) == 1:
-            state = self._cfg_variable_converter.is_valid_and_get(s_from, ss_by[0], s_to)
-            if state is not None:
-                return [[state]]
-            else:
-                return []
+            return self._generate_length_one_rules(s_from, s_to, ss_by)
         res = []
-        for states in product(self._states, repeat=len(ss_by) - 1):
+        is_valid_and_get = self._cfg_variable_converter.is_valid_and_get
+        append_to_res = res.append
+        length_ss_by_minus_one = len(ss_by) - 1
+        for states in product(self._states, repeat=length_ss_by_minus_one):
             last_one = s_from
             temp = []
             stopped = False
-            for i in range(len(ss_by) - 1):
-                new_variable = self._cfg_variable_converter.is_valid_and_get(last_one, ss_by[i], states[i])
+            for i in range(length_ss_by_minus_one):
+                new_variable = is_valid_and_get(last_one,
+                                                ss_by[i],
+                                                states[i])
                 if new_variable is None:
                     stopped = True
                     break
@@ -321,12 +323,19 @@ class PDA(object):
                 last_one = states[i]
             if stopped:
                 continue
-            new_variable = self._cfg_variable_converter.is_valid_and_get(last_one, ss_by[-1], s_to)
+            new_variable = is_valid_and_get(last_one, ss_by[-1], s_to)
             if new_variable is None:
                 continue
             temp.append(new_variable)
-            res.append(temp)
+            append_to_res(temp)
         return res
+
+    def _generate_length_one_rules(self, s_from, s_to, ss_by):
+        state = self._cfg_variable_converter.is_valid_and_get(s_from, ss_by[0], s_to)
+        if state is not None:
+            return [[state]]
+        else:
+            return []
 
     def _get_head_from_state_and_transition(self, state, transition):
         return self._cfg_variable_converter.to_cfg_combined_variable(transition[INPUT][STATE],
@@ -337,12 +346,11 @@ class PDA(object):
         productions = []
         for state in self._states:
             productions.append(cfg.Production(start,
-                                              [self._cfg_variable_converter.to_cfg_combined_variable(self._start_state,
-                                                                        self._start_stack_symbol,
-                                                                        state)]))
+                                              [self._cfg_variable_converter.to_cfg_combined_variable(
+                                                  self._start_state, self._start_stack_symbol, state)]))
         return productions
 
-    def intersection(self, other:Any) -> "PDA":
+    def intersection(self, other: Any) -> "PDA":
         """ Gets the intersection of the current PDA with something else
 
         Parameters
@@ -373,8 +381,8 @@ class PDA(object):
                   start_stack_symbol=self._start_stack_symbol)
         symbols = self._input_symbols.copy()
         symbols.add(Epsilon())
-        to_process=[(self._start_state, start_state_other)]
-        processed={(self._start_state, start_state_other)}
+        to_process = [(self._start_state, start_state_other)]
+        processed = {(self._start_state, start_state_other)}
         while to_process:
             state_in, state_dfa = to_process.pop()
             if state_in in self._final_states and state_dfa in final_state_other:
@@ -452,8 +460,11 @@ class CFGVariableConverter(object):
 
     def get_state_index(self, state):
         if state.index_cfg_converter is None:
-            state.index_cfg_converter = self._inverse_states_d[state]
+            self.set_index_state(state)
         return state.index_cfg_converter
+
+    def set_index_state(self, state):
+        state.index_cfg_converter = self._inverse_states_d[state]
 
     def get_symbol_index(self, symbol):
         if symbol.index_cfg_converter is None:
@@ -462,36 +473,40 @@ class CFGVariableConverter(object):
 
     def to_cfg_combined_variable(self, state0, stack_symbol, state1):
         """ Conversion used in the to_pda method """
-        i_state0 = self.get_state_index(state0)
-        i_stack_symbol = self.get_symbol_index(stack_symbol)
-        i_state1 = self.get_state_index(state1)
+        i_stack_symbol, i_state0, i_state1 = self._get_indexes(stack_symbol, state0, state1)
         prev = self._conversions[i_state0][i_stack_symbol][i_state1]
         if prev[1] is None:
-            self._create_new_variable(i_stack_symbol, i_state0, i_state1)
-        return self._conversions[i_state0][i_stack_symbol][i_state1][1]
+            return self._create_new_variable(i_stack_symbol, i_state0, i_state1, prev)[1]
+        return prev[1]
 
-    def _create_new_variable(self, i_stack_symbol, i_state0, i_state1):
-        prev = self._conversions[i_state0][i_stack_symbol][i_state1]
-        self._conversions[i_state0][i_stack_symbol][i_state1] = (prev[0], cfg.Variable(self._counter))
+    def _create_new_variable(self, i_stack_symbol, i_state0, i_state1, prev):
+        temp = (prev[0], cfg.Variable(self._counter))
         self._counter += 1
+        self._conversions[i_state0][i_stack_symbol][i_state1] = temp
+        return temp
 
     def set_valid(self, state0, stack_symbol, state1):
-        i_state0 = self.get_state_index(state0)
-        i_stack_symbol = self.get_symbol_index(stack_symbol)
-        i_state1 = self.get_state_index(state1)
+        i_stack_symbol, i_state0, i_state1 = self._get_indexes(stack_symbol, state0, state1)
         prev = self._conversions[i_state0][i_stack_symbol][i_state1]
         self._conversions[i_state0][i_stack_symbol][i_state1] = (True, prev[1])
 
     def is_valid_and_get(self, state0, stack_symbol, state1):
-        i_state0 = self.get_state_index(state0)
-        i_stack_symbol = self.get_symbol_index(stack_symbol)
-        i_state1 = self.get_state_index(state1)
+        i_state0 = state0.index_cfg_converter
+        i_stack_symbol = stack_symbol.index_cfg_converter
+        i_state1 = state1.index_cfg_converter
         current = self._conversions[i_state0][i_stack_symbol][i_state1]
         if not current[0]:
             return None
         if current[1] is None:
-            self._create_new_variable(i_stack_symbol, i_state0, i_state1)
-        return self._conversions[i_state0][i_stack_symbol][i_state1][1]
+            return self._create_new_variable(i_stack_symbol, i_state0, i_state1, current)[1]
+        else:
+            return current[1]
+
+    def _get_indexes(self, stack_symbol, state0, state1):
+        i_state0 = self.get_state_index(state0)
+        i_stack_symbol = self.get_symbol_index(stack_symbol)
+        i_state1 = self.get_state_index(state1)
+        return i_stack_symbol, i_state0, i_state1
 
 
 def get_next_free(prefix, type_generating, to_check):

@@ -6,6 +6,7 @@ from .state import State
 from .symbol import Symbol
 from .stack_symbol import StackSymbol
 
+
 class TransitionFunction(object):
     """ A transition function in a pushdown automaton """
 
