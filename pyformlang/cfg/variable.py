@@ -15,6 +15,7 @@ class Variable(CFGObject): # pylint: disable=too-few-public-methods
     def __init__(self, value):
         super().__init__(value)
         self._hash = None
+        self.index_cfg_converter = None
 
     def __eq__(self, other):
         return self._value == other.get_value()

@@ -30,6 +30,7 @@ class State(FiniteAutomatonObject): # pylint: disable=too-few-public-methods
     def __init__(self, value):
         super().__init__(value)
         self.index = None
+        self.index_cfg_converter = None
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, State):
