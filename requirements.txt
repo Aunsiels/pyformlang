@@ -9,3 +9,5 @@ Tqdm
 networkx
 sphinx_rtd_theme
 numpy
+pylint
+pylint_junit

@@ -34,8 +34,7 @@ class CFGVariableConverter(object):
         i_stack_symbol, i_state0, i_state1 = self._get_indexes(stack_symbol, state0, state1)
         prev = self._conversions[i_state0][i_stack_symbol][i_state1]
         if prev[1] is None:
-            value = "[" + str(state0.get_value()) + "; " + str(stack_symbol.get_value()) + "; " + str(state1.get_value()) + "]"
-            return self._create_new_variable(i_stack_symbol, i_state0, i_state1, prev, value=value)[1]
+            return self._create_new_variable(i_stack_symbol, i_state0, i_state1, prev)[1]
         return prev[1]
 
     def _create_new_variable(self, i_stack_symbol, i_state0, i_state1, prev, value=None):

@@ -21,6 +21,8 @@ Indexed grammars come from the original paper *Index Grammars - An Extension of 
 
 On the implementation of Hopcroft minimization algorithm: [Implementation of Hopcroft's Algorithm, Hang Zhou](https://www.irif.fr/~carton/Enseignement/Complexite/ENS/Redaction/2009-2010/hang.zhou.pdf)
 
+[Intersection CFG/Regex](https://www.degruyter.com/downloadpdf/j/stuf.1961.14.issue-1-4/stuf.1961.14.14.143/stuf.1961.14.14.143.pdf) and [a better written version](http://www.cs.umd.edu/~gasarch/BLOGPAPERS/cfg.pdf)
+
 ## Usage
 
 ### Regular expression

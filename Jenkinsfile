@@ -46,6 +46,7 @@ pipeline {
         sh 'make test-coverage-xml'
         echo 'Style Check'
         sh 'make style-check'
+        recordIssues(enabledForFailure: true, tool: checkStyle(pattern: 'pylint_report.xml'), sourceCodeEncoding: 'UTF-8')
       }
     }
   }
