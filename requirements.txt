@@ -10,3 +10,4 @@ networkx
 sphinx_rtd_theme
 numpy
 pylint
+pycodestyle
