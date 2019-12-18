@@ -23,4 +23,5 @@ RUN pip3 install pytest \
     Tqdm \
     networkx \
     bitarray \
-    numpy
+    numpy \
+    pycodestyle
