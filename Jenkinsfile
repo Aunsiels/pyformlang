@@ -20,7 +20,7 @@ pipeline {
 
       }
       steps {
-        sh 'make test-code-xml' || echo 0
+        sh 'make test-code-xml || echo 0'
       }
     }
     stage('Static code metrics') {
