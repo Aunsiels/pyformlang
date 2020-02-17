@@ -3,6 +3,10 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+requirements = []
+with open("requirements.txt") as f:
+    for line in f:
+        requirements.append(line.strip())
 
 setuptools.setup(
     name='pyformlang',
@@ -19,5 +23,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-    ]
+    ],
+    install_requires=requirements,
 )
