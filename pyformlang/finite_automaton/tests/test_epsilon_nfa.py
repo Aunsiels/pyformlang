@@ -458,6 +458,16 @@ class TestEpsilonNFA(unittest.TestCase):
         trans0 = list(fst.translate(["c"]))
         self.assertEqual(trans0, [["c"]])
 
+    def test_cyclic(self):
+        dfa = EpsilonNFA()
+        state0 = State(0)
+        state1 = State(1)
+        symb_a = Symbol('a')
+        dfa.add_start_state(state0)
+        dfa.add_transition(state0, symb_a, state1)
+        dfa.add_transition(state1, Epsilon(), state0)
+        self.assertFalse(dfa.is_acyclic())
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """
@@ -481,7 +491,8 @@ def get_digits_enfa():
     enfa.add_transition(states[1], point, states[2])
     enfa.add_transition(states[4], point, states[3])
     enfa.add_transition(states[3], epsilon, states[5])
-    return (enfa, digits, epsilon, plus, minus, point)
+    return enfa, digits, epsilon, plus, minus, point
+
 
 def get_enfa_example0():
     """ Gives an example ENFA

@@ -10,7 +10,7 @@ with open("requirements.txt") as f:
 
 setuptools.setup(
     name='pyformlang',
-    version='0.1.14',
+    version='0.1.15',
     #scripts=['pyformlang'] ,
     author="Julien Romero",
     author_email="romerojulien34@gmail.com",

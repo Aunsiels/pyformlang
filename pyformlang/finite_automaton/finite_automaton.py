@@ -317,6 +317,23 @@ class FiniteAutomaton(object):
                                [symb_by.get_value()])
         return fst
 
+    def is_acyclic(self) -> bool:
+        to_process = []
+        for state in self._start_state:
+            to_process.append((state, set()))
+        while to_process:
+            current, visited = to_process.pop()
+            if current in visited:
+                return False
+            visited.add(current)
+            for symbol in self._input_symbols:
+                for state in self(current, symbol):
+                    to_process.append((state, visited.copy()))
+            # Epsilon
+            for state in self(current, Epsilon()):
+                to_process.append((state, visited.copy()))
+        return True
+
 
 def to_state(given: Any) -> State:
     """ Transforms the input into a state
@@ -331,6 +348,7 @@ def to_state(given: Any) -> State:
     if isinstance(given, State):
         return given
     return State(given)
+
 
 def to_symbol(given: Any) -> Symbol:
     """ Transforms the input into a symbol

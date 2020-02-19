@@ -219,6 +219,35 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa = dfa.minimize()
         self.assertTrue(dfa.accepts([symb_a, symb_star, symb_a]))
 
+    def test_not_cyclic(self):
+        dfa = DeterministicFiniteAutomaton()
+        state0 = State(0)
+        state1 = State(1)
+        symb_a = Symbol('a')
+        dfa.add_start_state(state0)
+        dfa.add_transition(state0, symb_a, state1)
+        self.assertTrue(dfa.is_acyclic())
+
+    def test_not_cyclic2(self):
+        dfa = DeterministicFiniteAutomaton()
+        state0 = State(0)
+        state1 = State(1)
+        symb_a = Symbol('a')
+        symb_b = Symbol('b')
+        dfa.add_start_state(state0)
+        dfa.add_transition(state0, symb_a, state1)
+        dfa.add_transition(state0, symb_b, state1)
+        self.assertTrue(dfa.is_acyclic())
+
+    def test_cyclic(self):
+        dfa = DeterministicFiniteAutomaton()
+        state0 = State(0)
+        state1 = State(1)
+        symb_a = Symbol('a')
+        dfa.add_start_state(state0)
+        dfa.add_transition(state0, symb_a, state1)
+        dfa.add_transition(state1, symb_a, state0)
+        self.assertFalse(dfa.is_acyclic())
 
 
 def get_example0():
@@ -240,6 +269,7 @@ def get_example0():
     dfa.add_transition(state1, symb_c, state2)
     dfa.add_transition(state1, symb_d, state3)
     return dfa
+
 
 def get_example0_bis():
     """ Gives a dfa """
