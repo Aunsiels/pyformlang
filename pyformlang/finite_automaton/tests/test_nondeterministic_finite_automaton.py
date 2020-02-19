@@ -4,9 +4,10 @@ Tests for nondeterministic finite automata
 
 import unittest
 
-from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
+from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, Epsilon
 from pyformlang.finite_automaton import State
 from pyformlang.finite_automaton import Symbol
+from pyformlang.finite_automaton.transition_function import InvalidEpsilonTransition
 
 
 class TestNondeterministicFiniteAutomaton(unittest.TestCase):
@@ -106,3 +107,10 @@ class TestNondeterministicFiniteAutomaton(unittest.TestCase):
         dfa = nfa.to_deterministic()
         self.assertEqual(dfa.get_number_states(), 3)
         self.assertEqual(dfa.get_number_transitions(), 6)
+
+    def test_epsilon_refused(self):
+        dfa = NondeterministicFiniteAutomaton()
+        state0 = State(0)
+        state1 = State(1)
+        with self.assertRaises(InvalidEpsilonTransition):
+            dfa.add_transition(state0, Epsilon(), state1)

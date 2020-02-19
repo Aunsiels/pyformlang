@@ -4,10 +4,11 @@ Tests for the deterministic finite automata
 
 import unittest
 
-from pyformlang.finite_automaton import DeterministicFiniteAutomaton
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton, Epsilon
 from pyformlang.finite_automaton import State
 from pyformlang.finite_automaton import Symbol
 from pyformlang.finite_automaton import TransitionFunction
+from pyformlang.finite_automaton.transition_function import InvalidEpsilonTransition
 
 
 class TestDeterministicFiniteAutomaton(unittest.TestCase):
@@ -238,6 +239,13 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa.add_transition(state0, symb_a, state1)
         dfa.add_transition(state0, symb_b, state1)
         self.assertTrue(dfa.is_acyclic())
+
+    def test_epsilon_refused(self):
+        dfa = DeterministicFiniteAutomaton()
+        state0 = State(0)
+        state1 = State(1)
+        with self.assertRaises(InvalidEpsilonTransition):
+            dfa.add_transition(state0, Epsilon(), state1)
 
     def test_cyclic(self):
         dfa = DeterministicFiniteAutomaton()

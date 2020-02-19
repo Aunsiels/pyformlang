@@ -2,9 +2,12 @@
 
 from typing import Set, List, Any
 
+import networkx as nx
+
 from .epsilon import Epsilon
 from .state import State
 from .symbol import Symbol
+
 
 class FiniteAutomaton(object):
     """ Represents a general finite automaton
@@ -24,7 +27,6 @@ class FiniteAutomaton(object):
     _final_states : set of :class:`~pyformlang.finite_automaton.State`, optional
         A set of final or accepting states. It is a subset of states.
     """
-
 
     def __init__(self):
         self._states = set()
@@ -59,11 +61,12 @@ class FiniteAutomaton(object):
         s_from = to_state(s_from)
         symb_by = to_symbol(symb_by)
         s_to = to_state(s_to)
+        temp = self._transition_function.add_transition(s_from, symb_by, s_to)
         self._states.add(s_from)
         self._states.add(s_to)
         if symb_by != Epsilon():
             self._input_symbols.add(symb_by)
-        return self._transition_function.add_transition(s_from, symb_by, s_to)
+        return temp
 
     def remove_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
         """ Remove a transition of the nfa
@@ -333,6 +336,17 @@ class FiniteAutomaton(object):
             for state in self(current, Epsilon()):
                 to_process.append((state, visited.copy()))
         return True
+
+    def to_networkx(self) -> nx.MultiDiGraph:
+        graph = nx.MultiDiGraph()
+        for state in self._states:
+            graph.add_node(state.get_value(),
+                           is_start=state in self.get_start_states(),
+                           is_final=state in self.get_final_states())
+        graph.add_nodes_from([x.get_value() for x in self._states])
+        for s_from, symbol, s_to in self._transition_function.get_edges():
+            graph.add_edge(s_from.get_value(), s_to.get_value(), name=symbol.get_value())
+        return graph
 
 
 def to_state(given: Any) -> State:

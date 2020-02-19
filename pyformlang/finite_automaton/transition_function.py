@@ -4,8 +4,14 @@ Repretation of a transition function
 
 from typing import List
 
+from pyformlang.finite_automaton.epsilon import Epsilon
+
 from .state import State
 from .symbol import Symbol
+
+
+class InvalidEpsilonTransition(Exception):
+    pass
 
 
 class TransitionFunction(object):
@@ -50,6 +56,8 @@ class TransitionFunction(object):
         DuplicateTransitionError
             If the transition already exists
         """
+        if symb_by == Epsilon():
+            raise InvalidEpsilonTransition()
         if s_from in self._transitions:
             if symb_by in self._transitions[s_from]:
                 if self._transitions[s_from][symb_by] != s_to:
@@ -137,7 +145,7 @@ class TransitionFunction(object):
         """
         for state in self._transitions:
             for symbol in self._transitions[state]:
-                yield (state, symbol, self._transitions[state][symbol])
+                yield state, symbol, self._transitions[state][symbol]
 
 
 class DuplicateTransitionError(Exception):

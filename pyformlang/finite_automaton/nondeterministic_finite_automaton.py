@@ -4,9 +4,13 @@ Representation of a nondeterministic finite automaton
 
 from typing import Iterable
 
-from .symbol import Symbol
+from pyformlang.finite_automaton.epsilon import Epsilon
+
+from .state import State
 from .epsilon_nfa import EpsilonNFA
-from .finite_automaton import to_state, to_symbol
+from .finite_automaton import to_symbol
+from .symbol import Symbol
+from .transition_function import InvalidEpsilonTransition
 
 
 class NondeterministicFiniteAutomaton(EpsilonNFA):
@@ -69,3 +73,8 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
             A dfa equivalent to the current nfa
         """
         return self._to_deterministic_internal(False)
+
+    def add_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
+        if symb_by == Epsilon():
+            raise InvalidEpsilonTransition
+        return super().add_transition(s_from, symb_by, s_to)

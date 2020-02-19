@@ -4,6 +4,8 @@ Tests for epsilon NFA
 
 import unittest
 
+import networkx
+
 from pyformlang.finite_automaton import EpsilonNFA, State, Symbol, Epsilon
 from ..regexable import Regexable
 
@@ -459,14 +461,33 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertEqual(trans0, [["c"]])
 
     def test_cyclic(self):
-        dfa = EpsilonNFA()
+        enfa = EpsilonNFA()
         state0 = State(0)
         state1 = State(1)
         symb_a = Symbol('a')
-        dfa.add_start_state(state0)
-        dfa.add_transition(state0, symb_a, state1)
-        dfa.add_transition(state1, Epsilon(), state0)
-        self.assertFalse(dfa.is_acyclic())
+        enfa.add_start_state(state0)
+        enfa.add_transition(state0, symb_a, state1)
+        enfa.add_transition(state1, Epsilon(), state0)
+        self.assertFalse(enfa.is_acyclic())
+
+    def test_export_networkx(self):
+        enfa = EpsilonNFA()
+        state0 = State("0")
+        state1 = State(1)
+        symb_a = Symbol('a')
+        enfa.add_start_state(state0)
+        enfa.add_final_state(state1)
+        enfa.add_transition(state0, symb_a, state1)
+        enfa.add_transition(state1, Epsilon(), state0)
+        graph = enfa.to_networkx()
+        self.assertTrue(isinstance(graph, networkx.MultiDiGraph))
+        self.assertTrue("0" in graph)
+        self.assertTrue(("0", 1) in graph.edges)
+        self.assertIn("a", [x["name"] for x in graph["0"][1].values()])
+        self.assertTrue(graph.nodes["0"]["is_start"])
+        self.assertFalse(graph.nodes["0"]["is_final"])
+        self.assertFalse(graph.nodes[1]["is_start"])
+        self.assertTrue(graph.nodes[1]["is_final"])
 
 
 def get_digits_enfa():
