@@ -504,6 +504,23 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(enfa_from_nx.accepts([symb_a, symb_a]))
         self.assertFalse(enfa_from_nx.accepts([]))
 
+    def test_iter(self):
+        enfa = EpsilonNFA()
+        state0 = State("0")
+        state1 = State(1)
+        symb_a = Symbol('a')
+        enfa.add_start_state(state0)
+        enfa.add_final_state(state1)
+        enfa.add_transition(state0, symb_a, state1)
+        enfa.add_transition(state1, Epsilon(), state0)
+        counter = 0
+        for s_from, symb, s_to in enfa:
+            counter += 1
+            self.assertIn((s_from, symb, s_to), enfa)
+        self.assertNotIn((state1, symb_a, state1), enfa)
+        self.assertIn(("0", "a", 1), enfa)
+        self.assertEqual(counter, 2)
+
     def test_equivalent(self):
         enfa0 = EpsilonNFA()
         state0 = State("0")
@@ -579,6 +596,7 @@ def get_enfa_example0():
     enfa0.add_transition(state1, symb_b, state2)
     return enfa0
 
+
 def get_enfa_example1():
     """ Gives and example ENFA
     Accepts c
@@ -591,6 +609,7 @@ def get_enfa_example1():
     enfa1.add_final_state(state3)
     enfa1.add_transition(state2, symb_c, state3)
     return enfa1
+
 
 def get_enfa_example0_bis():
     """ A non minimal NFA, equivalent to example0 """
@@ -613,6 +632,7 @@ def get_enfa_example0_bis():
     enfa0.add_transition(state3, symb_a, state3)
     enfa0.add_transition(state3, symb_b, state4)
     return enfa0
+
 
 def get_example_non_minimal():
     """ A non minimal example a.a*.b"""

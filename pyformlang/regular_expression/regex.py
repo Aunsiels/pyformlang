@@ -157,6 +157,9 @@ class Regex(RegexReader):
     def union(self, other: "Regex") -> "Regex":
         """ Makes the union with another regex
 
+        Equivalent to:
+          >> regex0 or regex1
+
         Parameters
         ----------
         other : :class:`~pyformlang.regular_expression.Regex`
@@ -172,7 +175,7 @@ class Regex(RegexReader):
         regex.sons = [self, other]
         return regex
 
-    def __truediv__(self, other):
+    def __or__(self, other):
         """ Makes the union with another regex
 
         Parameters
@@ -189,6 +192,9 @@ class Regex(RegexReader):
 
     def concatenate(self, other: "Regex") -> "Regex":
         """ Concatenates a regular expression with an other one
+
+        Equivalent to:
+          >> regex0 + regex1
 
         Parameters
         ----------

@@ -5,6 +5,7 @@ from typing import Any, Iterable
 from pyformlang.indexed_grammar import DuplicationRule, ProductionRule, EndRule,\
     ConsumptionRule, IndexedGrammar, Rules
 
+
 class FST(object):
     """ Representation of a Finite State Transducer"""
 

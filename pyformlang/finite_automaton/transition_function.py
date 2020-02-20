@@ -131,10 +131,7 @@ class TransitionFunction(object):
             The number of deterministic transitions
 
         """
-        counter = 0
-        for s_from in self._transitions:
-            counter += len(self._transitions[s_from])
-        return counter
+        return sum([len(x) for x in self._transitions.values()])
 
     def get_edges(self):
         """ Gets the edges
@@ -149,6 +146,12 @@ class TransitionFunction(object):
         for state in self._transitions:
             for symbol in self._transitions[state]:
                 yield state, symbol, self._transitions[state][symbol]
+
+    def __len__(self):
+        return self.get_number_transitions()
+
+    def __iter__(self):
+        yield from self.get_edges()
 
 
 class DuplicateTransitionError(Exception):

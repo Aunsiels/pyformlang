@@ -371,6 +371,16 @@ class FiniteAutomaton(object):
     def to_deterministic(self):
         raise NotImplementedError
 
+    def __eq__(self, other):
+        return self.is_equivalent_to(other)
+
+    def __len__(self):
+        """Number of transitions"""
+        return len(self._transition_function)
+
+    def __iter__(self):
+        yield from self._transition_function.get_edges()
+
 
 def to_state(given: Any) -> State:
     """ Transforms the input into a state

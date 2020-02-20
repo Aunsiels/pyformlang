@@ -33,9 +33,9 @@ class TestState(unittest.TestCase):
         state2 = State(1)
         state3 = State("ABC")
         self.assertEqual(state1, state3)
-        self.assertFalse(state2 == 1)
+        self.assertTrue(state2 == 1)
         self.assertNotEqual(state2, state3)
-        self.assertNotEqual(state2, 1)
+        self.assertEqual(state2, 1)
         self.assertNotEqual(state1, state2)
 
     def test_hash(self):

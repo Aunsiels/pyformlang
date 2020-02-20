@@ -88,6 +88,9 @@ class NondeterministicTransitionFunction(object):
                 counter += len(self._transitions[s_from][symb_by])
         return counter
 
+    def __len__(self):
+        return self.get_number_transitions()
+
     def __call__(self, s_from: State, symb_by: Symbol=None) -> Set[State]:
         """ Calls the transition function as a real function
 
@@ -140,4 +143,7 @@ class NondeterministicTransitionFunction(object):
         for state in self._transitions:
             for symbol in self._transitions[state]:
                 for next_state in self._transitions[state][symbol]:
-                    yield (state, symbol, next_state)
+                    yield state, symbol, next_state
+
+    def __iter__(self):
+        yield from self.get_edges()

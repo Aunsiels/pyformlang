@@ -246,6 +246,9 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                 enfa.add_transition(state, Epsilon(), state_to)
         return enfa
 
+    def __copy__(self):
+        return self.copy()
+
     def to_regex(self) -> "Regex":
         """ Tranforms the EpsilonNFA to a regular expression
 
@@ -333,9 +336,12 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
     def get_complement(self) -> "EpsilonNFA":
         """ Get the complement of the current Epsilon NFA
 
+        Equivalent to:
+          >> -automaton
+
         Returns
         ----------
-        dfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
             A complement automaton
         """
         enfa = self.copy()
@@ -358,8 +364,21 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             enfa.add_transition(trash, symbol, trash)
         return enfa
 
+    def __neg__(self):
+        """ Get the complement of the current Epsilon NFA
+
+        Returns
+        ----------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            A complement automaton
+        """
+        return self.get_complement()
+
     def get_intersection(self, other: "EpsilonNFA") -> "EpsilonNFA":
         """ Computes the intersection of two Epsilon NFAs
+
+        Equivalent to:
+          >> automaton0 and automaton1
 
         Parameters
         ----------
@@ -396,6 +415,21 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                             to_process.append((new_s0, new_s1))
         return enfa
 
+    def __and__(self, other):
+        """ Computes the intersection of two Epsilon NFAs
+
+        Parameters
+        ----------
+        other : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+           The other Epsilon NFA
+
+        Returns
+        ---------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+           The intersection of the two Epsilon NFAs
+        """
+        return self.get_intersection(other)
+
     def get_difference(self, other: "EpsilonNFA")\
             -> "EpsilonNFA":
         """ Compute the difference with another Epsilon NFA
@@ -415,8 +449,29 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             other.add_symbol(symbol)
         return self.get_intersection(other.get_complement())
 
+    def __sub__(self, other):
+        """ Compute the difference with another Epsilon NFA
+
+        Equivalent to:
+          >> automaton0 - automaton1
+
+        Parameters
+        ----------
+        other : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The other Epsilon NFA
+
+        Returns
+        ---------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The difference with the other epsilon NFA
+        """
+        return self.get_difference(other)
+
     def reverse(self) -> "EpsilonNFA":
         """ Compute the reversed EpsilonNFA
+
+        Equivalent to:
+          >> ~automaton
 
         Returns
         ---------
@@ -435,6 +490,16 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         for final in self._final_states:
             enfa.add_start_state(final)
         return enfa
+
+    def __invert__(self):
+        """ Compute the reversed EpsilonNFA
+
+        Returns
+        ---------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The difference with the other epsilon NFA
+        """
+        return self.reverse()
 
     def is_empty(self) -> bool:
         """ Checks if the language represented by the FSM is empty or not
@@ -534,7 +599,6 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         """
         return self.to_deterministic().minimize()
 
-
     def _create_or_transitions(self):
         """ Creates a OR transition instead of several connections
 
@@ -561,6 +625,9 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                 self.add_transition(state,
                                     Symbol(new_transitions[out_state]),
                                     out_state)
+
+    def __bool__(self):
+        return not self.is_empty()
 
 
 def get_temp(start_to_end: str, end_to_start: str, end_to_end: str) -> (str, str):

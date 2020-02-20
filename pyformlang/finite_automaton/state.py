@@ -35,7 +35,7 @@ class State(FiniteAutomatonObject): # pylint: disable=too-few-public-methods
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, State):
             return self._value == other._value
-        return False
+        return self._value == other
 
     def __hash__(self) -> int:
         if self._hash is None:

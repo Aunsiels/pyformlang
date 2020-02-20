@@ -38,7 +38,7 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa = DeterministicFiniteAutomaton(start_state=state1,
                                            final_states={state0, state1})
         self.assertIsNotNone(dfa)
-        self.assertEqual(dfa, dfa.to_deterministic())
+        self.assertTrue(dfa is dfa.to_deterministic())
 
     def test_add_transition(self):
         """ Tests the addition of transitions
