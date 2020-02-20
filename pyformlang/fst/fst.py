@@ -78,7 +78,6 @@ class FST(object):
         """
         return len(self._start_states)
 
-
     def add_transition(self, s_from: Any,
                        input_symbol: Any,
                        s_to: Any,
@@ -167,7 +166,11 @@ class FST(object):
                     to_process.append((remaining, generated + output_string, next_state))
 
     def intersection(self, indexed_grammar):
-        """ Compute the intersection with an other object """
+        """ Compute the intersection with an other object
+
+        Equivalent to:
+          >> fst and indexed_grammar
+        """
         rules = indexed_grammar.rules
         new_rules = []
         terminals = rules.get_terminals()
@@ -244,3 +247,6 @@ class FST(object):
                     "T"))
         rules = Rules(new_rules, rules.optim)
         return IndexedGrammar(rules).remove_useless_rules()
+
+    def __and__(self, other):
+        return self.intersection(other)
