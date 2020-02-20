@@ -2,6 +2,7 @@
 
 from .terminal import Terminal
 
+
 class Epsilon(Terminal):
     """ An epsilon terminal """
 

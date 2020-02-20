@@ -12,6 +12,7 @@ in the code and a readthedocs website: https://pyformlang.readthedocs.io.
 
 Available subpackages
 ---------------------
+
 regular_expression
     Regular Expressions
 finite_automaton
@@ -28,4 +29,9 @@ Indexed Grammar
 
 """
 
-__all__ = ["finite_automaton", "regular_expression"]
+__all__ = ["finite_automaton",
+           "regular_expression",
+           "cfg",
+           "fst",
+           "indexed_grammar",
+           "pda"]
