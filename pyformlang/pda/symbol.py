@@ -1,6 +1,7 @@
 """ A Symbol in a pushdown automaton """
 
-class Symbol(object):
+
+class Symbol:
     """ A Symbol in a pushdown automaton
 
     Parameters
@@ -16,7 +17,8 @@ class Symbol(object):
     def __hash__(self):
         return hash(str(self._value))
 
-    def get_value(self):
+    @property
+    def value(self):
         """ Returns the value of the symbol
 
         Returns
@@ -28,7 +30,7 @@ class Symbol(object):
 
     def __eq__(self, other):
         if isinstance(other, Symbol):
-            return self._value == other.get_value()
+            return self._value == other.value
         return False
 
     def __repr__(self):

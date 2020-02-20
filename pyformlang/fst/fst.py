@@ -18,45 +18,25 @@ class FST(object):
         self._start_states = set()
         self._final_states = set()  # _final_statesinal states
 
-    def get_number_states(self) -> int:
-        """ Get the number of states in the FST
+    @property
+    def states(self):
+        return self._states
 
-        Returns
-        ----------
-        n_states : int
-            The number of states
-        """
-        return len(self._states)
+    @property
+    def input_symbols(self):
+        return self._input_symbols
 
-    def get_number_final_states(self) -> int:
-        """ Get the number of final states in the FST
+    @property
+    def output_symbols(self):
+        return self._output_symbols
 
-        Returns
-        ----------
-        n_final_states : int
-            The number of final states
-        """
-        return len(self._final_states)
+    @property
+    def start_states(self):
+        return self._start_states
 
-    def get_number_input_symbols(self) -> int:
-        """ Get the number of input symbols in the FST
-
-        Returns
-        ----------
-        n_input_symbols : int
-            The number of input symbols
-        """
-        return len(self._input_symbols)
-
-    def get_number_output_symbols(self) -> int:
-        """ Get the number of output symbols in the FST
-
-        Returns
-        ----------
-        n_output_symbols : int
-            The number of output symbols
-        """
-        return len(self._output_symbols)
+    @property
+    def final_states(self):
+        return self._final_states
 
     def get_number_transitions(self) -> int:
         """ Get the number of transitions in the FST
@@ -67,16 +47,6 @@ class FST(object):
             The number of transitions
         """
         return sum([len(x) for x in self._delta.values()])
-
-    def get_number_start_states(self) -> int:
-        """ Get the number of start states in the FST
-
-        Returns
-        ----------
-        n_start_states : int
-            The number of start states
-        """
-        return len(self._start_states)
 
     def add_transition(self, s_from: Any,
                        input_symbol: Any,
@@ -173,39 +143,39 @@ class FST(object):
         """
         rules = indexed_grammar.rules
         new_rules = []
-        terminals = rules.get_terminals()
+        terminals = rules.terminals
         new_rules.append(EndRule("T", "epsilon"))
-        consumptions = rules.get_consumption_rules()
+        consumptions = rules.consumption_rules
         for f in consumptions:
             for consumption in consumptions[f]:
                 for r in self._states:
                     for s in self._states:
                         new_rules.append(ConsumptionRule(
-                            consumption.get_f(),
-                            str((r, consumption.get_left_term(), s)),
-                            str((r, consumption.get_right(), s))))
-        for rule in rules.get_rules():
+                            consumption.f,
+                            str((r, consumption.left_term, s)),
+                            str((r, consumption.right, s))))
+        for rule in rules.rules:
             if rule.is_duplication():
                 for p in self._states:
                     for q in self._states:
                         for r in self._states:
                             new_rules.append(DuplicationRule(
-                                str((p, rule.get_left_term(), q)),
-                                str((p, rule.get_right_terms()[0], r)),
-                                str((r, rule.get_right_terms()[1], q))))
+                                str((p, rule.left_term, q)),
+                                str((p, rule.right_terms[0], r)),
+                                str((r, rule.right_terms[1], q))))
             elif rule.is_production():
                 for p in self._states:
                     for q in self._states:
                         new_rules.append(ProductionRule(
-                            str((p, rule.get_left_term(), q)),
-                            str((p, rule.get_right_term(), q)),
-                            str(rule.get_production())))
+                            str((p, rule.left_term, q)),
+                            str((p, rule.right_term, q)),
+                            str(rule.production)))
             elif rule.is_end_rule():
                 for p in self._states:
                     for q in self._states:
                         new_rules.append(DuplicationRule(
-                            str((p, rule.get_left_term(), q)),
-                            str((p, rule.get_right_term(), q)),
+                            str((p, rule.left_term, q)),
+                            str((p, rule.right_term, q)),
                             "T"))
         for a in terminals:
             for p in self._states:
@@ -245,7 +215,7 @@ class FST(object):
                     "S",
                     str((start_state, "S", p)),
                     "T"))
-        rules = Rules(new_rules, rules.optim)
+        rules = Rules(new_rules, rules._optim)
         return IndexedGrammar(rules).remove_useless_rules()
 
     def __and__(self, other):

@@ -2,7 +2,7 @@
 A representation of a duplication rule, i.e. a rule that duplicates the stack
 """
 
-from typing import Any, Iterable, AbstractSet
+from typing import Any, Iterable, AbstractSet, Tuple
 
 from .reduced_rule import ReducedRule
 
@@ -22,8 +22,8 @@ class DuplicationRule(ReducedRule):
     """
 
     def __init__(self, left_term, right_term0, right_term1):
-        self.left_term = left_term
-        self.right_terms = (right_term0, right_term1)
+        self._left_term = left_term
+        self._right_terms = (right_term0, right_term1)
 
     def is_duplication(self) -> bool:
         """Whether the rule is a duplication rule or not
@@ -35,7 +35,8 @@ class DuplicationRule(ReducedRule):
         """
         return True
 
-    def get_right_terms(self) -> Iterable[Any]:
+    @property
+    def right_terms(self) -> Tuple[Any, Any]:
         """Gives the non-terminals on the right of the rule
 
         Returns
@@ -43,9 +44,10 @@ class DuplicationRule(ReducedRule):
         right_terms : iterable of any
             The right terms of the rule
         """
-        return self.right_terms
+        return self._right_terms
 
-    def get_left_term(self) -> Any:
+    @property
+    def left_term(self) -> Any:
         """Gives the non-terminal on the left of the rule
 
         Returns
@@ -53,9 +55,10 @@ class DuplicationRule(ReducedRule):
         left_term : any
             The left term of the rule
         """
-        return self.left_term
+        return self._left_term
 
-    def get_non_terminals(self) -> Iterable[Any]:
+    @property
+    def non_terminals(self) -> Iterable[Any]:
         """Gives the set of non-terminals used in this rule
 
         Returns
@@ -63,9 +66,10 @@ class DuplicationRule(ReducedRule):
         non_terminals : iterable of any
             The non terminals used in this rule
         """
-        return [self.left_term, self.right_terms[0], self.right_terms[1]]
+        return [self._left_term, self._right_terms[0], self._right_terms[1]]
 
-    def get_terminals(self) -> AbstractSet[Any]:
+    @property
+    def terminals(self) -> AbstractSet[Any]:
         """Gets the terminals used in the rule
 
         Returns
@@ -73,13 +77,13 @@ class DuplicationRule(ReducedRule):
         terminals : set of any
             The terminals used in this rule
         """
-        return {}
+        return set()
 
     def __repr__(self):
         """Gives a string representation of the rule, ignoring the sigmas"""
-        return self.left_term + " -> " + self.right_terms[0] + \
-            " " + self.right_terms[1]
+        return self._left_term + " -> " + self._right_terms[0] + \
+            " " + self._right_terms[1]
 
     def __eq__(self, other):
         return other.is_duplication() and other.left_term == \
-            self.left_term and other.get_right_terms() == self.get_right_terms()
+               self._left_term and other.right_terms == self.right_terms

@@ -20,7 +20,8 @@ class StackSymbol(object):
             self._hash = hash(self._value)
         return self._hash
 
-    def get_value(self):
+    @property
+    def value(self):
         """ Returns the value of the stack symbol
 
         Returns
@@ -31,7 +32,7 @@ class StackSymbol(object):
         return self._value
 
     def __eq__(self, other):
-        return self._value == other.get_value()
+        return self._value == other.value
 
     def __repr__(self):
         return "StackSymbol(" + str(self._value) + ")"

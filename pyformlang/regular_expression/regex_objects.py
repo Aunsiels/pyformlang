@@ -10,7 +10,8 @@ class Node(object): # pylint: disable=too-few-public-methods
     def __init__(self, value):
         self._value = value
 
-    def get_value(self):
+    @property
+    def value(self):
         """ Give the value of the node
 
         Returns
@@ -71,7 +72,7 @@ class Symbol(Node): # pylint: disable=too-few-public-methods
     """
 
     def get_str_repr(self, sons_repr):
-        return str(self.get_value())
+        return str(self.value)
 
     def __repr__(self):
         return "Symbol(" + str(self._value) + ")"

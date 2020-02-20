@@ -45,16 +45,16 @@ class RuleOrdering(object):
         di_graph = nx.DiGraph()
         for rule in self.rules:
             if rule.is_duplication():
-                if rule.get_right_terms()[0] != rule.get_left_term():
-                    di_graph.add_edge(rule.get_right_terms()[0], rule.get_left_term())
-                if rule.get_right_terms()[1] != rule.get_left_term():
-                    di_graph.add_edge(rule.get_right_terms()[1], rule.get_left_term())
+                if rule.right_terms[0] != rule.left_term:
+                    di_graph.add_edge(rule.right_terms[0], rule.left_term)
+                if rule.right_terms[1] != rule.left_term:
+                    di_graph.add_edge(rule.right_terms[1], rule.left_term)
             if rule.is_production():
                 f_rules = self.conso_rules.setdefault(
-                    rule.get_production(), [])
+                    rule.production, [])
                 for f_rule in f_rules:
-                    if f_rule.get_right() != rule.get_left_term():
-                        di_graph.add_edge(f_rule.get_right(), rule.get_left_term())
+                    if f_rule.right != rule.left_term:
+                        di_graph.add_edge(f_rule.right, rule.left_term)
         return di_graph
 
     def order_by_core(self, reverse: bool=False) -> Iterable[ReducedRule]:
@@ -76,7 +76,7 @@ class RuleOrdering(object):
         core_numbers = nx.core_number(di_graph)
         new_order = sorted(self.rules,
                            key=lambda x: core_numbers.setdefault(
-                               x.get_left_term(), 0))
+                               x.left_term, 0))
         if reverse:
             new_order.reverse()
         return new_order
@@ -115,7 +115,7 @@ class RuleOrdering(object):
                     to_process.put(x)
         new_order = sorted(self.rules,
                            key=lambda x: res.setdefault(
-                               x.get_left_term(), 0))
+                               x.left_term, 0))
         if reverse:
             new_order.reverse()
         return new_order
@@ -131,8 +131,8 @@ class RuleOrdering(object):
         x : :class:`~pyformlang.indexed_grammar.ReducedRule`
             The rule
         """
-        if x.get_left_term() in di_graph:
-            return len(di_graph[x.get_left_term()])
+        if x.left_term in di_graph:
+            return len(di_graph[x.left_term])
         else:
             return 0
 

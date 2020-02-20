@@ -1,6 +1,7 @@
 """ A State in a pushdown automaton """
 
-class State(object):
+
+class State:
     """ A State in a pushdown automaton
 
     Parameters
@@ -20,7 +21,8 @@ class State(object):
             self._hash = hash(self._value)
         return self._hash
 
-    def get_value(self):
+    @property
+    def value(self):
         """ Returns the value of the state
 
         Returns
@@ -32,7 +34,7 @@ class State(object):
 
     def __eq__(self, other):
         if isinstance(other, State):
-            return self._value == other.get_value()
+            return self._value == other.value
         return False
 
     def __repr__(self):

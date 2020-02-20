@@ -37,11 +37,13 @@ class PDAObjectCreator(object):
                                    self._stack_symbol_creator,
                                    StackSymbol)
 
+
 def get_object_from_known(given, obj_converter):
-    if given.get_value() in obj_converter:
-        return obj_converter[given.get_value()]
-    obj_converter[given.get_value()] = given
+    if given.value in obj_converter:
+        return obj_converter[given.value]
+    obj_converter[given.value] = given
     return given
+
 
 def get_object_from_raw(given, obj_converter, to_type):
     if given in obj_converter:

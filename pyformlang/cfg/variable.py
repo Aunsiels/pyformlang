@@ -18,13 +18,13 @@ class Variable(CFGObject): # pylint: disable=too-few-public-methods
         self.index_cfg_converter = None
 
     def __eq__(self, other):
-        return self._value == other.get_value()
+        return self._value == other.value
 
     def __str__(self):
-        return str(self.get_value())
+        return str(self.value)
 
     def __repr__(self):
-        return "Variable(" + str(self.get_value()) + ")"
+        return "Variable(" + str(self.value) + ")"
 
     def __hash__(self):
         if self._hash is None:

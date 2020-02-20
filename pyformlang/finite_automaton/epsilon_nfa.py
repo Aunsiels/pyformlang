@@ -274,7 +274,8 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         return regular_expression.Regex(res)
 
     def get_regex_simple(self) -> str:
-        """ Get the regex of an automaton when it only composed of a start and a final state
+        """ Get the regex of an automaton when it only composed of a start and
+        a final state
 
         CAUTION: For internal use only!
 
@@ -292,7 +293,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             for symbol in self._input_symbols:
                 out_states = self._transition_function(list(self._start_state)[0], symbol)
                 if out_states:
-                    return "(" + str(symbol.get_value()) + ")*"
+                    return "(" + str(symbol.value) + ")*"
             return "epsilon"
         start_to_start, start_to_end, end_to_start, end_to_end = self._get_bi_transitions()
         return get_regex_sub(start_to_start, start_to_end, end_to_start, end_to_end)
@@ -320,7 +321,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         for state in self._states:
             for symbol in self._input_symbols.union({Epsilon()}):
                 for out_state in self._transition_function(state, symbol):
-                    symbol_str = str(symbol.get_value())
+                    symbol_str = str(symbol.value)
                     if not symbol_str.isalnum():
                         symbol_str = "(" + symbol_str + ")"
                     if state == start and out_state == start:
@@ -391,16 +392,16 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             The intersection of the two Epsilon NFAs
         """
         enfa = EpsilonNFA()
-        symbols = list(self.get_symbols().intersection(other.get_symbols()))
+        symbols = list(self.symbols.intersection(other.symbols))
         to_process = []
         processed = set()
-        for st0 in self.eclose_iterable(self.get_start_states()):
-            for st1 in other.eclose_iterable(other.get_start_states()):
+        for st0 in self.eclose_iterable(self.start_states):
+            for st1 in other.eclose_iterable(other.start_states):
                 enfa.add_start_state(combine_state_pair(st0, st1))
                 to_process.append((st0, st1))
                 processed.add((st0, st1))
-        for st0 in self.get_final_states():
-            for st1 in other.get_final_states():
+        for st0 in self.final_states:
+            for st1 in other.final_states:
                 enfa.add_final_state(combine_state_pair(st0, st1))
         while to_process:
             st0, st1 = to_process.pop()
@@ -565,7 +566,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         for symbol in self._input_symbols.union({Epsilon()}):
             out_states = self._transition_function(state, symbol).copy()
             for out_state in out_states:
-                out_transitions[out_state] = str(symbol.get_value())
+                out_transitions[out_state] = str(symbol.value)
                 self.remove_transition(state, symbol, out_state)
         if state in out_transitions:
             to_itself = "(" + out_transitions[state] + ")*"
@@ -580,7 +581,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                 out_states = self._transition_function(in_state, symbol)
                 if state not in out_states:
                     continue
-                symbol_str = "(" + str(symbol.get_value()) + ")"
+                symbol_str = "(" + str(symbol.value) + ")"
                 self.remove_transition(in_state, symbol, state)
                 for out_state in out_transitions:
                     new_symbol = Symbol(symbol_str + "." + out_transitions[out_state])
@@ -611,7 +612,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             for symbol in input_symbols:
                 out_states = self._transition_function(state, symbol)
                 out_states = out_states.copy()
-                symbol_str = str(symbol.get_value())
+                symbol_str = str(symbol.value)
                 for out_state in out_states:
                     self.remove_transition(state, symbol, out_state)
                     base = new_transitions.setdefault(out_state, "")
@@ -690,12 +691,13 @@ def to_single_state(l_states: Iterable[State]) -> State:
     values = []
     for state in l_states:
         if state is not None:
-            values.append(str(state.get_value()))
+            values.append(str(state.value))
         else:
             values.append("TRASH")
     values = sorted(values)
     return State(";".join(values))
 
+
 def combine_state_pair(state0, state1):
     """ Combine two states """
-    return State(str(state0.get_value()) + "; " + str(state1.get_value()))
+    return State(str(state0.value) + "; " + str(state1.value))

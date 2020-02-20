@@ -39,7 +39,7 @@ class TestIndexedGrammar(unittest.TestCase):
            rules = Rules(l_rules, i)
            i_grammar = IndexedGrammar(rules)
            self.assertFalse(i_grammar.is_empty())
-           self.assertEqual(i_grammar.get_terminals(), {"end", "b", "epsilon"})
+           self.assertEqual(i_grammar.terminals, {"end", "b", "epsilon"})
 
     def test_simple_ig_1(self):
 

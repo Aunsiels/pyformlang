@@ -102,45 +102,21 @@ class PDA(object):
         state = self._pda_obj_creator.to_state(state)
         self._final_states.add(state)
 
-    def get_number_states(self) -> int:
-        """ Gets the number of states
+    @property
+    def states(self):
+        return self._states
 
-        Returns
-        ----------
-        n_states : int
-            The number of states
-        """
-        return len(self._states)
+    @property
+    def final_states(self):
+        return self._final_states
 
-    def get_number_final_states(self) -> int:
-        """ Gets the number of final states
+    @property
+    def input_symbols(self):
+        return self._input_symbols
 
-        Returns
-        ----------
-        n_states : int
-            The number of final states
-        """
-        return len(self._final_states)
-
-    def get_number_input_symbols(self) -> int:
-        """ Gets the number of input symbols
-
-        Returns
-        ----------
-        n_input_symbols : int
-            The number of input symbols
-        """
-        return len(self._input_symbols)
-
-    def get_number_stack_symbols(self) -> int:
-        """ Gets the number of stack symbols
-
-        Returns
-        ----------
-        n_stack_symbols : int
-            The number of stack symbols
-        """
-        return len(self._stack_alphabet)
+    @property
+    def stack_symbols(self):
+        return self._stack_alphabet
 
     def get_number_transitions(self) -> int:
         """ Gets the number of transitions in the PDA
@@ -381,12 +357,12 @@ class PDA(object):
                 other = other.to_deterministic()
         else:
             raise NotImplementedError
-        start_state_other = other.get_start_states()
+        start_state_other = other.start_states
         if len(start_state_other) == 0:
             return PDA()
-        pda_state_converter = PDAStateConverter(self._states, other.get_states())
+        pda_state_converter = PDAStateConverter(self._states, other.states)
         start_state_other = list(start_state_other)[0]
-        final_state_other = other.get_final_states()
+        final_state_other = other.final_states
         start = pda_state_converter.to_pda_combined_state(self._start_state,
                                                           start_state_other)
         pda = PDA(start_state=start,
@@ -403,7 +379,7 @@ class PDA(object):
                 if symbol == Epsilon():
                     symbol_dfa = finite_automaton.Epsilon()
                 else:
-                    symbol_dfa = finite_automaton.Symbol(symbol.get_value())
+                    symbol_dfa = finite_automaton.Symbol(symbol.value)
                 if symbol == Epsilon():
                     next_states_dfa = [state_dfa]
                 else:
@@ -452,9 +428,12 @@ class PDA(object):
         """
         return self.intersection(other)
 
+    def to_dict(self):
+        return self._transition_function.to_dict()
+
 
 def _prepend_input_symbol_to_the_bodies(bodies, transition):
-    to_prepend = cfg.Terminal(transition[INPUT][INPUT_SYMBOL].get_value())
+    to_prepend = cfg.Terminal(transition[INPUT][INPUT_SYMBOL].value)
     for body in bodies:
         body.insert(0, to_prepend)
 

@@ -6,6 +6,7 @@ from pyformlang.fst import FST
 from pyformlang.indexed_grammar import DuplicationRule, ProductionRule, EndRule,\
     ConsumptionRule, IndexedGrammar, Rules
 
+
 class TestFST(unittest.TestCase):
     """ Tests FST """
 
@@ -13,42 +14,42 @@ class TestFST(unittest.TestCase):
         """ Test Translate """
         fst = FST()
         self.assertIsNotNone(fst)
-        self.assertEqual(fst.get_number_states(), 0)
-        self.assertEqual(fst.get_number_input_symbols(), 0)
-        self.assertEqual(fst.get_number_output_symbols(), 0)
+        self.assertEqual(len(fst.states), 0)
+        self.assertEqual(len(fst.input_symbols), 0)
+        self.assertEqual(len(fst.output_symbols), 0)
         self.assertEqual(fst.get_number_transitions(), 0)
-        self.assertEqual(fst.get_number_final_states(), 0)
+        self.assertEqual(len(fst.final_states), 0)
 
         fst.add_start_state("q0")
-        self.assertEqual(fst.get_number_states(), 1)
+        self.assertEqual(len(fst.states), 1)
 
         fst.add_transition("q0", "a", "q1", ["bc"])
-        self.assertEqual(fst.get_number_states(), 2)
-        self.assertEqual(fst.get_number_input_symbols(), 1)
-        self.assertEqual(fst.get_number_output_symbols(), 1)
+        self.assertEqual(len(fst.states), 2)
+        self.assertEqual(len(fst.input_symbols), 1)
+        self.assertEqual(len(fst.output_symbols), 1)
         self.assertEqual(fst.get_number_transitions(), 1)
-        self.assertEqual(fst.get_number_final_states(), 0)
+        self.assertEqual(len(fst.final_states), 0)
 
         fst.add_transition("q0", "epsilon", "q1", ["bc"])
-        self.assertEqual(fst.get_number_states(), 2)
-        self.assertEqual(fst.get_number_input_symbols(), 1)
-        self.assertEqual(fst.get_number_output_symbols(), 1)
+        self.assertEqual(len(fst.states), 2)
+        self.assertEqual(len(fst.input_symbols), 1)
+        self.assertEqual(len(fst.output_symbols), 1)
         self.assertEqual(fst.get_number_transitions(), 2)
-        self.assertEqual(fst.get_number_final_states(), 0)
+        self.assertEqual(len(fst.final_states), 0)
 
         fst.add_final_state("q2")
-        self.assertEqual(fst.get_number_states(), 3)
-        self.assertEqual(fst.get_number_input_symbols(), 1)
-        self.assertEqual(fst.get_number_output_symbols(), 1)
+        self.assertEqual(len(fst.states), 3)
+        self.assertEqual(len(fst.input_symbols), 1)
+        self.assertEqual(len(fst.output_symbols), 1)
         self.assertEqual(fst.get_number_transitions(), 2)
-        self.assertEqual(fst.get_number_final_states(), 1)
+        self.assertEqual(len(fst.final_states), 1)
 
         fst.add_transition("q0", "a", "q1", ["d"])
-        self.assertEqual(fst.get_number_states(), 3)
-        self.assertEqual(fst.get_number_input_symbols(), 1)
-        self.assertEqual(fst.get_number_output_symbols(), 2)
+        self.assertEqual(len(fst.states), 3)
+        self.assertEqual(len(fst.input_symbols), 1)
+        self.assertEqual(len(fst.output_symbols), 2)
         self.assertEqual(fst.get_number_transitions(), 3)
-        self.assertEqual(fst.get_number_final_states(), 1)
+        self.assertEqual(len(fst.final_states), 1)
 
     def test_translate(self):
         """ Test a translation """

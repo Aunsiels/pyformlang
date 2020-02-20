@@ -16,5 +16,6 @@ class CFGObject(object): # pylint: disable=too-few-public-methods
         self._value = value
         self._hash = None
 
-    def get_value(self) -> Any:
+    @property
+    def value(self) -> Any:
         return self._value

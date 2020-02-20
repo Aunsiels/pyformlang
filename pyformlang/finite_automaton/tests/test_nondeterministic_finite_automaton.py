@@ -104,7 +104,7 @@ class TestNondeterministicFiniteAutomaton(unittest.TestCase):
         nfa.add_transition(state0, symb1, state0)
         nfa.add_transition(state1, symb1, state2)
         dfa = nfa.to_deterministic()
-        self.assertEqual(dfa.get_number_states(), 3)
+        self.assertEqual(len(dfa.states), 3)
         self.assertEqual(dfa.get_number_transitions(), 6)
 
     def test_epsilon_refused(self):

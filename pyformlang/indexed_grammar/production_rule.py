@@ -22,9 +22,9 @@ class ProductionRule(ReducedRule):
     """
 
     def __init__(self, left, right, prod):
-        self.production = prod
-        self.left_term = left
-        self.right_term = right
+        self._production = prod
+        self._left_term = left
+        self._right_term = right
 
     def is_production(self) -> bool:
         """Whether the rule is a production rule or not
@@ -36,7 +36,8 @@ class ProductionRule(ReducedRule):
         """
         return True
 
-    def get_production(self) -> Any:
+    @property
+    def production(self) -> Any:
         """Gets the terminal used in the production
 
         Returns
@@ -44,9 +45,10 @@ class ProductionRule(ReducedRule):
         production : any
             The production used in this rule
         """
-        return self.production
+        return self._production
 
-    def get_left_term(self) -> Any:
+    @property
+    def left_term(self) -> Any:
         """Gets the non-terminal on the left side of the rule
 
         Returns
@@ -54,9 +56,10 @@ class ProductionRule(ReducedRule):
         left_term : any
             The left term of this rule
         """
-        return self.left_term
+        return self._left_term
 
-    def get_right_term(self) -> Any:
+    @property
+    def right_term(self) -> Any:
         """Gets the non-terminal on the right side of the rule
 
         Returns
@@ -64,9 +67,10 @@ class ProductionRule(ReducedRule):
         right_term : any
             The right term used in this rule
         """
-        return self.right_term
+        return self._right_term
 
-    def get_non_terminals(self) -> Iterable[Any]:
+    @property
+    def non_terminals(self) -> Iterable[Any]:
         """Gets the non-terminals used in the rule
 
         Returns
@@ -74,9 +78,10 @@ class ProductionRule(ReducedRule):
         non_terminals : any
             The non terminals used in this rules
         """
-        return [self.left_term, self.right_term]
+        return [self._left_term, self._right_term]
 
-    def get_terminals(self) -> AbstractSet[Any]:
+    @property
+    def terminals(self) -> AbstractSet[Any]:
         """Gets the terminals used in the rule
 
         Returns
@@ -84,14 +89,14 @@ class ProductionRule(ReducedRule):
         terminals : any
             The terminals used in this rule
         """
-        return {self.production}
+        return {self._production}
 
     def __repr__(self):
         """Gets the string representation of the rule"""
-        return self.left_term + " -> " + \
-            self.right_term + "[ " + self.production + " ]"
+        return self._left_term + " -> " + \
+               self._right_term + "[ " + self._production + " ]"
 
     def __eq__(self, other):
-        return other.is_production() and other.get_left_term() == \
-            self.get_left_term() and other.get_right_term() == self.get_right_term()\
-            and other.get_production() == self.get_production()
+        return other.is_production() and other.left_term == \
+               self.left_term and other.right_term == self.right_term \
+               and other.production == self.production

@@ -93,17 +93,8 @@ class FiniteAutomaton(object):
                                                            symb_by,
                                                            s_to)
 
-    def get_number_states(self) -> int:
-        """ Gives the total number of states
-
-        Returns
-        ----------
-        number_states : int
-            The number of states
-        """
-        return len(self._states)
-
-    def get_states(self):
+    @property
+    def states(self):
         """ Gives the states
 
         Returns
@@ -124,25 +115,13 @@ class FiniteAutomaton(object):
         """
         return self._transition_function.get_number_transitions()
 
-    def get_number_symbols(self) -> int:
-        """ Gives the total number of symbols
+    @property
+    def symbols(self):
+        return self._input_symbols
 
-        Returns
-        ----------
-        number_symbols : int
-            The number of symbols
-        """
-        return len(self._input_symbols)
-
-    def get_number_final_states(self) -> int:
-        """ Gives the number of final states
-
-        Returns
-        ----------
-        number_final_states : int
-            The number of final states
-        """
-        return len(self._final_states)
+    @property
+    def final_states(self):
+        return self._final_states
 
     def add_start_state(self, state: State) -> int:
         """ Set an initial state
@@ -256,35 +235,9 @@ class FiniteAutomaton(object):
         state = to_state(state)
         return state in self._final_states
 
-    def get_start_states(self) -> Set[State]:
-        """ Gets the start states
-
-        Returns
-        ----------
-        states: set of :class:`~pyformlang.finite_automaton.State`
-            The initial states
-        """
-        return self._start_state.copy()
-
-    def get_final_states(self) -> Set[State]:
-        """ Gets the final states
-
-        Returns
-        ----------
-        states: set of :class:`~pyformlang.finite_automaton.State`
-            The final states
-        """
-        return self._final_states.copy()
-
-    def get_symbols(self) -> Set[Symbol]:
-        """ Gets the input symbols
-
-        Returns
-        ----------
-        states: set of :class:`~pyformlang.finite_automaton.Symbol`
-            The symbols
-        """
-        return self._input_symbols
+    @property
+    def start_states(self):
+        return self._start_state
 
     def add_symbol(self, symbol: Symbol):
         """ Add a symbol
@@ -311,14 +264,14 @@ class FiniteAutomaton(object):
         from pyformlang.fst import FST
         fst = FST()
         for start_state in self._start_state:
-            fst.add_start_state(start_state.get_value())
+            fst.add_start_state(start_state.value)
         for final_state in self._final_states:
-            fst.add_final_state(final_state.get_value())
+            fst.add_final_state(final_state.value)
         for s_from, symb_by, s_to in self._transition_function.get_edges():
-            fst.add_transition(s_from.get_value(),
-                               symb_by.get_value(),
-                               s_to.get_value(),
-                               [symb_by.get_value()])
+            fst.add_transition(s_from.value,
+                               symb_by.value,
+                               s_to.value,
+                               [symb_by.value])
         return fst
 
     def is_acyclic(self) -> bool:
@@ -341,12 +294,12 @@ class FiniteAutomaton(object):
     def to_networkx(self) -> nx.MultiDiGraph:
         graph = nx.MultiDiGraph()
         for state in self._states:
-            graph.add_node(state.get_value(),
-                           is_start=state in self.get_start_states(),
-                           is_final=state in self.get_final_states())
-        graph.add_nodes_from([x.get_value() for x in self._states])
+            graph.add_node(state.value,
+                           is_start=state in self.start_states,
+                           is_final=state in self.final_states)
+        graph.add_nodes_from([x.value for x in self._states])
         for s_from, symbol, s_to in self._transition_function.get_edges():
-            graph.add_edge(s_from.get_value(), s_to.get_value(), name=symbol.get_value())
+            graph.add_edge(s_from.value, s_to.value, name=symbol.value)
         return graph
 
     @classmethod

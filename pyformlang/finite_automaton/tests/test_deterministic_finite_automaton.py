@@ -44,13 +44,13 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         """ Tests the addition of transitions
         """
         dfa = DeterministicFiniteAutomaton()
-        self.assertEqual(dfa.get_number_states(), 0)
+        self.assertEqual(len(dfa.states), 0)
         state0 = State("0")
         state1 = State("1")
         symb = Symbol("a")
         dfa.add_transition(state0, symb, state1)
-        self.assertEqual(dfa.get_number_states(), 2)
-        self.assertEqual(dfa.get_number_symbols(), 1)
+        self.assertEqual(len(dfa.states), 2)
+        self.assertEqual(len(dfa.symbols), 1)
         self.assertEqual(len(list(dfa._transition_function.get_edges())), 1)
 
     def test_add_remove_start_final(self):
@@ -60,9 +60,9 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         state0 = State("0")
         state1 = State("1")
         self.assertEqual(dfa.add_start_state(state0), 1)
-        self.assertEqual(dfa.get_number_states(), 1)
+        self.assertEqual(len(dfa.states), 1)
         self.assertEqual(dfa.add_final_state(state1), 1)
-        self.assertEqual(dfa.get_number_states(), 2)
+        self.assertEqual(len(dfa.states), 2)
         self.assertEqual(dfa.remove_final_state(state0), 0)
         self.assertTrue(dfa.is_final_state(state1))
         self.assertFalse(dfa.is_final_state(state0))
@@ -150,7 +150,7 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         for i in range(size):
             dfa.add_transition(State(i), symb, State(i+1))
         dfa = dfa.minimize()
-        self.assertEqual(dfa.get_number_states(), size + 1)
+        self.assertEqual(len(dfa.states), size + 1)
         self.assertFalse(dfa.accepts([symb]))
 
     def test_big_minimize_reduce(self):

@@ -26,14 +26,16 @@ class Production(object):
         self._head = head
         self._hash = None
 
-    def get_head(self) -> Variable:
+    @property
+    def head(self) -> Variable:
         return self._head
 
-    def get_body(self) -> Iterable[CFGObject]:
+    @property
+    def body(self) -> Iterable[CFGObject]:
         return self._body
 
     def __repr__(self):
-        return str(self.get_head()) +  " -> " + " ".join([str(x) for x in self.get_body()])
+        return str(self.head) + " -> " + " ".join([str(x) for x in self.body])
 
     def __hash__(self):
         if self._hash is None:
@@ -41,4 +43,4 @@ class Production(object):
         return self._hash
 
     def __eq__(self, other):
-        return self.get_head() == other.get_head() and self.get_body() == other.get_body()
+        return self.head == other.head and self.body == other.body

@@ -30,7 +30,7 @@ class Symbol(FiniteAutomatonObject): # pylint: disable=too-few-public-methods
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, Symbol):
-            return self._value == other.get_value()
+            return self._value == other.value
         return self._value == other
 
     def __hash__(self) -> int:

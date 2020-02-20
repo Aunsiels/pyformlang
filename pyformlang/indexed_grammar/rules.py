@@ -2,7 +2,7 @@
 Representations of rules in a indexed grammar
 """
 
-from typing import Iterable, Dict, Any
+from typing import Iterable, Dict, Any, List
 
 from .production_rule import ProductionRule
 from .consumption_rule import ConsumptionRule
@@ -31,38 +31,39 @@ class Rules(object):
     """
 
     def __init__(self, rules: Iterable[ReducedRule], optim: int=7):
-        self.rules = []
-        self.consumptionRules = dict()
-        self.optim = optim
+        self._rules = []
+        self._consumptionRules = dict()
+        self._optim = optim
         for rule in rules:
             # We separate consumption rule from other
             if rule.is_consumption():
-                temp = self.consumptionRules.setdefault(rule.get_f(), [])
+                temp = self._consumptionRules.setdefault(rule.f, [])
                 if rule not in temp:
                     temp.append(rule)
-                self.consumptionRules[rule.get_f()] = temp
+                self._consumptionRules[rule.f] = temp
             else:
-                if rule not in self.rules:
-                    self.rules.append(rule)
-        ro = RuleOrdering(self.rules, self.consumptionRules)
+                if rule not in self._rules:
+                    self._rules.append(rule)
+        ro = RuleOrdering(self._rules, self._consumptionRules)
         if optim == 1:
-            self.rules = ro.reverse()
+            self._rules = ro.reverse()
         elif optim == 2:
-            self.rules = ro.order_by_core()
+            self._rules = ro.order_by_core()
         elif optim == 3:
-            self.rules = ro.order_by_core(reverse=True)
+            self._rules = ro.order_by_core(reverse=True)
         elif optim == 4:
-            self.rules = ro.order_by_arborescence(reverse=True)
+            self._rules = ro.order_by_arborescence(reverse=True)
         elif optim == 5:
-            self.rules = ro.order_by_arborescence(reverse=False)
+            self._rules = ro.order_by_arborescence(reverse=False)
         elif optim == 6:
-            self.rules = ro.order_by_edges()
+            self._rules = ro.order_by_edges()
         elif optim == 7:
-            self.rules = ro.order_by_edges(reverse=True)
+            self._rules = ro.order_by_edges(reverse=True)
         elif optim == 8:
-            self.rules = ro.order_random()
+            self._rules = ro.order_random()
 
-    def get_rules(self) -> Iterable[ReducedRule]:
+    @property
+    def rules(self) -> Iterable[ReducedRule]:
         """Gets the non consumption rules
 
         Returns
@@ -70,9 +71,10 @@ class Rules(object):
         non_consumption_rules :  iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
             The non consumption rules
         """
-        return self.rules
+        return self._rules
 
-    def get_length(self) -> (int, int):
+    @property
+    def length(self) -> (int, int):
         """Get the total number of rules
 
         Returns
@@ -81,9 +83,10 @@ class Rules(object):
             A couple with first the number of non consumption rules and then\
                 the number of consumption rules
         """
-        return (len(self.rules), len(self.consumptionRules.values()))
+        return len(self._rules), len(self._consumptionRules.values())
 
-    def get_consumption_rules(self) -> Dict[Any, Iterable[ConsumptionRule]]:
+    @property
+    def consumption_rules(self) -> Dict[Any, Iterable[ConsumptionRule]]:
         """Gets the consumption rules
 
         Returns
@@ -92,9 +95,10 @@ class Rules(object):
             :class:`~pyformlang.indexed_grammar.ConsumptionRule`
             A dictionary contains the consumption rules gathered by consumed symbols
         """
-        return self.consumptionRules
+        return self._consumptionRules
 
-    def get_terminals(self) -> Iterable[Any]:
+    @property
+    def terminals(self) -> Iterable[Any]:
         """Gets all the terminals used by all the rules
 
         Returns
@@ -103,14 +107,15 @@ class Rules(object):
             The terminals used in the rules
         """
         terminals = set()
-        for temp_rule in self.consumptionRules.values():
+        for temp_rule in self._consumptionRules.values():
             for rule in temp_rule:
-                terminals = terminals.union(rule.get_terminals())
-        for rule in self.rules:
-            terminals = terminals.union(rule.get_terminals())
+                terminals = terminals.union(rule.terminals)
+        for rule in self._rules:
+            terminals = terminals.union(rule.terminals)
         return terminals
 
-    def get_non_terminals(self) -> Iterable[Any]:
+    @property
+    def non_terminals(self) -> List[Any]:
         """Gets all the non-terminals used by all the rules
 
         Returns
@@ -119,11 +124,11 @@ class Rules(object):
             The non terminals used in the rule
         """
         terminals = set()
-        for temp_rule in self.consumptionRules.values():
+        for temp_rule in self._consumptionRules.values():
             for rule in temp_rule:
-                terminals = terminals.union(set(rule.get_non_terminals()))
-        for rule in self.rules:
-            terminals = terminals.union(set(rule.get_non_terminals()))
+                terminals = terminals.union(set(rule.non_terminals))
+        for rule in self._rules:
+            terminals = terminals.union(set(rule.non_terminals))
         return list(terminals)
 
     def remove_production(self, left: Any, right: Any, prod: Any):
@@ -139,10 +144,11 @@ class Rules(object):
         prod : any
             The production used in the rule
         """
-        self.rules = list(filter(lambda x: not(x.is_production() and
-                                 x.get_left_term() == left and
-                                 x.get_right_term() == right and
-                                 x.get_production() == prod), self.rules))
+        self._rules = list(filter(lambda x: not(x.is_production() and
+                                                x.left_term == left and
+                                                x.right_term == right and
+                                                x.production == prod),
+                                  self._rules))
 
     def add_production(self, left: Any, right: Any, prod: Any):
         """Add the production rule:
@@ -157,5 +163,5 @@ class Rules(object):
         prod : any
             The production used in the rule
         """
-        self.rules.append(ProductionRule(left, right, prod))
+        self._rules.append(ProductionRule(left, right, prod))
 

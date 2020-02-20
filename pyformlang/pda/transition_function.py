@@ -21,10 +21,7 @@ class TransitionFunction(object):
         n_transitions : int
             The number of transitions
         """
-        res = 0
-        for transition in self._transitions:
-            res += len(self._transitions[transition])
-        return res
+        return sum([len(x) for x in self._transitions.values()])
 
     def add_transition(self,
                        s_from: State,
@@ -93,3 +90,6 @@ class TransitionFunction(object):
                  input_symbol: Symbol,
                  stack_from: StackSymbol):
         return self._transitions.get((s_from, input_symbol, stack_from), {})
+
+    def to_dict(self):
+        return self._transitions

@@ -25,7 +25,7 @@ class Regex(RegexReader):
     def _initialize_enfa(self):
         self._enfa = finite_automaton.EpsilonNFA()
 
-    def get_number_symbols(self) -> int:
+    def _get_number_symbols(self) -> int:
         """ Gives the number of symbols in the regex
 
         Returns
@@ -34,10 +34,10 @@ class Regex(RegexReader):
             The number of symbols in the regex
         """
         if self.sons:
-            return sum([son.get_number_symbols() for son in self.sons])
+            return sum([son._get_number_symbols() for son in self.sons])
         return 1
 
-    def get_number_operators(self) -> int:
+    def _get_number_operators(self) -> int:
         """ Gives the number of operators in the regex
 
         Returns
@@ -46,7 +46,7 @@ class Regex(RegexReader):
             The number of operators in the regex
         """
         if self.sons:
-            return 1 + sum([son.get_number_operators() for son in self.sons])
+            return 1 + sum([son._get_number_operators() for son in self.sons])
         return 0
 
     def to_epsilon_nfa(self):
@@ -78,9 +78,7 @@ class Regex(RegexReader):
         self._enfa.add_start_state(s_initial)
         return s_initial
 
-    def _process_to_enfa(self,
-                         s_from: State,
-                         s_to: State):
+    def _process_to_enfa(self, s_from: State, s_to: State):
         """ Internal function to add a regex to a given epsilon NFA
 
         Parameters
@@ -99,7 +97,7 @@ class Regex(RegexReader):
         if isinstance(self.head, pyformlang.regular_expression.regex_objects.Epsilon):
             self._add_epsilon_transition_in_enfa_between(s_from, s_to)
         elif not isinstance(self.head, pyformlang.regular_expression.regex_objects.Empty):
-            symbol = finite_automaton.Symbol(self.head.get_value())
+            symbol = finite_automaton.Symbol(self.head.value)
             self._enfa.add_transition(s_from, symbol, s_to)
 
     def _process_to_enfa_when_sons(self, s_from, s_to):

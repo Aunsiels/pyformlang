@@ -51,3 +51,23 @@ class ReducedRule(object):
             Whether the rule is an end rule or not
         """
         return False
+
+    @property
+    def f(self):
+        raise NotImplementedError
+
+    @property
+    def left_term(self):
+        raise NotImplementedError
+
+    @property
+    def right_terms(self):
+        raise NotImplementedError
+
+    @property
+    def right_term(self):
+        raise NotImplementedError
+
+    @property
+    def production(self):
+        raise NotImplementedError

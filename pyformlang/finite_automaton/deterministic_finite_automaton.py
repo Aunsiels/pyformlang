@@ -358,14 +358,15 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         other_minimal = other.minimize()
         return self._is_equivalent_to_minimal(self_minimal, other_minimal)
 
-    def get_start_state(self) -> State:
+    @property
+    def start_state(self) -> State:
         return list(self._start_state)[0]
 
     @staticmethod
     def _is_equivalent_to_minimal(self_minimal, other_minimal):
-        to_process = [(self_minimal.get_start_state(),
-                       other_minimal.get_start_state())]
-        matches = {self_minimal.get_start_state(): other_minimal.get_start_state()}
+        to_process = [(self_minimal.start_state,
+                       other_minimal.start_state)]
+        matches = {self_minimal.start_state: other_minimal.start_state}
         while to_process:
             current_self, current_other = to_process.pop()
             if (self_minimal.is_final_state(current_self) and not other_minimal.is_final_state(current_other)) or\

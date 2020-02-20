@@ -20,7 +20,8 @@ class FiniteAutomatonObject(object): # pylint: disable=too-few-public-methods
     def __repr__(self) -> str:
         return str(self._value)
 
-    def get_value(self) -> Any:
+    @property
+    def value(self) -> Any:
         """ Gets the value of the object
 
         Returns

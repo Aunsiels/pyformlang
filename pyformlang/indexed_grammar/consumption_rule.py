@@ -23,9 +23,9 @@ class ConsumptionRule(ReducedRule):
     """
 
     def __init__(self, f : Any, left : Any, right : Any):
-        self.f = f
-        self.right = right
-        self.left_term = left
+        self._f = f
+        self._right = right
+        self._left_term = left
 
     def is_consumption(self) -> bool:
         """Whether the rule is a consumption rule or not
@@ -37,7 +37,8 @@ class ConsumptionRule(ReducedRule):
         """
         return True
 
-    def get_f(self) -> Any:
+    @property
+    def f(self) -> Any:
         """Gets the symbol which is consumed
 
         Returns
@@ -45,44 +46,48 @@ class ConsumptionRule(ReducedRule):
         f : any
             The symbol being consumed by the rule
         """
-        return self.f
+        return self._f
 
-    def get_right(self) -> Any:
+    @property
+    def right(self) -> Any:
         """Gets the symbole on the right of the rule
 
         right : any
             The right symbol
         """
-        return self.right
+        return self._right
 
-    def get_left_term(self) -> Any:
+    @property
+    def left_term(self) -> Any:
         """Gets the symbol on the left of the rule
 
         left : any
             The left symbol of the rule
         """
-        return self.left_term
+        return self._left_term
 
-    def get_non_terminals(self) -> Iterable[Any]:
+    @property
+    def non_terminals(self) -> Iterable[Any]:
         """Gets the non-terminals used in the rule
 
         non_terminals : iterable of any
             The non_terminals used in the rule
         """
-        return [self.left_term, self.right]
+        return [self._left_term, self._right]
 
-    def get_terminals(self) -> AbstractSet[Any]:
+    @property
+    def terminals(self) -> AbstractSet[Any]:
         """Gets the terminals used in the rule
 
         terminals : set of any
             The terminals used in the rule
         """
-        return {self.f}
+        return {self._f}
 
     def __repr__(self):
-        return self.left_term + " [ " + self.f + " ] -> " + self.right
+        return self._left_term + " [ " + self._f + " ] -> " + self._right
 
     def __eq__(self, other):
-        return other.is_consumption() and other.get_left_term() == \
-            self.get_left_term() and other.get_right() == self.get_right() and\
-            other.get_f() == self.get_f()
+        return other.is_consumption() and other.left_term == \
+            self.left_term and other.right == self.right and\
+            other.f() == self.f

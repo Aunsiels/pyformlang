@@ -9,6 +9,7 @@ from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.finite_automaton import State
 from pyformlang.finite_automaton import Symbol
 
+
 class TestCFG(unittest.TestCase):
     """ Tests the production """
 
@@ -19,16 +20,16 @@ class TestCFG(unittest.TestCase):
         p0 = Production(v0, [t0, Terminal("A"), Variable(1)])
         cfg = CFG({v0}, {t0}, v0, {p0})
         self.assertIsNotNone(cfg)
-        self.assertEqual(cfg.get_number_variables(), 2)
-        self.assertEqual(cfg.get_number_terminals(), 2)
-        self.assertEqual(cfg.get_number_productions(), 1)
+        self.assertEqual(len(cfg.variables), 2)
+        self.assertEqual(len(cfg.terminals), 2)
+        self.assertEqual(len(cfg.productions), 1)
         self.assertTrue(cfg.is_empty())
 
         cfg = CFG()
         self.assertIsNotNone(cfg)
-        self.assertEqual(cfg.get_number_variables(), 0)
-        self.assertEqual(cfg.get_number_terminals(), 0)
-        self.assertEqual(cfg.get_number_productions(), 0)
+        self.assertEqual(len(cfg.variables), 0)
+        self.assertEqual(len(cfg.terminals), 0)
+        self.assertEqual(len(cfg.productions), 0)
         self.assertTrue(cfg.is_empty())
 
     def test_generating_object(self):
@@ -42,17 +43,17 @@ class TestCFG(unittest.TestCase):
         p1 = Production(start, [ter_a])
         p2 = Production(var_A, [ter_b])
         cfg = CFG({var_A, var_B, start}, {ter_a, ter_b}, start, {p0, p1, p2})
-        self.assertEqual(cfg.get_number_variables(), 3)
-        self.assertEqual(cfg.get_number_terminals(), 2)
-        self.assertEqual(cfg.get_number_productions(), 3)
+        self.assertEqual(len(cfg.variables), 3)
+        self.assertEqual(len(cfg.terminals), 2)
+        self.assertEqual(len(cfg.productions), 3)
         self.assertEqual(cfg.get_generating_symbols(), {var_A, ter_a, ter_b, start})
 
         p3 = Production(var_B, [Epsilon()])
 
         cfg = CFG({var_A, var_B, start}, {ter_a, ter_b}, start, {p0, p1, p2, p3})
-        self.assertEqual(cfg.get_number_variables(), 3)
-        self.assertEqual(cfg.get_number_terminals(), 2)
-        self.assertEqual(cfg.get_number_productions(), 4)
+        self.assertEqual(len(cfg.variables), 3)
+        self.assertEqual(len(cfg.terminals), 2)
+        self.assertEqual(len(cfg.productions), 4)
         self.assertEqual(cfg.get_generating_symbols(), {var_A, var_B, ter_a,
                                                         ter_b, start})
 
@@ -88,9 +89,9 @@ class TestCFG(unittest.TestCase):
         p2 = Production(var_A, [ter_b])
         cfg = CFG({var_A, var_B, start}, {ter_a, ter_b}, start, {p0, p1, p2})
         new_cfg = cfg.remove_useless_symbols()
-        self.assertEqual(new_cfg.get_number_variables(), 1)
-        self.assertEqual(new_cfg.get_number_terminals(), 1)
-        self.assertEqual(new_cfg.get_number_productions(), 1)
+        self.assertEqual(len(new_cfg.variables), 1)
+        self.assertEqual(len(new_cfg.terminals), 1)
+        self.assertEqual(len(new_cfg.productions), 1)
         self.assertFalse(cfg.is_empty())
 
     def test_nullable_object(self):
@@ -127,8 +128,8 @@ class TestCFG(unittest.TestCase):
                   {ter_a, ter_b},
                   start, {p0, p1, p2, p3, p4})
         new_cfg = cfg.remove_epsilon()
-        self.assertEqual(new_cfg.get_number_variables(), 3)
-        self.assertEqual(new_cfg.get_number_terminals(), 2)
+        self.assertEqual(len(new_cfg.variables), 3)
+        self.assertEqual(len(new_cfg.terminals), 2)
         self.assertEqual(len(set(new_cfg._productions)), 9)
         self.assertEqual(len(new_cfg.get_nullable_symbols()), 0)
         self.assertFalse(cfg.is_empty())
@@ -210,9 +211,9 @@ class TestCFG(unittest.TestCase):
                   var_E,
                   productions)
         new_cfg = cfg.to_normal_form()
-        self.assertEqual(new_cfg.get_number_variables(), 15)
-        self.assertEqual(new_cfg.get_number_terminals(), 8)
-        self.assertEqual(new_cfg.get_number_productions(), 41)
+        self.assertEqual(len(new_cfg.variables), 15)
+        self.assertEqual(len(new_cfg.terminals), 8)
+        self.assertEqual(len(new_cfg.productions), 41)
         self.assertFalse(cfg.is_empty())
         new_cfg2 = cfg.to_normal_form()
         self.assertEqual(new_cfg, new_cfg2)
@@ -220,9 +221,9 @@ class TestCFG(unittest.TestCase):
         cfg2 = CFG(start_symbol=var_E,
                    productions={Production(var_E, [var_T])})
         new_cfg = cfg2.to_normal_form()
-        self.assertEqual(new_cfg.get_number_variables(), 1)
-        self.assertEqual(new_cfg.get_number_terminals(), 0)
-        self.assertEqual(new_cfg.get_number_productions(), 0)
+        self.assertEqual(len(new_cfg.variables), 1)
+        self.assertEqual(len(new_cfg.terminals), 0)
+        self.assertEqual(len(new_cfg.productions), 0)
         self.assertTrue(cfg2.is_empty())
 
     def test_substitution(self):
@@ -234,9 +235,9 @@ class TestCFG(unittest.TestCase):
         p1 = Production(var_S, [])
         cfg = CFG({var_S}, {ter_a, ter_b}, var_S, {p0, p1})
         new_cfg = cfg.substitute({ter_a: cfg})
-        self.assertEqual(new_cfg.get_number_variables(), 2)
-        self.assertEqual(new_cfg.get_number_terminals(), 2)
-        self.assertEqual(new_cfg.get_number_productions(), 4)
+        self.assertEqual(len(new_cfg.variables), 2)
+        self.assertEqual(len(new_cfg.terminals), 2)
+        self.assertEqual(len(new_cfg.productions), 4)
         self.assertFalse(new_cfg.is_empty())
         self.assertTrue(new_cfg.contains([ter_a, ter_b, ter_a, ter_b, ter_b, ter_b]))
 
@@ -249,9 +250,9 @@ class TestCFG(unittest.TestCase):
         p1 = Production(var_S, [])
         cfg = CFG({var_S}, {ter_a, ter_b}, var_S, {p0, p1})
         new_cfg = cfg.union(cfg)
-        self.assertEqual(new_cfg.get_number_variables(), 3)
-        self.assertEqual(new_cfg.get_number_terminals(), 2)
-        self.assertEqual(new_cfg.get_number_productions(), 6)
+        self.assertEqual(len(new_cfg.variables), 3)
+        self.assertEqual(len(new_cfg.terminals), 2)
+        self.assertEqual(len(new_cfg.productions), 6)
         self.assertFalse(new_cfg.is_empty())
         self.assertTrue(new_cfg.contains([ter_a, ter_a, ter_b, ter_b]))
 
@@ -264,9 +265,9 @@ class TestCFG(unittest.TestCase):
         p1 = Production(var_S, [])
         cfg = CFG({var_S}, {ter_a, ter_b}, var_S, {p0, p1})
         new_cfg = cfg.concatenate(cfg)
-        self.assertEqual(new_cfg.get_number_variables(), 3)
-        self.assertEqual(new_cfg.get_number_terminals(), 2)
-        self.assertEqual(new_cfg.get_number_productions(), 5)
+        self.assertEqual(len(new_cfg.variables), 3)
+        self.assertEqual(len(new_cfg.terminals), 2)
+        self.assertEqual(len(new_cfg.productions), 5)
         self.assertFalse(new_cfg.is_empty())
         self.assertTrue(new_cfg.contains([ter_a, ter_a, ter_b, ter_b, ter_a, ter_b]))
 
@@ -280,9 +281,9 @@ class TestCFG(unittest.TestCase):
         p1 = Production(var_S, [ter_c])
         cfg = CFG({var_S}, {ter_a, ter_b}, var_S, {p0, p1})
         new_cfg = cfg.get_closure()
-        self.assertEqual(new_cfg.get_number_variables(), 2)
-        self.assertEqual(new_cfg.get_number_terminals(), 3)
-        self.assertEqual(new_cfg.get_number_productions(), 5)
+        self.assertEqual(len(new_cfg.variables), 2)
+        self.assertEqual(len(new_cfg.terminals), 3)
+        self.assertEqual(len(new_cfg.productions), 5)
         self.assertFalse(new_cfg.is_empty())
         self.assertTrue(new_cfg.contains([]))
         self.assertTrue(new_cfg.contains([ter_a, ter_a, ter_c, ter_b, ter_b,
@@ -298,9 +299,9 @@ class TestCFG(unittest.TestCase):
         p1 = Production(var_S, [ter_c])
         cfg = CFG({var_S}, {ter_a, ter_b}, var_S, {p0, p1})
         new_cfg = cfg.get_positive_closure()
-        self.assertEqual(new_cfg.get_number_variables(), 3)
-        self.assertEqual(new_cfg.get_number_terminals(), 3)
-        self.assertEqual(new_cfg.get_number_productions(), 6)
+        self.assertEqual(len(new_cfg.variables), 3)
+        self.assertEqual(len(new_cfg.terminals), 3)
+        self.assertEqual(len(new_cfg.productions), 6)
         self.assertFalse(new_cfg.is_empty())
         self.assertFalse(new_cfg.contains([]))
         self.assertTrue(new_cfg.contains([ter_a, ter_a, ter_c, ter_b, ter_b,
@@ -315,9 +316,9 @@ class TestCFG(unittest.TestCase):
         p1 = Production(var_S, [])
         cfg = CFG({var_S}, {ter_a, ter_b}, var_S, {p0, p1})
         new_cfg = cfg.reverse()
-        self.assertEqual(new_cfg.get_number_variables(), 1)
-        self.assertEqual(new_cfg.get_number_terminals(), 2)
-        self.assertEqual(new_cfg.get_number_productions(), 2)
+        self.assertEqual(len(new_cfg.variables), 1)
+        self.assertEqual(len(new_cfg.terminals), 2)
+        self.assertEqual(len(new_cfg.productions), 2)
         self.assertFalse(new_cfg.is_empty())
         self.assertTrue(new_cfg.contains([ter_b, ter_b, ter_a, ter_a]))
 
@@ -402,10 +403,10 @@ class TestCFG(unittest.TestCase):
                   var_E,
                   productions)
         pda = cfg.to_pda()
-        self.assertEqual(pda.get_number_states(), 1)
-        self.assertEqual(pda.get_number_final_states(), 0)
-        self.assertEqual(pda.get_number_input_symbols(), 8)
-        self.assertEqual(pda.get_number_stack_symbols(), 10)
+        self.assertEqual(len(pda.states), 1)
+        self.assertEqual(len(pda.final_states), 0)
+        self.assertEqual(len(pda.input_symbols), 8)
+        self.assertEqual(len(pda.stack_symbols), 10)
         self.assertEqual(pda.get_number_transitions(), 19)
 
     def test_conversions(self):

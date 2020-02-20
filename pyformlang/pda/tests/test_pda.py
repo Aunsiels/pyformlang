@@ -6,6 +6,7 @@ from pyformlang.pda import PDA, State, StackSymbol, Symbol, Epsilon
 from pyformlang.cfg import Terminal
 from pyformlang import finite_automaton
 
+
 class TestPDA(unittest.TestCase):
     """ Tests the pushdown automata """
 
@@ -13,55 +14,55 @@ class TestPDA(unittest.TestCase):
         """ Test of creation """
         pda = PDA()
         self.assertIsNotNone(pda)
-        self.assertEqual(pda.get_number_states(), 0)
-        self.assertEqual(pda.get_number_final_states(), 0)
-        self.assertEqual(pda.get_number_input_symbols(), 0)
-        self.assertEqual(pda.get_number_stack_symbols(), 0)
+        self.assertEqual(len(pda.states), 0)
+        self.assertEqual(len(pda.final_states), 0)
+        self.assertEqual(len(pda.input_symbols), 0)
+        self.assertEqual(len(pda.stack_symbols), 0)
 
         pda = PDA(start_state=State("A"))
         self.assertIsNotNone(pda)
-        self.assertEqual(pda.get_number_states(), 1)
-        self.assertEqual(pda.get_number_stack_symbols(), 0)
-        self.assertEqual(pda.get_number_final_states(), 0)
+        self.assertEqual(len(pda.states), 1)
+        self.assertEqual(len(pda.stack_symbols), 0)
+        self.assertEqual(len(pda.final_states), 0)
 
         pda = PDA(final_states={State("A"), State("A"), State("B"),
                                 Symbol("B")})
         self.assertIsNotNone(pda)
-        self.assertEqual(pda.get_number_states(), 3)
-        self.assertEqual(pda.get_number_input_symbols(), 0)
-        self.assertEqual(pda.get_number_stack_symbols(), 0)
-        self.assertEqual(pda.get_number_final_states(), 3)
+        self.assertEqual(len(pda.states), 3)
+        self.assertEqual(len(pda.input_symbols), 0)
+        self.assertEqual(len(pda.stack_symbols), 0)
+        self.assertEqual(len(pda.final_states), 3)
 
         pda = PDA(input_symbols={Symbol("A"), Symbol("B"),
                                  Symbol("A"), State("A")})
         self.assertIsNotNone(pda)
-        self.assertEqual(pda.get_number_states(), 0)
-        self.assertEqual(pda.get_number_input_symbols(), 3)
-        self.assertEqual(pda.get_number_stack_symbols(), 0)
-        self.assertEqual(pda.get_number_final_states(), 0)
+        self.assertEqual(len(pda.states), 0)
+        self.assertEqual(len(pda.input_symbols), 3)
+        self.assertEqual(len(pda.stack_symbols), 0)
+        self.assertEqual(len(pda.final_states), 0)
 
         pda = PDA(start_stack_symbol=StackSymbol("A"))
         self.assertIsNotNone(pda)
-        self.assertEqual(pda.get_number_input_symbols(), 0)
-        self.assertEqual(pda.get_number_states(), 0)
-        self.assertEqual(pda.get_number_stack_symbols(), 1)
-        self.assertEqual(pda.get_number_final_states(), 0)
+        self.assertEqual(len(pda.input_symbols), 0)
+        self.assertEqual(len(pda.states), 0)
+        self.assertEqual(len(pda.stack_symbols), 1)
+        self.assertEqual(len(pda.final_states), 0)
 
         pda = PDA(stack_alphabet={StackSymbol("A"), StackSymbol("A"),
                                   StackSymbol("B")})
         self.assertIsNotNone(pda)
-        self.assertEqual(pda.get_number_states(), 0)
-        self.assertEqual(pda.get_number_input_symbols(), 0)
-        self.assertEqual(pda.get_number_stack_symbols(), 2)
-        self.assertEqual(pda.get_number_final_states(), 0)
+        self.assertEqual(len(pda.states), 0)
+        self.assertEqual(len(pda.input_symbols), 0)
+        self.assertEqual(len(pda.stack_symbols), 2)
+        self.assertEqual(len(pda.final_states), 0)
 
         pda = PDA(input_symbols={Epsilon()})
         self.assertIsNotNone(pda)
-        self.assertEqual(pda.get_number_states(), 0)
-        self.assertEqual(pda.get_number_input_symbols(), 1)
-        self.assertEqual(pda.get_number_stack_symbols(), 0)
+        self.assertEqual(len(pda.states), 0)
+        self.assertEqual(len(pda.input_symbols), 1)
+        self.assertEqual(len(pda.stack_symbols), 0)
         self.assertEqual(pda.get_number_transitions(), 0)
-        self.assertEqual(pda.get_number_final_states(), 0)
+        self.assertEqual(len(pda.final_states), 0)
 
     def test_represent(self):
         """ Tests representations """
@@ -80,18 +81,18 @@ class TestPDA(unittest.TestCase):
                            StackSymbol("stack symbol"),
                            State("to"),
                            [StackSymbol("A"), StackSymbol("B")])
-        self.assertEqual(pda.get_number_states(), 2)
-        self.assertEqual(pda.get_number_input_symbols(), 1)
-        self.assertEqual(pda.get_number_stack_symbols(), 3)
+        self.assertEqual(len(pda.states), 2)
+        self.assertEqual(len(pda.input_symbols), 1)
+        self.assertEqual(len(pda.stack_symbols), 3)
         self.assertEqual(pda.get_number_transitions(), 1)
         pda.add_transition(State("from"),
                            Epsilon(),
                            StackSymbol("stack symbol"),
                            State("to"),
                            [StackSymbol("A"), StackSymbol("B")])
-        self.assertEqual(pda.get_number_states(), 2)
-        self.assertEqual(pda.get_number_input_symbols(), 1)
-        self.assertEqual(pda.get_number_stack_symbols(), 3)
+        self.assertEqual(len(pda.states), 2)
+        self.assertEqual(len(pda.input_symbols), 1)
+        self.assertEqual(len(pda.stack_symbols), 3)
         self.assertEqual(pda.get_number_transitions(), 2)
 
     def test_example62(self):
@@ -110,9 +111,9 @@ class TestPDA(unittest.TestCase):
                   start_state=q0,
                   start_stack_symbol=ss_z0,
                   final_states={q2})
-        self.assertEqual(pda.get_number_states(), 3)
-        self.assertEqual(pda.get_number_input_symbols(), 2)
-        self.assertEqual(pda.get_number_stack_symbols(), 3)
+        self.assertEqual(len(pda.states), 3)
+        self.assertEqual(len(pda.input_symbols), 2)
+        self.assertEqual(len(pda.stack_symbols), 3)
         self.assertEqual(pda.get_number_transitions(), 0)
 
         pda.add_transition(q0, s_zero, ss_z0, q0, [ss_zero, ss_z0])
@@ -157,11 +158,11 @@ class TestPDA(unittest.TestCase):
         pda.add_transition(q, i, Z, q, (Z, Z))
         pda.add_transition(q, e, Z, q, [])
         new_pda = pda.to_final_state()
-        self.assertEqual(new_pda.get_number_states(), 3)
-        self.assertEqual(new_pda.get_number_input_symbols(), 2)
-        self.assertEqual(new_pda.get_number_stack_symbols(), 2)
+        self.assertEqual(len(new_pda.states), 3)
+        self.assertEqual(len(new_pda.input_symbols), 2)
+        self.assertEqual(len(new_pda.stack_symbols), 2)
         self.assertEqual(new_pda.get_number_transitions(), 4)
-        self.assertEqual(new_pda.get_number_final_states(), 1)
+        self.assertEqual(len(new_pda.final_states), 1)
 
     def test_to_empty_stack(self):
         """ Test transformation to empty stack """
@@ -182,11 +183,11 @@ class TestPDA(unittest.TestCase):
         pda.add_transition(q, e, Z, q, [])
         pda.add_transition(q, Epsilon(), Z0, q0, [])
         new_pda = pda.to_empty_stack()
-        self.assertEqual(new_pda.get_number_states(), 4)
-        self.assertEqual(new_pda.get_number_input_symbols(), 2)
-        self.assertEqual(new_pda.get_number_stack_symbols(), 3)
+        self.assertEqual(len(new_pda.states), 4)
+        self.assertEqual(len(new_pda.input_symbols), 2)
+        self.assertEqual(len(new_pda.stack_symbols), 3)
         self.assertEqual(new_pda.get_number_transitions(), 11)
-        self.assertEqual(new_pda.get_number_final_states(), 0)
+        self.assertEqual(len(new_pda.final_states), 0)
 
     def test_to_cfg(self):
         """ Test the transformation to CFG """
@@ -202,9 +203,9 @@ class TestPDA(unittest.TestCase):
         pda.add_transition(q, i, Z, q, (Z, Z))
         pda.add_transition(q, e, Z, q, [])
         cfg = pda.to_cfg()
-        self.assertEqual(cfg.get_number_variables(), 2)
-        self.assertEqual(cfg.get_number_terminals(), 2)
-        self.assertEqual(cfg.get_number_productions(), 3)
+        self.assertEqual(len(cfg.variables), 2)
+        self.assertEqual(len(cfg.terminals), 2)
+        self.assertEqual(len(cfg.productions), 3)
 
         pda = PDA(states={"q"},
                   input_symbols={"i", "e"},
@@ -214,9 +215,9 @@ class TestPDA(unittest.TestCase):
         pda.add_transition("q", "i", "Z", "q", ("Z", "Z"))
         pda.add_transition("q", "e", "Z", "q", [])
         cfg = pda.to_cfg()
-        self.assertEqual(cfg.get_number_variables(), 2)
-        self.assertEqual(cfg.get_number_terminals(), 2)
-        self.assertEqual(cfg.get_number_productions(), 3)
+        self.assertEqual(len(cfg.variables), 2)
+        self.assertEqual(len(cfg.terminals), 2)
+        self.assertEqual(len(cfg.productions), 3)
         pda.add_transition("q", "epsilon", "Z", "q", ["Z"])
 
     def test_pda_conversion(self):
@@ -286,10 +287,10 @@ class TestPDA(unittest.TestCase):
         pda_es = new_pda.to_empty_stack()
         cfg = pda_es.to_cfg()
         self.assertEqual(new_pda.get_number_transitions(), 6)
-        self.assertEqual(new_pda.get_number_states(), 5)
-        self.assertEqual(new_pda.get_number_final_states(), 2)
-        self.assertEqual(new_pda.get_number_input_symbols(), 2)
-        self.assertEqual(new_pda.get_number_stack_symbols(), 2)
+        self.assertEqual(len(new_pda.states), 5)
+        self.assertEqual(len(new_pda.final_states), 2)
+        self.assertEqual(len(new_pda.input_symbols), 2)
+        self.assertEqual(len(new_pda.stack_symbols), 2)
 
         i_cfg = Terminal("i")
         e_cfg = Terminal("e")
