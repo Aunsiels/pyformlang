@@ -371,6 +371,9 @@ class FiniteAutomaton(object):
     def to_deterministic(self):
         raise NotImplementedError
 
+    def is_deterministic(self):
+        raise NotImplementedError
+
     def __eq__(self, other):
         return self.is_equivalent_to(other)
 

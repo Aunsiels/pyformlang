@@ -1,4 +1,4 @@
-""" We represent here a pushdown automaton """
+""" We represent here a push-down automaton """
 
 from typing import AbstractSet, List, Iterable, Any
 from itertools import product
@@ -14,6 +14,7 @@ from .utils import PDAObjectCreator
 from pyformlang import finite_automaton
 from pyformlang.regular_expression import Regex
 from pyformlang import cfg
+from ..finite_automaton import FiniteAutomaton
 
 INPUT_SYMBOL = 1
 
@@ -354,6 +355,9 @@ class PDA(object):
     def intersection(self, other: Any) -> "PDA":
         """ Gets the intersection of the current PDA with something else
 
+        Equivalent to:
+            >> pda and regex
+
         Parameters
         ----------
         other : any
@@ -366,10 +370,17 @@ class PDA(object):
 
         Raises
         ----------
-        TODO
+        NotImplementedError
+            When intersecting with something else than a regex or a finite
+            automaton
         """
         if isinstance(other, Regex):
             other = other.to_epsilon_nfa().to_deterministic()
+        elif isinstance(other, FiniteAutomaton):
+            if not other.is_deterministic():
+                other = other.to_deterministic()
+        else:
+            raise NotImplementedError
         start_state_other = other.get_start_states()
         if len(start_state_other) == 0:
             return PDA()
@@ -416,6 +427,30 @@ class PDA(object):
                                 to_process.append((next_state, next_state_dfa))
                                 processed.add((next_state, next_state_dfa))
         return pda
+
+    def __and__(self, other):
+        """ Gets the intersection of the current PDA with something else
+
+        Equivalent to:
+            >> pda and regex
+
+        Parameters
+        ----------
+        other : any
+            The other part of the intersection
+
+        Returns
+        ----------
+        new_pda : :class:`~pyformlang.pda.PDA`
+            The pda resulting of the intersection
+
+        Raises
+        ----------
+        NotImplementedError
+            When intersecting with something else than a regex or a finite
+            automaton
+        """
+        return self.intersection(other)
 
 
 def _prepend_input_symbol_to_the_bodies(bodies, transition):
