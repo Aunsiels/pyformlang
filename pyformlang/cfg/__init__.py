@@ -1,6 +1,6 @@
 """
 :mod:`pyformlang.cfg`
-==============
+=====================
 
 This submodule implements functions related to context-free grammars.
 

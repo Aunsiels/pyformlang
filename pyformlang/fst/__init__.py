@@ -1,6 +1,6 @@
 """
 :mod:`pyformlang.fst`
-==================================
+=====================
 
 This module deals with finite state transducers.
 

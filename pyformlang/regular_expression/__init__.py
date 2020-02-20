@@ -1,6 +1,6 @@
 """
 :mod:`pyformlang.regular_expression`
-==================================
+====================================
 
 This module deals with regular expression.
 
