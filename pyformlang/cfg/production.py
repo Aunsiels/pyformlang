@@ -26,7 +26,7 @@ class Production(object):
         self._head = head
         self._hash = None
 
-    def get_head(self) -> CFGObject:
+    def get_head(self) -> Variable:
         return self._head
 
     def get_body(self) -> Iterable[CFGObject]:
