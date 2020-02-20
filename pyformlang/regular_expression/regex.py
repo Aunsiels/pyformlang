@@ -172,6 +172,21 @@ class Regex(RegexReader):
         regex.sons = [self, other]
         return regex
 
+    def __truediv__(self, other):
+        """ Makes the union with another regex
+
+        Parameters
+        ----------
+        other : :class:`~pyformlang.regular_expression.Regex`
+            The other regex
+
+        Returns
+        ----------
+        regex : :class:`~pyformlang.regular_expression.Regex`
+            The union of the two regex
+        """
+        return self.union(other)
+
     def concatenate(self, other: "Regex") -> "Regex":
         """ Concatenates a regular expression with an other one
 
@@ -189,6 +204,21 @@ class Regex(RegexReader):
         regex.head = pyformlang.regular_expression.regex_objects.Concatenation()
         regex.sons = [self, other]
         return regex
+
+    def __add__(self, other):
+        """ Concatenates a regular expression with an other one
+
+        Parameters
+        ----------
+        other : :class:`~pyformlang.regular_expression.Regex`
+            The other regex
+
+        Returns
+        ----------
+        regex : :class:`~pyformlang.regular_expression.Regex`
+            The concatenation of the two regex
+        """
+        return self.concatenate(other)
 
     def kleene_star(self) -> "Regex":
         """ Makes the kleene star of the current regex
