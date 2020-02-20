@@ -3,10 +3,10 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-requirements = []
-with open("requirements.txt") as f:
-    for line in f:
-        requirements.append(line.strip())
+requirements = [
+    "networkx",
+    "numpy"
+]
 
 setuptools.setup(
     name='pyformlang',
