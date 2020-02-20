@@ -164,6 +164,9 @@ class IndexedGrammar(object):
             return False
         return True
 
+    def __bool__(self):
+        return not self.is_empty()
+
     def get_reachable_non_terminals(self) -> AbstractSet[Any]:
         """ Get the reachable symbols
 
@@ -315,7 +318,40 @@ class IndexedGrammar(object):
         return IndexedGrammar(rules)
 
     def intersection(self, other: Any) -> "IndexedGrammar":
-        """ Computes the intersection of the current indexed grammar with the other object
+        """ Computes the intersection of the current indexed grammar with the
+        other object
+
+        Equivalent to
+        -------------
+          >> indexed_grammar and regex
+
+        Parameters
+        ----------
+        other : any
+            The object to intersect with
+
+        Returns
+        ----------
+        i_grammar : :class:`~pyformlang.indexed_grammar.IndexedGrammar`
+            The indexed grammar which useless rules
+
+        Raises
+        ------
+        NotEmplementedError
+            When trying to intersection with something else than a regular
+            expression or a finite automaton
+        """
+        import pyformlang
+        if isinstance(other, pyformlang.regular_expression.Regex):
+            other = other.to_epsilon_nfa()
+        if isinstance(other, pyformlang.finite_automaton.FiniteAutomaton):
+            fst = other.to_fst()
+            return fst.intersection(self)
+        raise NotImplementedError
+
+    def __and__(self, other):
+        """ Computes the intersection of the current indexed grammar with the
+        other object
 
         Parameters
         ----------
@@ -327,12 +363,7 @@ class IndexedGrammar(object):
         i_grammar : :class:`~pyformlang.indexed_grammar.IndexedGrammar`
             The indexed grammar which useless rules
         """
-        import pyformlang
-        if isinstance(other, pyformlang.regular_expression.Regex):
-            other = other.to_epsilon_nfa()
-        if isinstance(other, pyformlang.finite_automaton.FiniteAutomaton):
-            fst = other.to_fst()
-            return fst.intersection(self)
+        return self.intersection(other)
 
 
 def exists(l, f):
