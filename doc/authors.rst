@@ -4,4 +4,4 @@ Authors
 Main Author
 -----------
 
-* Julien Romero <julien.romero@telecom-paristech.fr>
+* Julien Romero <julien.romero@telecom-paris.fr>
