@@ -98,7 +98,7 @@ class TransitionFunction(object):
             return 1
         return 0
 
-    def __call__(self, s_from: State, symb_by: Symbol) -> List[State]:
+    def __call__(self, s_from: State, symb_by: Symbol=None) -> List[State]:
         """ Calls the transition function as a real function
 
         Parameters
@@ -115,8 +115,11 @@ class TransitionFunction(object):
 
         """
         if s_from in self._transitions:
-            if symb_by in self._transitions[s_from]:
-                return [self._transitions[s_from][symb_by]]
+            if symb_by is not None:
+                if symb_by in self._transitions[s_from]:
+                    return [self._transitions[s_from][symb_by]]
+            else:
+                return self._transitions[s_from].items()
         return []
 
     def get_number_transitions(self) -> int:

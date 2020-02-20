@@ -504,6 +504,38 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(enfa_from_nx.accepts([symb_a, symb_a]))
         self.assertFalse(enfa_from_nx.accepts([]))
 
+    def test_equivalent(self):
+        enfa0 = EpsilonNFA()
+        state0 = State("0")
+        state1 = State(1)
+        symb_a = Symbol('a')
+        enfa0.add_start_state(state0)
+        enfa0.add_final_state(state1)
+        enfa0.add_transition(state0, symb_a, state1)
+        enfa0.add_transition(state1, Epsilon(), state0)
+        enfa1 = EpsilonNFA()
+        enfa1.add_start_state(state0)
+        enfa1.add_final_state(state1)
+        enfa1.add_transition(state0, symb_a, state1)
+        enfa1.add_transition(state1, symb_a, state1)
+        self.assertTrue(enfa0.is_equivalent_to(enfa1))
+
+    def test_non_equivalent(self):
+        enfa0 = EpsilonNFA()
+        state0 = State("0")
+        state1 = State(1)
+        symb_a = Symbol('a')
+        enfa0.add_start_state(state0)
+        enfa0.add_final_state(state1)
+        enfa0.add_transition(state0, symb_a, state1)
+        enfa0.add_transition(state1, Epsilon(), state0)
+        enfa1 = EpsilonNFA()
+        enfa1.add_start_state(state0)
+        enfa1.add_final_state(state1)
+        enfa1.add_transition(state0, symb_a, state1)
+        enfa1.add_transition(state1, symb_a, state0)
+        self.assertFalse(enfa0.is_equivalent_to(enfa1))
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """

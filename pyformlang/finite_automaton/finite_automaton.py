@@ -218,7 +218,7 @@ class FiniteAutomaton(object):
             return 1
         return 0
 
-    def __call__(self, state: State, symbol: Symbol) -> List[State]:
+    def __call__(self, state: State, symbol: Symbol=None) -> List[State]:
         """ Gives the states obtained after calling a symbol on a state
         Calls the transition function
 
@@ -227,7 +227,7 @@ class FiniteAutomaton(object):
         state : :class:`~pyformlang.finite_automaton.State`
             The source state
         symbol : :class:`~pyformlang.finite_automaton.Symbol`
-            The symbol
+            The symbol, optional if we want all transitions
 
         Returns
         ----------
@@ -236,7 +236,8 @@ class FiniteAutomaton(object):
         """
         # pylint: disable=not-callable
         state = to_state(state)
-        symbol = to_symbol(symbol)
+        if symbol is not None:
+            symbol = to_symbol(symbol)
         return self._transition_function(state, symbol)
 
     def is_final_state(self, state: State) -> bool:
@@ -362,6 +363,13 @@ class FiniteAutomaton(object):
             if graph.nodes[node].get("is_final", False):
                 enfa.add_final_state(node)
         return enfa
+
+    def is_equivalent_to(self, other):
+        self_dfa = self.to_deterministic()
+        return self_dfa.is_equivalent_to(other)
+
+    def to_deterministic(self):
+        raise NotImplementedError
 
 
 def to_state(given: Any) -> State:

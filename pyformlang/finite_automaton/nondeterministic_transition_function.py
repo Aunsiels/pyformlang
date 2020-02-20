@@ -88,7 +88,7 @@ class NondeterministicTransitionFunction(object):
                 counter += len(self._transitions[s_from][symb_by])
         return counter
 
-    def __call__(self, s_from: State, symb_by: Symbol) -> Set[State]:
+    def __call__(self, s_from: State, symb_by: Symbol=None) -> Set[State]:
         """ Calls the transition function as a real function
 
         Parameters
@@ -105,8 +105,11 @@ class NondeterministicTransitionFunction(object):
 
         """
         if s_from in self._transitions:
-            if symb_by in self._transitions[s_from]:
-                return self._transitions[s_from][symb_by]
+            if symb_by is not None:
+                if symb_by in self._transitions[s_from]:
+                    return self._transitions[s_from][symb_by]
+            else:
+                return self._transitions[s_from].items()
         return set()
 
     def is_deterministic(self):

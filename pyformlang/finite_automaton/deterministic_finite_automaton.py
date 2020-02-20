@@ -44,7 +44,6 @@ class PreviousTransitions(object):
         return self._conversion[i_next0, i_symbol] or []
 
 
-
 class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
     """ Represents a deterministic finite automaton
 
@@ -338,6 +337,55 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                     else:
                         processing_list.insert(new_class, symbol)
         return partition
+
+    def is_equivalent_to(self, other):
+        """ Check whether two automata are equivalent
+
+        Parameters
+        ----------
+        other : :class:`~pyformlang.deterministic_finite_automaton.FiniteAutomaton`
+            A sequence of input symbols
+
+        Returns
+        ----------
+        are_equivalent : bool
+            Whether the two automata are equivalent or not
+        """
+        if not isinstance(other, DeterministicFiniteAutomaton):
+            other_dfa = other.to_deterministic()
+            return self.is_equivalent_to(other_dfa)
+        self_minimal = self.minimize()
+        other_minimal = other.minimize()
+        return self._is_equivalent_to_minimal(self_minimal, other_minimal)
+
+    def get_start_state(self) -> State:
+        return list(self._start_state)[0]
+
+    @staticmethod
+    def _is_equivalent_to_minimal(self_minimal, other_minimal):
+        to_process = [(self_minimal.get_start_state(),
+                       other_minimal.get_start_state())]
+        matches = {self_minimal.get_start_state(): other_minimal.get_start_state()}
+        while to_process:
+            current_self, current_other = to_process.pop()
+            if (self_minimal.is_final_state(current_self) and not other_minimal.is_final_state(current_other)) or\
+                    (not self_minimal.is_final_state(current_self) and other_minimal.is_final_state(current_other)):
+                return False
+            next_self = self_minimal(current_self)
+            next_other = other_minimal(current_other)
+            if len(next_self) != len(next_other):
+                return False
+            next_symbol_self, next_state_self = list(next_self)[0]
+            next_symbol_other, next_state_other = list(next_other)[0]
+            if next_symbol_other != next_symbol_self:
+                return False
+            if next_state_self in matches:
+                if matches[next_state_self] != next_state_other:
+                    return False
+            else:
+                matches[next_state_self] = next_state_other
+                to_process.append((next_state_self, next_state_other))
+        return True
 
 
 def get_groups(states, distinguishable) -> Iterable[AbstractSet[State]]:
