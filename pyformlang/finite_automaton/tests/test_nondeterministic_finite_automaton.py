@@ -41,7 +41,6 @@ class TestNondeterministicFiniteAutomaton(unittest.TestCase):
         self.assertEqual(nfa.remove_start_state(state0), 1)
         self.assertFalse(nfa.accepts([symb_a]))
 
-
     def test_accepts(self):
         """ Tests the acceptance of nfa
         """

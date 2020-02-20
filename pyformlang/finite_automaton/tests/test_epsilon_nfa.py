@@ -489,6 +489,21 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(graph.nodes[1]["is_start"])
         self.assertTrue(graph.nodes[1]["is_final"])
 
+    def test_import_networkx(self):
+        enfa = EpsilonNFA()
+        state0 = State("0")
+        state1 = State(1)
+        symb_a = Symbol('a')
+        enfa.add_start_state(state0)
+        enfa.add_final_state(state1)
+        enfa.add_transition(state0, symb_a, state1)
+        enfa.add_transition(state1, Epsilon(), state0)
+        graph = enfa.to_networkx()
+        enfa_from_nx = EpsilonNFA.from_networkx(graph)
+        self.assertTrue(enfa_from_nx.accepts([symb_a]))
+        self.assertTrue(enfa_from_nx.accepts([symb_a, symb_a]))
+        self.assertFalse(enfa_from_nx.accepts([]))
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """

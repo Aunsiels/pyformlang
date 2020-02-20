@@ -348,6 +348,21 @@ class FiniteAutomaton(object):
             graph.add_edge(s_from.get_value(), s_to.get_value(), name=symbol.get_value())
         return graph
 
+    @classmethod
+    def from_networkx(cls, graph):
+        from pyformlang.finite_automaton import EpsilonNFA
+        enfa = EpsilonNFA()
+        for s_from in graph:
+            for s_to in graph[s_from]:
+                for transition in graph[s_from][s_to].values():
+                    enfa.add_transition(s_from, transition["name"], s_to)
+        for node in graph.nodes:
+            if graph.nodes[node].get("is_start", False):
+                enfa.add_start_state(node)
+            if graph.nodes[node].get("is_final", False):
+                enfa.add_final_state(node)
+        return enfa
+
 
 def to_state(given: Any) -> State:
     """ Transforms the input into a state
