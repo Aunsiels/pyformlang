@@ -1,7 +1,7 @@
 """
 A nondeterministic transition function
 """
-
+import copy
 from typing import Set
 
 from .state import State
@@ -147,3 +147,6 @@ class NondeterministicTransitionFunction(object):
 
     def __iter__(self):
         yield from self.get_edges()
+
+    def to_dict(self):
+        return copy.deepcopy(self._transitions)

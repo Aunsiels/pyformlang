@@ -553,6 +553,20 @@ class TestEpsilonNFA(unittest.TestCase):
         enfa1.add_transition(state1, symb_a, state0)
         self.assertFalse(enfa0.is_equivalent_to(enfa1))
 
+    def test_get_as_dict(self):
+        enfa0 = EpsilonNFA()
+        state0 = State("0")
+        state1 = State(1)
+        symb_a = Symbol('a')
+        enfa0.add_start_state(state0)
+        enfa0.add_final_state(state1)
+        enfa0.add_transition(state0, symb_a, state1)
+        enfa0.add_transition(state1, Epsilon(), state0)
+        d_enfa = enfa0.to_dict()
+        self.assertIn(state0, d_enfa)
+        self.assertIn(symb_a, d_enfa[state0])
+        self.assertIn(state1, d_enfa[state0][symb_a])
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """

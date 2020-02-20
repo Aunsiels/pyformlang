@@ -375,6 +375,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             next_other = other_minimal(current_other)
             if len(next_self) != len(next_other):
                 return False
+            if len(next_self) == 0:
+                continue
             next_symbol_self, next_state_self = list(next_self)[0]
             next_symbol_other, next_state_other = list(next_other)[0]
             if next_symbol_other != next_symbol_self:

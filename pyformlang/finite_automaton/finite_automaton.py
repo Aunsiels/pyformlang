@@ -384,6 +384,9 @@ class FiniteAutomaton(object):
     def __iter__(self):
         yield from self._transition_function.get_edges()
 
+    def to_dict(self):
+        return self._transition_function.to_dict()
+
 
 def to_state(given: Any) -> State:
     """ Transforms the input into a state

@@ -1,7 +1,7 @@
 """
 Repretation of a transition function
 """
-
+import copy
 from typing import List
 
 from pyformlang.finite_automaton.epsilon import Epsilon
@@ -152,6 +152,9 @@ class TransitionFunction(object):
 
     def __iter__(self):
         yield from self.get_edges()
+
+    def to_dict(self):
+        return copy.deepcopy(self._transitions)
 
 
 class DuplicateTransitionError(Exception):
