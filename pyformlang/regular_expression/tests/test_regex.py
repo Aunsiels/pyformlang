@@ -158,3 +158,11 @@ class TestRegex(unittest.TestCase):
         regex = Regex("")
         tree_str = regex.get_tree_str()
         self.assertTrue("Empty" in tree_str)
+
+    def test_get_repr(self):
+        regex0 = Regex("a*.(b|c)epsilon")
+        regex_str = str(regex0)
+        regex1 = Regex(regex_str)
+        dfa0 = regex0.to_epsilon_nfa().to_deterministic().minimize()
+        dfa1 = regex1.to_epsilon_nfa().to_deterministic().minimize()
+        self.assertEqual(dfa0, dfa1)

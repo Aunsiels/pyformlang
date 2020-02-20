@@ -20,6 +20,9 @@ class Node(object): # pylint: disable=too-few-public-methods
         """
         return self._value
 
+    def get_str_repr(self, sons_repr):
+        raise NotImplementedError
+
 
 CONCATENATION_SYMBOLS = ["."]
 UNION_SYMBOLS = ["|", "+"]
@@ -51,6 +54,9 @@ class Operator(Node): # pylint: disable=too-few-public-methods
         The value of the operator
     """
 
+    def get_str_repr(self, sons_repr):
+        raise NotImplementedError
+
     def __repr__(self):
         return "Operator(" + str(self._value) + ")"
 
@@ -64,6 +70,9 @@ class Symbol(Node): # pylint: disable=too-few-public-methods
         The value of the symbol
     """
 
+    def get_str_repr(self, sons_repr):
+        return str(self.get_value())
+
     def __repr__(self):
         return "Symbol(" + str(self._value) + ")"
 
@@ -71,6 +80,9 @@ class Symbol(Node): # pylint: disable=too-few-public-methods
 class Concatenation(Operator): # pylint: disable=too-few-public-methods
     """ Represents a concatenation
     """
+
+    def get_str_repr(self, sons_repr):
+        return "(" + ".".join(sons_repr) + ")"
 
     def __init__(self):
         super().__init__("Concatenation")
@@ -80,6 +92,9 @@ class Union(Operator): # pylint: disable=too-few-public-methods
     """ Represents a union
     """
 
+    def get_str_repr(self, sons_repr):
+        return "(" + "|".join(sons_repr) + ")"
+
     def __init__(self):
         super().__init__("Union")
 
@@ -88,6 +103,9 @@ class KleeneStar(Operator): # pylint: disable=too-few-public-methods
     """ Represents an epsilon symbol
     """
 
+    def get_str_repr(self, sons_repr):
+        return "(" + ".".join(sons_repr) + ")*"
+
     def __init__(self):
         super().__init__("Kleene Star")
 
@@ -95,6 +113,9 @@ class KleeneStar(Operator): # pylint: disable=too-few-public-methods
 class Epsilon(Symbol): # pylint: disable=too-few-public-methods
     """ Represents an epsilon symbol
     """
+
+    def get_str_repr(self, sons_repr):
+        return "$"
 
     def __init__(self):
         super().__init__("Epsilon")

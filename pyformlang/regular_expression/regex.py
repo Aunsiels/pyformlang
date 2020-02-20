@@ -154,6 +154,9 @@ class Regex(RegexReader):
             temp += son.get_tree_str(depth + 1)
         return temp
 
+    def __repr__(self):
+        return self.head.get_str_repr([str(son) for son in self.sons])
+
     def union(self, other: "Regex") -> "Regex":
         """ Makes the union with another regex
 
