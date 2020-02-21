@@ -3,6 +3,7 @@
 from typing import Set, List, Any
 
 import networkx as nx
+from networkx.drawing.nx_pydot import write_dot
 
 from .epsilon import Epsilon
 from .state import State
@@ -296,26 +297,42 @@ class FiniteAutomaton(object):
         for state in self._states:
             graph.add_node(state.value,
                            is_start=state in self.start_states,
-                           is_final=state in self.final_states)
-        graph.add_nodes_from([x.value for x in self._states])
+                           is_final=state in self.final_states,
+                           peripheries=2,
+                           label=state.value)
+            if state in self.start_states:
+                graph.add_node(str(state.value) + "_starting",
+                               label="",
+                               shape=None,
+                               height=.0,
+                               width=.0)
+                graph.add_edge(str(state.value) + "_starting",
+                               state.value)
         for s_from, symbol, s_to in self._transition_function.get_edges():
-            graph.add_edge(s_from.value, s_to.value, name=symbol.value)
+            graph.add_edge(s_from.value, s_to.value, label=symbol.value)
         return graph
 
     @classmethod
     def from_networkx(cls, graph):
+        # TODO We lose the type of the node value if going through a dot file
         from pyformlang.finite_automaton import EpsilonNFA
         enfa = EpsilonNFA()
         for s_from in graph:
             for s_to in graph[s_from]:
                 for transition in graph[s_from][s_to].values():
-                    enfa.add_transition(s_from, transition["name"], s_to)
+                    if "label" in transition:
+                        enfa.add_transition(s_from,
+                                            transition["label"],
+                                            s_to)
         for node in graph.nodes:
             if graph.nodes[node].get("is_start", False):
                 enfa.add_start_state(node)
             if graph.nodes[node].get("is_final", False):
                 enfa.add_final_state(node)
         return enfa
+
+    def write_as_dot(self, filename):
+        write_dot(self.to_networkx(), filename)
 
     def is_equivalent_to(self, other):
         self_dfa = self.to_deterministic()

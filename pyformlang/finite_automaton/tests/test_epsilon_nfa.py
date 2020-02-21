@@ -483,11 +483,12 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(isinstance(graph, networkx.MultiDiGraph))
         self.assertTrue("0" in graph)
         self.assertTrue(("0", 1) in graph.edges)
-        self.assertIn("a", [x["name"] for x in graph["0"][1].values()])
+        self.assertIn("a", [x["label"] for x in graph["0"][1].values()])
         self.assertTrue(graph.nodes["0"]["is_start"])
         self.assertFalse(graph.nodes["0"]["is_final"])
         self.assertFalse(graph.nodes[1]["is_start"])
         self.assertTrue(graph.nodes[1]["is_final"])
+        enfa.write_as_dot("enfa.dot")
 
     def test_import_networkx(self):
         enfa = EpsilonNFA()

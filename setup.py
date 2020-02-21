@@ -5,7 +5,8 @@ with open("README.md", "r") as fh:
 
 requirements = [
     "networkx",
-    "numpy"
+    "numpy",
+    "pydot"
 ]
 
 setuptools.setup(
