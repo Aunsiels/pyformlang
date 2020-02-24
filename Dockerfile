@@ -24,4 +24,5 @@ RUN pip3 install pytest \
     networkx \
     bitarray \
     numpy \
-    pycodestyle
+    pycodestyle \
+    pydot
