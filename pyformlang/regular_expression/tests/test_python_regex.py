@@ -48,3 +48,16 @@ class TestPythonRegex(unittest.TestCase):
         self.assertFalse(regex.accepts(["a", "\n"]))
         self.assertFalse(regex.accepts(["a"]))
         self.assertTrue(regex.accepts(["a", "|"]))
+        self.assertTrue(regex.accepts(["a", "("]))
+        self.assertTrue(regex.accepts(["a", ")"]))
+        self.assertTrue(regex.accepts(["a", "."]))
+        self.assertTrue(regex.accepts(["a", "*"]))
+        self.assertTrue(regex.accepts(["a", "+"]))
+        self.assertTrue(regex.accepts(["a", "$"]))
+
+    def test_dot_spaces(self):
+        regex = PythonRegex("a.")
+        self.assertTrue(regex.accepts(["a", " "]))
+        self.assertTrue(regex.accepts(["a", "\t"]))
+        self.assertTrue(regex.accepts(["a", "\v"]))
+        self.assertTrue(regex.accepts(["a", "\r"]))

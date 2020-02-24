@@ -184,3 +184,7 @@ class TestRegex(unittest.TestCase):
         self.assertTrue(regex.accepts(["a", "c"]))
         self.assertFalse(regex.accepts(["a", "b", "c"]))
         self.assertFalse(regex.accepts(["a", "a"]))
+
+    def test_space(self):
+        regex = Regex("\\ ")
+        self.assertTrue(regex.accepts([" "]))

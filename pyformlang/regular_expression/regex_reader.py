@@ -172,7 +172,13 @@ def _get_parenthesis_value(component):
 
 
 def pre_process_regex(regex: str) -> str:
-    regex = re.sub(r"\s+", " ", regex.strip())
+    regex = regex.strip(" ")
+    if regex.endswith("\\") and not regex.endswith("\\\\"):
+        regex += " "
+    regex = re.sub(r" +", " ", regex)
+    regex = re.sub(r"\\ ", "\\  ", regex)
+    if regex.endswith("  "):
+        regex = regex[:-1]
     res = []
     pos = 0
     previous_is_escape = False
@@ -201,4 +207,13 @@ def pre_process_regex(regex: str) -> str:
 
 
 def get_regex_componants(regex):
-    return regex.split(" ")
+    temp = regex.split(" ")
+    for i, sub in enumerate(temp):
+        if sub.endswith("\\") and not sub.endswith("\\\\"):
+            temp[i] += " "
+    if len(temp) > 1 and not temp[-1]:
+        del temp[-1]
+    temp = list(filter(lambda x: len(x) > 0, temp))
+    if not temp:
+        temp = [""]
+    return temp

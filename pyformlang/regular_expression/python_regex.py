@@ -3,16 +3,18 @@ import string
 
 from pyformlang.regular_expression import Regex
 
-PRINTABLES = list(string.ascii_letters + string.punctuation + string.digits)
+PRINTABLES = list(string.printable)
 
 TRANSFORMATIONS = {
-    "|": "\\\\|",
-    "(": "",
-    ")": "",
-    "*": "",
-    "+": "",
-    ".": "",
-    "$": ""
+    "|": "\\|",
+    "(": "\\(",
+    ")": "\\)",
+    "*": "\\*",
+    "+": "\\+",
+    ".": "\\.",
+    "$": "\\$",
+    "\n": "",
+    " ": "\\ "
 }
 
 ESCAPED_PRINTABLES = [TRANSFORMATIONS.get(x, x)
@@ -51,8 +53,13 @@ class PythonRegex(Regex):
         super().__init__(self._python_regex)
 
     def _separate(self):
-        regex = " ".join(self._python_regex)
-        self._python_regex = re.sub(r"\\ \\ ", "\\\\", regex)
+        regex_temp = []
+        for symbol in self._python_regex:
+            if regex_temp and regex_temp[-1] == "\\":
+                regex_temp[-1] += symbol
+            else:
+                regex_temp.append(symbol)
+        self._python_regex = " ".join(regex_temp)
 
     def _preprocess_brackets(self):
         regex_temp = []
