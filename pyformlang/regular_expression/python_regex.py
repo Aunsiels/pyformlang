@@ -28,10 +28,9 @@ class PythonRegex(Regex):
     """ Represents a regular expression as used in Python. It adds the
     following features to the basic regex:
 
-    * Set of characters with []
+    * Set of characters with [] (no inverse with [^...])
     * positive closure +
-    * . for all letters, punctuation or digits different from |, (, ), *, +,
-    ., $ (TODO: not like in python)
+    * . for all printable characters
 
         Parameters
         ----------

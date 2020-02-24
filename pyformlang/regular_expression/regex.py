@@ -12,6 +12,9 @@ from pyformlang.regular_expression.regex_reader import RegexReader
 class Regex(RegexReader):
     """ Represents a regular expression
 
+    Special Operators: |, +, *, ., $, epsilon
+    All except epsilon can be escaped with a backslash (\\ in strings).
+
     Parameters
     ----------
     regex : str
@@ -96,18 +99,23 @@ class Regex(RegexReader):
             self._process_to_enfa_when_no_son(s_from, s_to)
 
     def _process_to_enfa_when_no_son(self, s_from, s_to):
-        if isinstance(self.head, pyformlang.regular_expression.regex_objects.Epsilon):
+        if isinstance(self.head,
+                      pyformlang.regular_expression.regex_objects.Epsilon):
             self._add_epsilon_transition_in_enfa_between(s_from, s_to)
-        elif not isinstance(self.head, pyformlang.regular_expression.regex_objects.Empty):
+        elif not isinstance(self.head,
+                            pyformlang.regular_expression.regex_objects.Empty):
             symbol = finite_automaton.Symbol(self.head.value)
             self._enfa.add_transition(s_from, symbol, s_to)
 
     def _process_to_enfa_when_sons(self, s_from, s_to):
-        if isinstance(self.head, pyformlang.regular_expression.regex_objects.Concatenation):
+        if isinstance(self.head,
+                      pyformlang.regular_expression.regex_objects.Concatenation):
             self._process_to_enfa_concatenation(s_from, s_to)
-        elif isinstance(self.head, pyformlang.regular_expression.regex_objects.Union):
+        elif isinstance(self.head,
+                        pyformlang.regular_expression.regex_objects.Union):
             self._process_to_enfa_union(s_from, s_to)
-        elif isinstance(self.head, pyformlang.regular_expression.regex_objects.KleeneStar):
+        elif isinstance(self.head,
+                        pyformlang.regular_expression.regex_objects.KleeneStar):
             self._process_to_enfa_kleene_star(s_from, s_to)
 
     def _process_to_enfa_kleene_star(self, s_from, s_to):
