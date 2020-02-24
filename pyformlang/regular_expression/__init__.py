@@ -20,5 +20,6 @@ MisformedRegexError
 
 from .regex import Regex
 from .regex_objects import MisformedRegexError
+from .python_regex import PythonRegex
 
-__all__ = ["Regex", "MisformedRegexError"]
+__all__ = ["Regex", "PythonRegex", "MisformedRegexError"]

@@ -1,6 +1,7 @@
 """
 Representation of a regular expression
 """
+from typing import Iterable
 
 from pyformlang import finite_automaton
 import pyformlang.regular_expression.regex_objects
@@ -21,6 +22,7 @@ class Regex(RegexReader):
         super().__init__(regex)
         self._counter = 0
         self._initialize_enfa()
+        self._enfa = None
 
     def _initialize_enfa(self):
         self._enfa = finite_automaton.EpsilonNFA()
@@ -242,3 +244,13 @@ class Regex(RegexReader):
 
     def from_string(self, regex):
         return Regex(regex)
+
+    def accepts(self, word: Iterable[str]) -> bool:
+        if self._enfa is None:
+            self._enfa = self.to_epsilon_nfa()
+        return self._enfa.accepts(word)
+
+    @classmethod
+    def from_python_regex(cls, regex):
+        from pyformlang.regular_expression.python_regex import PythonRegex
+        return PythonRegex(regex)

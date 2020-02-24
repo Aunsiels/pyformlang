@@ -9,6 +9,7 @@ WRONG_PARENTHESIS_MESSAGE = "Wrong parenthesis regex"
 
 
 class RegexReader(object):
+
     def __init__(self, regex: str):
         self._current_node = None
         self._end_current_group: int = 0

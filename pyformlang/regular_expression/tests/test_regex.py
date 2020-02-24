@@ -166,3 +166,21 @@ class TestRegex(unittest.TestCase):
         dfa0 = regex0.to_epsilon_nfa().to_deterministic().minimize()
         dfa1 = regex1.to_epsilon_nfa().to_deterministic().minimize()
         self.assertEqual(dfa0, dfa1)
+
+    def test_accepts(self):
+        regex = Regex("a|b|c")
+        self.assertTrue(regex.accepts(["a"]))
+        self.assertFalse(regex.accepts(["a", "b"]))
+
+    def test_from_python_simple(self):
+        regex = Regex.from_python_regex("abc")
+        self.assertTrue(regex.accepts(["a", "b", "c"]))
+        self.assertFalse(regex.accepts(["a", "b", "b"]))
+        self.assertFalse(regex.accepts(["a", "b"]))
+
+    def test_from_python_brackets(self):
+        regex = Regex.from_python_regex("a[bc]")
+        self.assertTrue(regex.accepts(["a", "b"]))
+        self.assertTrue(regex.accepts(["a", "c"]))
+        self.assertFalse(regex.accepts(["a", "b", "c"]))
+        self.assertFalse(regex.accepts(["a", "a"]))
