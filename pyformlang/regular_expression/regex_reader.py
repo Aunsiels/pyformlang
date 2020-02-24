@@ -175,8 +175,9 @@ def pre_process_regex(regex: str) -> str:
     regex = re.sub(r"\s+", " ", regex.strip())
     res = []
     pos = 0
+    previous_is_escape = False
     for current_c in regex:
-        if (current_c in CONCATENATION_SYMBOLS
+        if not previous_is_escape and (current_c in CONCATENATION_SYMBOLS
             or current_c in UNION_SYMBOLS
             or current_c in KLEENE_STAR_SYMBOLS
             or current_c in EPSILON_SYMBOLS
@@ -184,13 +185,17 @@ def pre_process_regex(regex: str) -> str:
                 pos != 0 and res[-1] != " ":
             res.append(" ")
         res.append(current_c)
-        if (current_c in CONCATENATION_SYMBOLS
+        if not previous_is_escape and(current_c in CONCATENATION_SYMBOLS
             or current_c in UNION_SYMBOLS
             or current_c in KLEENE_STAR_SYMBOLS
             or current_c in EPSILON_SYMBOLS
             or current_c in [")", "("]) and \
                 pos != len(regex) - 1 and regex[pos + 1] != " ":
             res.append(" ")
+        if current_c == "\\":
+            previous_is_escape = True
+        else:
+            previous_is_escape = False
         pos += 1
     return "".join(res)
 

@@ -3,16 +3,23 @@ import string
 
 from pyformlang.regular_expression import Regex
 
-DOT_REPLACEMENT = "(" + "|".join((string.ascii_letters + string.punctuation +
-                                  string.digits)
-                                 .replace("\n", "")
-                                 .replace("|", "")
-                                 .replace("(", "")
-                                 .replace(")", "")
-                                 .replace("*", "")
-                                 .replace("+", "")
-                                 .replace(".", "")
-                                 .replace("$", "")) + ")"
+PRINTABLES = list(string.ascii_letters + string.punctuation + string.digits)
+
+TRANSFORMATIONS = {
+    "|": "\\\\|",
+    "(": "",
+    ")": "",
+    "*": "",
+    "+": "",
+    ".": "",
+    "$": ""
+}
+
+ESCAPED_PRINTABLES = [TRANSFORMATIONS.get(x, x)
+                      for x in PRINTABLES
+                      if TRANSFORMATIONS.get(x, x)]
+
+DOT_REPLACEMENT = "(" + "|".join(ESCAPED_PRINTABLES) + ")"
 
 
 class PythonRegex(Regex):
@@ -40,7 +47,12 @@ class PythonRegex(Regex):
         self._preprocess_brackets()
         self._preprocess_positive_closure()
         self._preprocess_dot()
-        super().__init__(" ".join(self._python_regex))
+        self._separate()
+        super().__init__(self._python_regex)
+
+    def _separate(self):
+        regex = " ".join(self._python_regex)
+        self._python_regex = re.sub(r"\\ \\ ", "\\\\", regex)
 
     def _preprocess_brackets(self):
         regex_temp = []

@@ -43,6 +43,8 @@ def to_node(value: str) -> Node:
         return KleeneStar()
     if value in EPSILON_SYMBOLS:
         return Epsilon()
+    if value[0] == "\\":
+        return Symbol(value[1:])
     return Symbol(value)
 
 

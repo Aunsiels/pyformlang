@@ -47,3 +47,4 @@ class TestPythonRegex(unittest.TestCase):
         self.assertTrue(regex.accepts(["a", "?"]))
         self.assertFalse(regex.accepts(["a", "\n"]))
         self.assertFalse(regex.accepts(["a"]))
+        self.assertTrue(regex.accepts(["a", "|"]))
