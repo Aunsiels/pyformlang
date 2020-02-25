@@ -121,7 +121,7 @@ class PythonRegex(Regex):
     def _preprocess_positive_closure(self):
         regex_temp = []
         for i, symbol in enumerate(self._python_regex):
-            if symbol != "+":
+            if symbol != "+" or (i != 0 and regex_temp[-1] == "\\"):
                 regex_temp.append(symbol)
             elif self._python_regex[i - 1] != ")":
                 regex_temp.append(self._python_regex[i - 1])

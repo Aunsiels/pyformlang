@@ -82,3 +82,7 @@ class TestPythonRegex(unittest.TestCase):
     def test_escape_kleene_star(self):
         regex = PythonRegex(r"ab\*")
         self.assertTrue(regex.accepts(["a", "b", "*"]))
+
+    def test_escape_plus(self):
+        regex = PythonRegex(r"ab\+")
+        self.assertTrue(regex.accepts(["a", "b", "+"]))
