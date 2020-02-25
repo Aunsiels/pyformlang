@@ -1,3 +1,7 @@
+"""
+A class to read Python format regex
+"""
+
 import re
 import string
 
@@ -41,7 +45,7 @@ class PythonRegex(Regex):
     * positive closure +
     * . for all printable characters
     * ? for optional character/group
-    * Shortcuts: \d, \s, \w
+    * Shortcuts: \\d, \\s, \\w
 
         Parameters
         ----------
@@ -148,7 +152,7 @@ class PythonRegex(Regex):
 
     def _preprocess_positive_closure(self):
         regex_temp = []
-        for i, symbol in enumerate(self._python_regex):
+        for symbol in self._python_regex:
             if symbol != "+" or (self._should_escape_next_symbol(regex_temp)):
                 if self._should_escape_next_symbol(regex_temp):
                     regex_temp[-1] += symbol

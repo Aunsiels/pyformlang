@@ -1,23 +1,32 @@
+"""
+A class to read regex
+"""
+
 import re
 
-from pyformlang.regular_expression.regex_objects import CONCATENATION_SYMBOLS, \
-    UNION_SYMBOLS, KLEENE_STAR_SYMBOLS, \
-    EPSILON_SYMBOLS, to_node, Operator, Symbol, Concatenation, Union, \
-    KleeneStar, MisformedRegexError
+from pyformlang.regular_expression.regex_objects import to_node, Operator, \
+    Symbol, Concatenation, Union, \
+    KleeneStar, MisformedRegexError, SPECIAL_SYMBOLS
 
 MISFORMED_MESSAGE = "The regex is misformed here."
 
 WRONG_PARENTHESIS_MESSAGE = "Wrong parenthesis regex"
 
 
-class RegexReader(object):
+class RegexReader:
+    """
+    A class to parse regular expressions
+    """
+    # pylint: disable=too-few-public-methods
 
     def __init__(self, regex: str):
         self._current_node = None
+        self.head = None
+        self.sons = None
         self._end_current_group: int = 0
-        regex = pre_process_regex(regex)
+        regex = _pre_process_regex(regex)
         self._regex = regex
-        self._components = get_regex_componants(regex)
+        self._components = _get_regex_componants(regex)
         self._pre_process_input_regex_componants()
         self._setup_sons()
         self._setup_from_regex_componants()
@@ -166,8 +175,21 @@ class RegexReader(object):
     def _setup_sons(self):
         self.sons = []
 
-    def from_string(self, sub_regex):
-        return RegexReader(sub_regex)
+    @classmethod
+    def from_string(cls, regex):
+        """
+        Read a regex from a string
+        Parameters
+        ----------
+        regex : str
+            A regular expression
+
+        Returns
+        -------
+        parsed_regex : :class:`~pyformlang.regular_expression.RegexReader`
+            The parsed regex
+        """
+        return RegexReader(regex)
 
 
 def _find_first_complete_closing_if_possible(parenthesis_depths, index_from=0):
@@ -181,13 +203,12 @@ def _find_first_complete_closing_if_possible(parenthesis_depths, index_from=0):
 def _get_parenthesis_value(component):
     if component == "(":
         return 1
-    elif component == ")":
+    if component == ")":
         return -1
-    else:
-        return 0
+    return 0
 
 
-def pre_process_regex(regex: str) -> str:
+def _pre_process_regex(regex: str) -> str:
     regex = regex.strip(" ")
     if regex.endswith("\\") and not regex.endswith("\\\\"):
         regex += " "
@@ -199,30 +220,19 @@ def pre_process_regex(regex: str) -> str:
     pos = 0
     previous_is_escape = False
     for current_c in regex:
-        if not previous_is_escape and (current_c in CONCATENATION_SYMBOLS
-                                       or current_c in UNION_SYMBOLS
-                                       or current_c in KLEENE_STAR_SYMBOLS
-                                       or current_c in EPSILON_SYMBOLS
-                                       or current_c in [")", "("]) and \
+        if not previous_is_escape and (current_c in SPECIAL_SYMBOLS) and \
                 pos != 0 and res[-1] != " ":
             res.append(" ")
         res.append(current_c)
-        if not previous_is_escape and (current_c in CONCATENATION_SYMBOLS
-                                       or current_c in UNION_SYMBOLS
-                                       or current_c in KLEENE_STAR_SYMBOLS
-                                       or current_c in EPSILON_SYMBOLS
-                                       or current_c in [")", "("]) and \
+        if not previous_is_escape and (current_c in SPECIAL_SYMBOLS) and \
                 pos != len(regex) - 1 and regex[pos + 1] != " ":
             res.append(" ")
-        if current_c == "\\":
-            previous_is_escape = True
-        else:
-            previous_is_escape = False
+        previous_is_escape = current_c == "\\"
         pos += 1
     return "".join(res)
 
 
-def get_regex_componants(regex):
+def _get_regex_componants(regex):
     temp = regex.split(" ")
     for i, sub in enumerate(temp):
         if sub.endswith("\\") and not sub.endswith("\\\\"):

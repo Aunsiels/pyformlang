@@ -1,4 +1,9 @@
-class Node(object): # pylint: disable=too-few-public-methods
+"""
+Representation of some objects used in regex.
+"""
+
+
+class Node: # pylint: disable=too-few-public-methods
     """ Represents a node in the tree representation of a regex
 
     Parameters
@@ -22,6 +27,20 @@ class Node(object): # pylint: disable=too-few-public-methods
         return self._value
 
     def get_str_repr(self, sons_repr):
+        """
+        The string representation of the node
+
+        Parameters
+        ----------
+        sons_repr : iterable of str
+            The sons representations
+
+        Returns
+        -------
+        repr : str
+            The representation of this node
+
+        """
         raise NotImplementedError
 
 
@@ -29,23 +48,32 @@ CONCATENATION_SYMBOLS = ["."]
 UNION_SYMBOLS = ["|", "+"]
 KLEENE_STAR_SYMBOLS = ["*"]
 EPSILON_SYMBOLS = ["epsilon", "$"]
+PARENTHESIS = ["(", ")"]
+
+SPECIAL_SYMBOLS = CONCATENATION_SYMBOLS + \
+                  UNION_SYMBOLS + \
+                  KLEENE_STAR_SYMBOLS + \
+                  EPSILON_SYMBOLS + \
+                  PARENTHESIS
 
 
 def to_node(value: str) -> Node:
     """ Transforms a given value into a node """
     if not value:
-        return Empty()
-    if value in CONCATENATION_SYMBOLS:
-        return Concatenation()
-    if value in UNION_SYMBOLS:
-        return Union()
-    if value in KLEENE_STAR_SYMBOLS:
-        return KleeneStar()
-    if value in EPSILON_SYMBOLS:
-        return Epsilon()
-    if value[0] == "\\":
-        return Symbol(value[1:])
-    return Symbol(value)
+        res = Empty()
+    elif value in CONCATENATION_SYMBOLS:
+        res = Concatenation()
+    elif value in UNION_SYMBOLS:
+        res = Union()
+    elif value in KLEENE_STAR_SYMBOLS:
+        res = KleeneStar()
+    elif value in EPSILON_SYMBOLS:
+        res = Epsilon()
+    elif value[0] == "\\":
+        res = Symbol(value[1:])
+    else:
+        res = Symbol(value)
+    return res
 
 
 class Operator(Node): # pylint: disable=too-few-public-methods

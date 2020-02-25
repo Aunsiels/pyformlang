@@ -7,6 +7,7 @@ from pyformlang import finite_automaton
 import pyformlang.regular_expression.regex_objects
 from pyformlang.finite_automaton import State
 from pyformlang.regular_expression.regex_reader import RegexReader
+from pyformlang import regular_expression
 
 
 class Regex(RegexReader):
@@ -22,6 +23,8 @@ class Regex(RegexReader):
     """
 
     def __init__(self, regex):
+        self.head = None
+        self.sons = None
         super().__init__(regex)
         self._counter = 0
         self._initialize_enfa()
@@ -30,7 +33,7 @@ class Regex(RegexReader):
     def _initialize_enfa(self):
         self._enfa = finite_automaton.EpsilonNFA()
 
-    def _get_number_symbols(self) -> int:
+    def get_number_symbols(self) -> int:
         """ Gives the number of symbols in the regex
 
         Returns
@@ -39,10 +42,10 @@ class Regex(RegexReader):
             The number of symbols in the regex
         """
         if self.sons:
-            return sum([son._get_number_symbols() for son in self.sons])
+            return sum([son.get_number_symbols() for son in self.sons])
         return 1
 
-    def _get_number_operators(self) -> int:
+    def get_number_operators(self) -> int:
         """ Gives the number of operators in the regex
 
         Returns
@@ -51,7 +54,7 @@ class Regex(RegexReader):
             The number of operators in the regex
         """
         if self.sons:
-            return 1 + sum([son._get_number_operators() for son in self.sons])
+            return 1 + sum([son.get_number_operators() for son in self.sons])
         return 0
 
     def to_epsilon_nfa(self):
@@ -119,13 +122,14 @@ class Regex(RegexReader):
             self._process_to_enfa_kleene_star(s_from, s_to)
 
     def _process_to_enfa_kleene_star(self, s_from, s_to):
-        state0 = self._get_next_state_enfa()
-        state1 = self._get_next_state_enfa()
-        self._add_epsilon_transition_in_enfa_between(state1, state0)
+        # pylint: disable=protected-access
+        state_first = self._get_next_state_enfa()
+        state_second = self._get_next_state_enfa()
+        self._add_epsilon_transition_in_enfa_between(state_second, state_first)
         self._add_epsilon_transition_in_enfa_between(s_from, s_to)
-        self._add_epsilon_transition_in_enfa_between(s_from, state0)
-        self._add_epsilon_transition_in_enfa_between(state1, s_to)
-        self._process_to_enfa_son(state0, state1, 0)
+        self._add_epsilon_transition_in_enfa_between(s_from, state_first)
+        self._add_epsilon_transition_in_enfa_between(state_second, s_to)
+        self._process_to_enfa_son(state_first, state_second, 0)
 
     def _process_to_enfa_union(self, s_from, s_to):
         son_number = 0
@@ -151,12 +155,24 @@ class Regex(RegexReader):
         self._enfa.add_transition(state0, finite_automaton.Epsilon(), state1)
 
     def _process_to_enfa_son(self, s_from, s_to, index_son):
+        # pylint: disable=protected-access
         self.sons[index_son]._counter = self._counter
         self.sons[index_son]._enfa = self._enfa
         self.sons[index_son]._process_to_enfa(s_from, s_to)
         self._counter = self.sons[index_son]._counter
 
     def get_tree_str(self, depth: int = 0) -> str:
+        """ Get a string representation of the tree behind the regex
+
+        Parameters
+        ----------
+        depth: int
+            The current depth, 0 by default
+        Returns
+        -------
+        representation: str
+            The tree representation
+        """
         temp = " " * depth + str(self.head) + "\n"
         for son in self.sons:
             temp += son.get_tree_str(depth + 1)
@@ -254,11 +270,40 @@ class Regex(RegexReader):
         return Regex(regex)
 
     def accepts(self, word: Iterable[str]) -> bool:
+        """
+        Check if a word matches (completely) the regex
+
+        Parameters
+        ----------
+        word : iterable of str
+            The word to check
+
+        Returns
+        -------
+        is_accepted : bool
+            Whether the word is recognized or not
+
+        """
         if self._enfa is None:
             self._enfa = self.to_epsilon_nfa()
         return self._enfa.accepts(word)
 
     @classmethod
     def from_python_regex(cls, regex):
-        from pyformlang.regular_expression.python_regex import PythonRegex
-        return PythonRegex(regex)
+        """
+        Creates a regex from a string using the python way to write it.
+
+        Careful: Not everything is implemented, check PythonRegex class
+        documentation for more details.
+
+        Parameters
+        ----------
+        regex : str
+            The regex given as a string or compile regex
+
+        Returns
+        -------
+        python_regex : :class:`~pyformlang.regular_expression.PythonRegex`
+
+        """
+        return regular_expression.PythonRegex(regex)
