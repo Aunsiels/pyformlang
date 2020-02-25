@@ -142,6 +142,8 @@ class PythonRegex(Regex):
             if symbol == "?":
                 if regex_temp[-1] == ")":
                     regex_temp[-1] = "|$)"
+                elif regex_temp[-1] == "\\":
+                    regex_temp[-1] = "?"
                 else:
                     regex_temp[-1] = "(" + regex_temp[-1] + "|$)"
             else:

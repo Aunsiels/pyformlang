@@ -74,3 +74,11 @@ class TestPythonRegex(unittest.TestCase):
         self.assertTrue(regex.accepts(["a", "b" , "b"]))
         self.assertTrue(regex.accepts(["a", "c"]))
         self.assertFalse(regex.accepts(["a", "b"]))
+
+    def test_escape_question_mark(self):
+        regex = PythonRegex(r"ab\?")
+        self.assertTrue(regex.accepts(["a", "b", "?"]))
+
+    def test_escape_kleene_star(self):
+        regex = PythonRegex(r"ab\*")
+        self.assertTrue(regex.accepts(["a", "b", "*"]))
