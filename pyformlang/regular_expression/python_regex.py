@@ -56,7 +56,7 @@ class PythonRegex(Regex):
     def _separate(self):
         regex_temp = []
         for symbol in self._python_regex:
-            if regex_temp and regex_temp[-1] == "\\":
+            if self._should_escape_next_symbol(regex_temp):
                 regex_temp[-1] += symbol
             else:
                 regex_temp.append(symbol)
@@ -79,15 +79,18 @@ class PythonRegex(Regex):
             elif in_brackets:
                 in_brackets_temp.append(symbol)
             else:
-                regex_temp.append(symbol)
+                if self._should_escape_next_symbol(regex_temp):
+                    regex_temp[-1] += symbol
+                else:
+                    regex_temp.append(symbol)
         self._python_regex = "".join(regex_temp)
 
-    @staticmethod
-    def _preprocess_brackets_content(bracket_content):
+    def _preprocess_brackets_content(self, bracket_content):
         bracket_content_temp = []
         previous_is_valid_for_range = False
         for i, symbol in enumerate(bracket_content):
-            if symbol == "-":
+            if (symbol == "-" and not self._should_escape_next_symbol(
+                    bracket_content_temp)):
                 if (not previous_is_valid_for_range
                         or i == len(bracket_content) - 1):
                     bracket_content_temp.append("-")
@@ -98,7 +101,10 @@ class PythonRegex(Regex):
                         bracket_content_temp.append(chr(j))
                     previous_is_valid_for_range = False
             else:
-                bracket_content_temp.append(symbol)
+                if self._should_escape_next_symbol(bracket_content_temp):
+                    bracket_content_temp[-1] += symbol
+                else:
+                    bracket_content_temp.append(symbol)
                 if (i != 0 and bracket_content[i - 1] == "-"
                         and not previous_is_valid_for_range):
                     previous_is_valid_for_range = False
@@ -106,10 +112,11 @@ class PythonRegex(Regex):
                     previous_is_valid_for_range = True
         return "|".join(bracket_content_temp)
 
-    def _find_previous_opening_parenthesis(self, pos):
+    @staticmethod
+    def _find_previous_opening_parenthesis(split_sequence):
         counter = 0
-        for i in range(pos - 1, 0, -1):
-            temp = self._python_regex[i]
+        for i in range(len(split_sequence) - 1, -1, -1):
+            temp = split_sequence[i]
             if temp == ")":
                 counter += 1
             elif temp == "(" and counter == 0:
@@ -121,15 +128,19 @@ class PythonRegex(Regex):
     def _preprocess_positive_closure(self):
         regex_temp = []
         for i, symbol in enumerate(self._python_regex):
-            if symbol != "+" or (i != 0 and regex_temp[-1] == "\\"):
-                regex_temp.append(symbol)
-            elif self._python_regex[i - 1] != ")":
-                regex_temp.append(self._python_regex[i - 1])
+            if symbol != "+" or (self._should_escape_next_symbol(regex_temp)):
+                if self._should_escape_next_symbol(regex_temp):
+                    regex_temp[-1] += symbol
+                else:
+                    regex_temp.append(symbol)
+            elif regex_temp[-1] != ")":
+                regex_temp.append(regex_temp[-1])
                 regex_temp.append("*")
             else:
-                pos_opening = self._find_previous_opening_parenthesis(i - 1)
-                for j in range(pos_opening, i):
-                    regex_temp.append(self._python_regex[j])
+                pos_opening = \
+                    self._find_previous_opening_parenthesis(regex_temp)
+                for j in range(pos_opening, len(regex_temp)):
+                    regex_temp.append(regex_temp[j])
                 regex_temp.append("*")
         self._python_regex = "".join(regex_temp)
 
@@ -147,5 +158,12 @@ class PythonRegex(Regex):
                 else:
                     regex_temp[-1] = "(" + regex_temp[-1] + "|$)"
             else:
-                regex_temp.append(symbol)
+                if self._should_escape_next_symbol(regex_temp):
+                    regex_temp[-1] += symbol
+                else:
+                    regex_temp.append(symbol)
         self._python_regex = "".join(regex_temp)
+
+    @staticmethod
+    def _should_escape_next_symbol(regex_temp):
+        return regex_temp and regex_temp[-1] == "\\"

@@ -86,6 +86,7 @@ class TestPythonRegex(unittest.TestCase):
     def test_escape_plus(self):
         regex = PythonRegex(r"ab\+")
         self.assertTrue(regex.accepts(["a", "b", "+"]))
+        self.assertFalse(regex.accepts(["a", "b", "\\"]))
 
     def test_escape_opening_bracket(self):
         regex = PythonRegex(r"a\[")
@@ -94,3 +95,34 @@ class TestPythonRegex(unittest.TestCase):
     def test_escape_closing_bracket(self):
         regex = PythonRegex(r"a\]")
         self.assertTrue(regex.accepts(["a", "]"]))
+
+    def test_escape_backslash(self):
+        regex = PythonRegex(r"a\\")
+        self.assertTrue(regex.accepts(["a", "\\"]))
+
+    def test_escape_backslash_plus(self):
+        regex = PythonRegex(r"a\\+")
+        self.assertTrue(regex.accepts(["a", "\\", "\\"]))
+
+    def test_escape_backslash_opening_bracket(self):
+        regex = PythonRegex(r"a\\[ab]")
+        self.assertTrue(regex.accepts(["a", "\\", "a"]))
+        self.assertTrue(regex.accepts(["a", "\\", "b"]))
+
+    def test_escape_backslash_closing_bracket(self):
+        regex = PythonRegex(r"a[ab\\]")
+        self.assertTrue(regex.accepts(["a", "a"]))
+        self.assertTrue(regex.accepts(["a", "b"]))
+        self.assertTrue(regex.accepts(["a", "\\"]))
+
+    def test_escape_backslash_question_mark(self):
+        regex = PythonRegex(r"a\\?")
+        self.assertTrue(regex.accepts(["a"]))
+        self.assertTrue(regex.accepts(["a", "\\"]))
+        self.assertFalse(regex.accepts(["a", "\\", "?"]))
+        self.assertFalse(regex.accepts(["a", "\\?"]))
+
+    def test_escape_dash_in_brackets(self):
+        regex = PythonRegex(r"a[a\-]")
+        self.assertTrue(regex.accepts(["a", "a"]))
+        self.assertTrue(regex.accepts(["a", "-"]))
