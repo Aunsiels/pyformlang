@@ -1,6 +1,6 @@
 """ A StackSymbol in a pushdown automaton """
 
-class StackSymbol(object):
+class StackSymbol:
     """ A StackSymbol in a pushdown automaton
 
     Parameters

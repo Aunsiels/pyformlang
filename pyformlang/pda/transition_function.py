@@ -1,17 +1,20 @@
 """ A transition function in a pushdown automaton """
 
-from typing import AbstractSet, List, Tuple
+from typing import List
 
+from .stack_symbol import StackSymbol
 from .state import State
 from .symbol import Symbol
-from .stack_symbol import StackSymbol
 
 
-class TransitionFunction(object):
+class TransitionFunction:
     """ A transition function in a pushdown automaton """
 
     def __init__(self):
         self._transitions = dict()
+        self._iterkey = None
+        self._current_key = None
+        self._iterinside = None
 
     def get_number_transitions(self):
         """ Gets the number of transitions
@@ -23,6 +26,7 @@ class TransitionFunction(object):
         """
         return sum([len(x) for x in self._transitions.values()])
 
+    # pylint: disable=too-many-arguments
     def add_transition(self,
                        s_from: State,
                        input_symbol: Symbol,
@@ -92,4 +96,5 @@ class TransitionFunction(object):
         return self._transitions.get((s_from, input_symbol, stack_from), {})
 
     def to_dict(self):
+        """Get the dictionary representation of the transitions"""
         return self._transitions
