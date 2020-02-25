@@ -71,7 +71,7 @@ class TestPythonRegex(unittest.TestCase):
     def test_with_parenthesis_optional(self):
         regex = PythonRegex("a(bb|c)?")
         self.assertTrue(regex.accepts(["a"]))
-        self.assertTrue(regex.accepts(["a", "b" , "b"]))
+        self.assertTrue(regex.accepts(["a", "b", "b"]))
         self.assertTrue(regex.accepts(["a", "c"]))
         self.assertFalse(regex.accepts(["a", "b"]))
 
@@ -165,3 +165,19 @@ class TestPythonRegex(unittest.TestCase):
         self.assertTrue(regex.accepts(["a", "0"]))
         self.assertTrue(regex.accepts(["a", "1"]))
         self.assertTrue(regex.accepts(["a", "a"]))
+
+    def test_shortcut_spaces(self):
+        regex = PythonRegex(r"a\s")
+        self.assertTrue(regex.accepts(["a", " "]))
+        self.assertTrue(regex.accepts(["a", "\t"]))
+
+    def test_space(self):
+        regex = PythonRegex(" ")
+        self.assertTrue(regex.accepts([" "]))
+
+    def test_shortcut_word(self):
+        regex = PythonRegex(r"a\w")
+        self.assertTrue(regex.accepts(["a", "0"]))
+        self.assertTrue(regex.accepts(["a", "_"]))
+        self.assertTrue(regex.accepts(["a", "A"]))
+        self.assertTrue(regex.accepts(["a", "f"]))

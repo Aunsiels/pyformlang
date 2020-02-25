@@ -26,7 +26,10 @@ DOT_REPLACEMENT = "(" + "|".join(ESCAPED_PRINTABLES) + ")"
 TO_ESCAPE_IN_BRACKETS = "(+*)?"
 
 SHORTCUTS = {
-    r"\d": "[0-9]"
+    " ": "\\ ",  # We have to do this due to how Regex separate words
+    r"\d": "[0-9]",
+    r"\s": "[\\ \t\n\r\f\v]",
+    r"\w": "[a-zA-Z0-9_]"
 }
 
 
@@ -38,7 +41,7 @@ class PythonRegex(Regex):
     * positive closure +
     * . for all printable characters
     * ? for optional character/group
-    * Shortcuts: \d
+    * Shortcuts: \d, \s, \w
 
         Parameters
         ----------
