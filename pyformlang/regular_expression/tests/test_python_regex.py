@@ -126,3 +126,31 @@ class TestPythonRegex(unittest.TestCase):
         regex = PythonRegex(r"a[a\-]")
         self.assertTrue(regex.accepts(["a", "a"]))
         self.assertTrue(regex.accepts(["a", "-"]))
+
+    def test_special_in_brackets_opening_parenthesis(self):
+        regex = PythonRegex(r"a[a(]")
+        self.assertTrue(regex.accepts(["a", "a"]))
+        self.assertTrue(regex.accepts(["a", "("]))
+
+    def test_special_in_brackets_closing_parenthesis(self):
+        regex = PythonRegex(r"a[a)]")
+        self.assertTrue(regex.accepts(["a", "a"]))
+        self.assertTrue(regex.accepts(["a", ")"]))
+
+    def test_special_in_brackets_kleene_star(self):
+        regex = PythonRegex(r"a[a*]")
+        self.assertTrue(regex.accepts(["a", "a"]))
+        self.assertTrue(regex.accepts(["a", "*"]))
+        self.assertFalse(regex.accepts(["a", "a", "a"]))
+
+    def test_special_in_brackets_positive_closure(self):
+        regex = PythonRegex(r"a[a+]")
+        self.assertTrue(regex.accepts(["a", "a"]))
+        self.assertTrue(regex.accepts(["a", "+"]))
+        self.assertFalse(regex.accepts(["a", "a", "a"]))
+
+    def test_special_in_brackets_optional(self):
+        regex = PythonRegex(r"a[a?]")
+        self.assertTrue(regex.accepts(["a", "a"]))
+        self.assertTrue(regex.accepts(["a", "?"]))
+        self.assertFalse(regex.accepts(["a"]))

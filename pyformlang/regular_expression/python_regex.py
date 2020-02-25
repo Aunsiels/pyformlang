@@ -23,6 +23,8 @@ ESCAPED_PRINTABLES = [TRANSFORMATIONS.get(x, x)
 
 DOT_REPLACEMENT = "(" + "|".join(ESCAPED_PRINTABLES) + ")"
 
+TO_ESCAPE_IN_BRACKETS = "(+*)?"
+
 
 class PythonRegex(Regex):
     """ Represents a regular expression as used in Python. It adds the
@@ -46,6 +48,7 @@ class PythonRegex(Regex):
         else:
             re.compile(regex)  # Check if it is valid
         self._python_regex = regex
+        self._escape_in_brackets()
         self._preprocess_brackets()
         self._preprocess_positive_closure()
         self._preprocess_optional()
@@ -167,3 +170,21 @@ class PythonRegex(Regex):
     @staticmethod
     def _should_escape_next_symbol(regex_temp):
         return regex_temp and regex_temp[-1] == "\\"
+
+    def _escape_in_brackets(self):
+        regex_temp = []
+        in_brackets = False
+        for symbol in self._python_regex:
+            if (symbol == "["
+                    and not self._should_escape_next_symbol(regex_temp)):
+                in_brackets = True
+            elif (symbol == "]"
+                    and not self._should_escape_next_symbol(regex_temp)):
+                in_brackets = False
+            if (in_brackets
+                and not self._should_escape_next_symbol(regex_temp)
+                and symbol in TO_ESCAPE_IN_BRACKETS):
+                regex_temp.append("\\" + symbol)
+            else:
+                regex_temp.append(symbol)
+        self._python_regex = "".join(regex_temp)
