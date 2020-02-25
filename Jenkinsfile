@@ -42,12 +42,11 @@ pipeline {
 
       }
       steps {
-        sh 'pwd'
-        echo $PYTHONPATH
         echo 'Code Coverage'
         sh 'make test-coverage-xml'
         echo 'Style Check'
-        sh 'make style-check'
+        sh 'pylint pyformlang > pylint.report || true'
+        sh 'pycodestyle pyformlang > pep8.report || true'
         recordIssues(enabledForFailure: true, tool: pyLint(pattern: 'pylint.report'), sourceCodeEncoding: 'UTF-8')
         recordIssues(enabledForFailure: true, tool: pep8(pattern: 'pep8.report'), sourceCodeEncoding: 'UTF-8')
       }
