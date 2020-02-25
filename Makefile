@@ -24,7 +24,7 @@ test-coverage-xml:
 		$(PYTEST) pyformlang --showlocals -v --cov=pyformlang --cov-report=xml:reports/coverage.xml
 
 style-check:
-	$(PYLINT) --rcfile=pylint.cfg pyformlang > pylint.report || true
+	$(PYLINT) pyformlang > pylint.report || true
 	pycodestyle pyformlang > pep8.report || true
 
 doc:
