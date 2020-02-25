@@ -31,6 +31,7 @@ class PythonRegex(Regex):
     * Set of characters with [] (no inverse with [^...])
     * positive closure +
     * . for all printable characters
+    * ? for optional character/group
 
         Parameters
         ----------
