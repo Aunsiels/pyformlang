@@ -43,7 +43,7 @@ pipeline {
       }
       steps {
         sh 'pwd'
-        echo '$PYTHONPATH'
+        echo $PYTHONPATH
         echo 'Code Coverage'
         sh 'make test-coverage-xml'
         echo 'Style Check'
