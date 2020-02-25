@@ -16,8 +16,10 @@ from pyformlang.regular_expression import Regex
 class TestIndexedGrammar(unittest.TestCase):
     """ Tests the indexed grammar """
 
-    def test_simple_ig_0(self):
+    # pylint: disable=missing-function-docstring
 
+    def test_simple_ig_0(self):
+        """Test"""
         # Write rules
 
         l_rules = []
@@ -36,13 +38,12 @@ class TestIndexedGrammar(unittest.TestCase):
         l_rules.append(EndRule("A0", "b"))
 
         for i in range(9):
-           rules = Rules(l_rules, i)
-           i_grammar = IndexedGrammar(rules)
-           self.assertFalse(i_grammar.is_empty())
-           self.assertEqual(i_grammar.terminals, {"end", "b", "epsilon"})
+            rules = Rules(l_rules, i)
+            i_grammar = IndexedGrammar(rules)
+            self.assertFalse(i_grammar.is_empty())
+            self.assertEqual(i_grammar.terminals, {"end", "b", "epsilon"})
 
     def test_simple_ig_1(self):
-
         # Write rules
 
         l_rules = []
@@ -83,7 +84,6 @@ class TestIndexedGrammar(unittest.TestCase):
         self.assertFalse(i_grammar.is_empty())
 
     def test_simple_ig_2(self):
-
         # Write rules
 
         l_rules = []
@@ -118,7 +118,6 @@ class TestIndexedGrammar(unittest.TestCase):
         self.assertTrue(i_grammar.is_empty())
 
     def test_simple_ig_3(self):
-
         # Write rules
 
         l_rules = []
@@ -141,7 +140,6 @@ class TestIndexedGrammar(unittest.TestCase):
         self.assertTrue(i_grammar.is_empty())
 
     def test_simple_ig_4(self):
-
         # Write rules
 
         l_rules = []
@@ -181,7 +179,6 @@ class TestIndexedGrammar(unittest.TestCase):
         self.assertTrue(i_grammar.is_empty())
 
     def test_simple_ig_5(self):
-
         # Write rules
 
         l_rules = []
@@ -201,7 +198,6 @@ class TestIndexedGrammar(unittest.TestCase):
         self.assertFalse(i_grammar.is_empty())
 
     def test_simple_ig_regular_expression(self):
-
         # Test for regular expression functions
 
         l_rules = []
@@ -364,8 +360,10 @@ class TestIndexedGrammar(unittest.TestCase):
         i_grammar = IndexedGrammar(rules, start_variable="S")
         i_grammar2 = i_grammar.remove_useless_rules()
         self.assertFalse(i_grammar.is_empty())
-        self.assertEqual(i_grammar2.non_terminals, i_grammar2.get_generating_non_terminals())
-        self.assertEqual(i_grammar2.non_terminals, i_grammar2.get_reachable_non_terminals())
+        self.assertEqual(i_grammar2.non_terminals,
+                         i_grammar2.get_generating_non_terminals())
+        self.assertEqual(i_grammar2.non_terminals,
+                         i_grammar2.get_reachable_non_terminals())
 
     def _test_intersection(self):
         """ Tests the intersection of indexed grammar with regex

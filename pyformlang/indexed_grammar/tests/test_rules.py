@@ -10,8 +10,11 @@ from pyformlang.indexed_grammar import EndRule
 from pyformlang.indexed_grammar import ProductionRule
 from pyformlang.indexed_grammar import DuplicationRule
 
+
 class TestIndexedGrammar(unittest.TestCase):
     """ Tests things related to rules """
+
+    # pylint: disable=missing-function-docstring
 
     def test_consumption_rules(self):
         """ Tests the consumption rules """

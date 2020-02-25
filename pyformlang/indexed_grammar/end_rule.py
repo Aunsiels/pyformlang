@@ -19,11 +19,24 @@ class EndRule(ReducedRule):
         The terminal on the right, "a" here
     """
 
+    @property
+    def production(self):
+        raise NotImplementedError
+
+    @property
+    def right_terms(self):
+        raise NotImplementedError
+
+    @property
+    def f_parameter(self):
+        raise NotImplementedError
+
     def __init__(self, left, right):
         self._left_term = left
         self._right_term = right
 
-    def is_end_rule(self) -> bool:
+    @staticmethod
+    def is_end_rule() -> bool:
         """Whether the rule is an end rule or not
 
         Returns

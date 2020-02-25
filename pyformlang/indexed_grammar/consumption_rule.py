@@ -22,7 +22,19 @@ class ConsumptionRule(ReducedRule):
         The non terminal on the right (here B)
     """
 
-    def __init__(self, f : Any, left : Any, right : Any):
+    @property
+    def production(self):
+        raise NotImplementedError
+
+    @property
+    def right_term(self):
+        raise NotImplementedError
+
+    @property
+    def right_terms(self):
+        raise NotImplementedError
+
+    def __init__(self, f: Any, left: Any, right: Any):
         self._f = f
         self._right = right
         self._left_term = left
@@ -38,7 +50,7 @@ class ConsumptionRule(ReducedRule):
         return True
 
     @property
-    def f(self) -> Any:
+    def f_parameter(self) -> Any:
         """Gets the symbol which is consumed
 
         Returns
@@ -89,5 +101,5 @@ class ConsumptionRule(ReducedRule):
 
     def __eq__(self, other):
         return other.is_consumption() and other.left_term == \
-            self.left_term and other.right == self.right and\
-            other.f() == self.f
+               self.left_term and other.right == self.right and \
+               other.f_parameter() == self.f_parameter

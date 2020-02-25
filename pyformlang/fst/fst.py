@@ -6,7 +6,7 @@ from pyformlang.indexed_grammar import DuplicationRule, ProductionRule, EndRule,
     ConsumptionRule, IndexedGrammar, Rules
 
 
-class FST(object):
+class FST:
     """ Representation of a Finite State Transducer"""
 
     def __init__(self):
@@ -20,22 +20,57 @@ class FST(object):
 
     @property
     def states(self):
+        """ Get the states of the FST
+
+        Returns
+        ----------
+        states : set of any
+            The states
+        """
         return self._states
 
     @property
     def input_symbols(self):
+        """ Get the input symbols of the FST
+
+        Returns
+        ----------
+        input_symbols : set of any
+            The input symbols of the FST
+        """
         return self._input_symbols
 
     @property
     def output_symbols(self):
+        """ Get the output symbols of the FST
+
+        Returns
+        ----------
+        output_symbols : set of any
+            The output symbols of the FST
+        """
         return self._output_symbols
 
     @property
     def start_states(self):
+        """ Get the start states of the FST
+
+        Returns
+        ----------
+        start_states : set of any
+            The start states of the FST
+        """
         return self._start_states
 
     @property
     def final_states(self):
+        """ Get the final states of the FST
+
+        Returns
+        ----------
+        final_states : set of any
+            The final states of the FST
+        """
         return self._final_states
 
     def get_number_transitions(self) -> int:
@@ -100,7 +135,8 @@ class FST(object):
         self._final_states.add(final_state)
         self._states.add(final_state)
 
-    def translate(self, input_word: Iterable[Any], max_length: int=-1) -> Iterable[Any]:
+    def translate(self, input_word: Iterable[Any], max_length: int = -1) -> \
+            Iterable[Any]:
         """ Translate a string into another using the FST
 
         Parameters
@@ -143,80 +179,100 @@ class FST(object):
         """
         rules = indexed_grammar.rules
         new_rules = []
-        terminals = rules.terminals
         new_rules.append(EndRule("T", "epsilon"))
-        consumptions = rules.consumption_rules
-        for f in consumptions:
-            for consumption in consumptions[f]:
-                for r in self._states:
-                    for s in self._states:
-                        new_rules.append(ConsumptionRule(
-                            consumption.f,
-                            str((r, consumption.left_term, s)),
-                            str((r, consumption.right, s))))
-        for rule in rules.rules:
-            if rule.is_duplication():
-                for p in self._states:
-                    for q in self._states:
-                        for r in self._states:
-                            new_rules.append(DuplicationRule(
-                                str((p, rule.left_term, q)),
-                                str((p, rule.right_terms[0], r)),
-                                str((r, rule.right_terms[1], q))))
-            elif rule.is_production():
-                for p in self._states:
-                    for q in self._states:
-                        new_rules.append(ProductionRule(
-                            str((p, rule.left_term, q)),
-                            str((p, rule.right_term, q)),
-                            str(rule.production)))
-            elif rule.is_end_rule():
-                for p in self._states:
-                    for q in self._states:
-                        new_rules.append(DuplicationRule(
-                            str((p, rule.left_term, q)),
-                            str((p, rule.right_term, q)),
-                            "T"))
-        for a in terminals:
-            for p in self._states:
-                for q in self._states:
-                    for r in self._states:
-                        new_rules.append(DuplicationRule(
-                            str((p, a, q)),
-                            str((p, "epsilon", r)),
-                            str((r, a, q))))
-                        new_rules.append(DuplicationRule(
-                            str((p, a, q)),
-                            str((p, a, r)),
-                            str((r, "epsilon", q))))
-        for p in self._states:
-            for q in self._states:
-                for r in self._states:
-                    new_rules.append(DuplicationRule(
-                        str((p, "epsilon", q)),
-                        str((p, "epsilon", r)),
-                        str((r, "epsilon", q))))
-        for key in self._delta:
-            p = key[0]
-            a = key[1]
-            for transition in self._delta[key]:
-                q = transition[0]
-                x = transition[1]
-                new_rules.append(EndRule(
-                    str((p, a, q)),
-                    x))
-        for p in self._states:
-            new_rules.append(EndRule(
-                str((p, "epsilon", p)),
-                "epsilon"))
-        for p in self._final_states:
+        self._extract_consumption_rules_intersection(rules, new_rules)
+        self._extract_indexed_grammar_rules_intersection(rules, new_rules)
+        self._extract_terminals_intersection(rules, new_rules)
+        self._extract_epsilon_transitions_intersection(new_rules)
+        self._extract_fst_delta_intersection(new_rules)
+        self._extract_fst_epsilon_intersection(new_rules)
+        self._extract_fst_duplication_rules_intersection(new_rules)
+        rules = Rules(new_rules, rules.optim)
+        return IndexedGrammar(rules).remove_useless_rules()
+
+    def _extract_fst_duplication_rules_intersection(self, new_rules):
+        for state_p in self._final_states:
             for start_state in self._start_states:
                 new_rules.append(DuplicationRule(
                     "S",
-                    str((start_state, "S", p)),
+                    str((start_state, "S", state_p)),
                     "T"))
-        rules = Rules(new_rules, rules._optim)
-        return IndexedGrammar(rules).remove_useless_rules()
+
+    def _extract_fst_epsilon_intersection(self, new_rules):
+        for state_p in self._states:
+            new_rules.append(EndRule(
+                str((state_p, "epsilon", state_p)),
+                "epsilon"))
+
+    def _extract_fst_delta_intersection(self, new_rules):
+        for key in self._delta:
+            state_p = key[0]
+            terminal = key[1]
+            for transition in self._delta[key]:
+                state_q = transition[0]
+                symbol = transition[1]
+                new_rules.append(EndRule(str((state_p, terminal, state_q)),
+                                         symbol))
+
+    def _extract_epsilon_transitions_intersection(self, new_rules):
+        for state_p in self._states:
+            for state_q in self._states:
+                for state_r in self._states:
+                    new_rules.append(DuplicationRule(
+                        str((state_p, "epsilon", state_q)),
+                        str((state_p, "epsilon", state_r)),
+                        str((state_r, "epsilon", state_q))))
+
+    def _extract_indexed_grammar_rules_intersection(self, rules, new_rules):
+        for rule in rules.rules:
+            if rule.is_duplication():
+                for state_p in self._states:
+                    for state_q in self._states:
+                        for state_r in self._states:
+                            new_rules.append(DuplicationRule(
+                                str((state_p, rule.left_term, state_q)),
+                                str((state_p, rule.right_terms[0], state_r)),
+                                str((state_r, rule.right_terms[1], state_q))))
+            elif rule.is_production():
+                for state_p in self._states:
+                    for state_q in self._states:
+                        new_rules.append(ProductionRule(
+                            str((state_p, rule.left_term, state_q)),
+                            str((state_p, rule.right_term, state_q)),
+                            str(rule.production)))
+            elif rule.is_end_rule():
+                for state_p in self._states:
+                    for state_q in self._states:
+                        new_rules.append(DuplicationRule(
+                            str((state_p, rule.left_term, state_q)),
+                            str((state_p, rule.right_term, state_q)),
+                            "T"))
+
+    def _extract_terminals_intersection(self, rules, new_rules):
+        terminals = rules.terminals
+        for terminal in terminals:
+            for state_p in self._states:
+                for state_q in self._states:
+                    for state_r in self._states:
+                        new_rules.append(DuplicationRule(
+                            str((state_p, terminal, state_q)),
+                            str((state_p, "epsilon", state_r)),
+                            str((state_r, terminal, state_q))))
+                        new_rules.append(DuplicationRule(
+                            str((state_p, terminal, state_q)),
+                            str((state_p, terminal, state_r)),
+                            str((state_r, "epsilon", state_q))))
+
+    def _extract_consumption_rules_intersection(self, rules, new_rules):
+        consumptions = rules.consumption_rules
+        for consumption_rule in consumptions:
+            for consumption in consumptions[consumption_rule]:
+                for state_r in self._states:
+                    for state_s in self._states:
+                        new_rules.append(ConsumptionRule(
+                            consumption.f_parameter,
+                            str((state_r, consumption.left_term, state_s)),
+                            str((state_r, consumption.right, state_s))))
 
     def __and__(self, other):
         return self.intersection(other)

@@ -10,7 +10,7 @@ from .rule_ordering import RuleOrdering
 from .reduced_rule import ReducedRule
 
 
-class Rules(object):
+class Rules:
     """Store a set of rules and manipulate them
 
     Parameters
@@ -30,37 +30,48 @@ class Rules(object):
         8 -> random order
     """
 
-    def __init__(self, rules: Iterable[ReducedRule], optim: int=7):
+    def __init__(self, rules: Iterable[ReducedRule], optim: int = 7):
         self._rules = []
-        self._consumptionRules = dict()
+        self._consumption_rules = dict()
         self._optim = optim
         for rule in rules:
             # We separate consumption rule from other
             if rule.is_consumption():
-                temp = self._consumptionRules.setdefault(rule.f, [])
+                temp = self._consumption_rules.setdefault(rule.f_parameter, [])
                 if rule not in temp:
                     temp.append(rule)
-                self._consumptionRules[rule.f] = temp
+                self._consumption_rules[rule.f_parameter] = temp
             else:
                 if rule not in self._rules:
                     self._rules.append(rule)
-        ro = RuleOrdering(self._rules, self._consumptionRules)
+        rule_ordering = RuleOrdering(self._rules, self._consumption_rules)
         if optim == 1:
-            self._rules = ro.reverse()
+            self._rules = rule_ordering.reverse()
         elif optim == 2:
-            self._rules = ro.order_by_core()
+            self._rules = rule_ordering.order_by_core()
         elif optim == 3:
-            self._rules = ro.order_by_core(reverse=True)
+            self._rules = rule_ordering.order_by_core(reverse=True)
         elif optim == 4:
-            self._rules = ro.order_by_arborescence(reverse=True)
+            self._rules = rule_ordering.order_by_arborescence(reverse=True)
         elif optim == 5:
-            self._rules = ro.order_by_arborescence(reverse=False)
+            self._rules = rule_ordering.order_by_arborescence(reverse=False)
         elif optim == 6:
-            self._rules = ro.order_by_edges()
+            self._rules = rule_ordering.order_by_edges()
         elif optim == 7:
-            self._rules = ro.order_by_edges(reverse=True)
+            self._rules = rule_ordering.order_by_edges(reverse=True)
         elif optim == 8:
-            self._rules = ro.order_random()
+            self._rules = rule_ordering.order_random()
+
+    @property
+    def optim(self):
+        """Gets the optimization number
+
+        Returns
+        ----------
+        non_consumption_rules :  int
+            The optimization number
+        """
+        return self._optim
 
     @property
     def rules(self) -> Iterable[ReducedRule]:
@@ -83,7 +94,7 @@ class Rules(object):
             A couple with first the number of non consumption rules and then\
                 the number of consumption rules
         """
-        return len(self._rules), len(self._consumptionRules.values())
+        return len(self._rules), len(self._consumption_rules.values())
 
     @property
     def consumption_rules(self) -> Dict[Any, Iterable[ConsumptionRule]]:
@@ -95,7 +106,7 @@ class Rules(object):
             :class:`~pyformlang.indexed_grammar.ConsumptionRule`
             A dictionary contains the consumption rules gathered by consumed symbols
         """
-        return self._consumptionRules
+        return self._consumption_rules
 
     @property
     def terminals(self) -> Iterable[Any]:
@@ -107,7 +118,7 @@ class Rules(object):
             The terminals used in the rules
         """
         terminals = set()
-        for temp_rule in self._consumptionRules.values():
+        for temp_rule in self._consumption_rules.values():
             for rule in temp_rule:
                 terminals = terminals.union(rule.terminals)
         for rule in self._rules:
@@ -124,7 +135,7 @@ class Rules(object):
             The non terminals used in the rule
         """
         terminals = set()
-        for temp_rule in self._consumptionRules.values():
+        for temp_rule in self._consumption_rules.values():
             for rule in temp_rule:
                 terminals = terminals.union(set(rule.non_terminals))
         for rule in self._rules:
@@ -164,4 +175,3 @@ class Rules(object):
             The production used in the rule
         """
         self._rules.append(ProductionRule(left, right, prod))
-

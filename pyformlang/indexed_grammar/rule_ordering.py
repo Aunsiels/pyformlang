@@ -4,15 +4,16 @@ Representation of a way to order rules
 
 from typing import Iterable, Dict, Any
 
-import networkx as nx
 from queue import Queue
 import random
+
+import networkx as nx
 
 from .reduced_rule import ReducedRule
 from .consumption_rule import ConsumptionRule
 
 
-class RuleOrdering(object):
+class RuleOrdering:
     """A class to order rules in an indexed grammar
 
     Parameters
@@ -57,7 +58,7 @@ class RuleOrdering(object):
                         di_graph.add_edge(f_rule.right, rule.left_term)
         return di_graph
 
-    def order_by_core(self, reverse: bool=False) -> Iterable[ReducedRule]:
+    def order_by_core(self, reverse: bool = False) -> Iterable[ReducedRule]:
         """Order the rules using the core numbers
 
         Parameters
@@ -81,7 +82,8 @@ class RuleOrdering(object):
             new_order.reverse()
         return new_order
 
-    def order_by_arborescence(self, reverse: bool=True) -> Iterable[ReducedRule]:
+    def order_by_arborescence(self, reverse: bool = True) \
+            -> Iterable[ReducedRule]:
         """Order the rules using the arborescence method.
 
         Parameters
@@ -95,24 +97,23 @@ class RuleOrdering(object):
             The rules ordered using core number
         """
         di_graph = self._get_graph()
-        # arborescence = nx.minimum_spanning_arborescence(di_graph)
         arborescence = nx.minimum_spanning_tree(di_graph.to_undirected())
         to_process = Queue()
         processed = set()
         res = dict()
         res["S"] = 0
-        for x in arborescence["S"]:
-            if x not in processed:
-                res[x] = 1
-                processed.add(x)
-                to_process.put(x)
+        for symbol in arborescence["S"]:
+            if symbol not in processed:
+                res[symbol] = 1
+                processed.add(symbol)
+                to_process.put(symbol)
         while not to_process.empty():
-            p = to_process.get()
-            for x in arborescence[p]:
-                if x not in processed:
-                    res[x] = res[p] + 1
-                    processed.add(x)
-                    to_process.put(x)
+            current = to_process.get()
+            for symbol in arborescence[current]:
+                if symbol not in processed:
+                    res[symbol] = res[current] + 1
+                    processed.add(symbol)
+                    to_process.put(symbol)
         new_order = sorted(self.rules,
                            key=lambda x: res.setdefault(
                                x.left_term, 0))
@@ -120,7 +121,8 @@ class RuleOrdering(object):
             new_order.reverse()
         return new_order
 
-    def _get_len_out(self, di_graph, x):
+    @staticmethod
+    def _get_len_out(di_graph, rule):
         """Get the number of out edges of a rule (more exactly, the non terminal at
         its left.
 
@@ -128,13 +130,12 @@ class RuleOrdering(object):
         ----------
         di_graph : DiGraph
             A directed graph
-        x : :class:`~pyformlang.indexed_grammar.ReducedRule`
+        rule : :class:`~pyformlang.indexed_grammar.ReducedRule`
             The rule
         """
-        if x.left_term in di_graph:
-            return len(di_graph[x.left_term])
-        else:
-            return 0
+        if rule.left_term in di_graph:
+            return len(di_graph[rule.left_term])
+        return 0
 
     def order_by_edges(self, reverse=False):
         """Order using the number of edges.

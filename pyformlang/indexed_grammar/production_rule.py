@@ -21,6 +21,14 @@ class ProductionRule(ReducedRule):
         The terminal used in the rule, "r" here
     """
 
+    @property
+    def right_terms(self):
+        raise NotImplementedError
+
+    @property
+    def f_parameter(self):
+        raise NotImplementedError
+
     def __init__(self, left, right, prod):
         self._production = prod
         self._left_term = left

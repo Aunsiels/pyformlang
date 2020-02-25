@@ -21,6 +21,18 @@ class DuplicationRule(ReducedRule):
         The second non-terminal on the right of the rule (C here)
     """
 
+    @property
+    def production(self):
+        raise NotImplementedError
+
+    @property
+    def right_term(self):
+        raise NotImplementedError
+
+    @property
+    def f_parameter(self):
+        raise NotImplementedError
+
     def __init__(self, left_term, right_term0, right_term1):
         self._left_term = left_term
         self._right_terms = (right_term0, right_term1)
