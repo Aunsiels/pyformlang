@@ -154,3 +154,14 @@ class TestPythonRegex(unittest.TestCase):
         self.assertTrue(regex.accepts(["a", "a"]))
         self.assertTrue(regex.accepts(["a", "?"]))
         self.assertFalse(regex.accepts(["a"]))
+
+    def test_shortcut_digits(self):
+        regex = PythonRegex(r"a\d")
+        self.assertTrue(regex.accepts(["a", "0"]))
+        self.assertTrue(regex.accepts(["a", "1"]))
+
+    def test_shortcut_digits_in_brackets(self):
+        regex = PythonRegex(r"a[\da]")
+        self.assertTrue(regex.accepts(["a", "0"]))
+        self.assertTrue(regex.accepts(["a", "1"]))
+        self.assertTrue(regex.accepts(["a", "a"]))

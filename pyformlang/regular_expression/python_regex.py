@@ -25,6 +25,10 @@ DOT_REPLACEMENT = "(" + "|".join(ESCAPED_PRINTABLES) + ")"
 
 TO_ESCAPE_IN_BRACKETS = "(+*)?"
 
+SHORTCUTS = {
+    r"\d": "[0-9]"
+}
+
 
 class PythonRegex(Regex):
     """ Represents a regular expression as used in Python. It adds the
@@ -34,6 +38,7 @@ class PythonRegex(Regex):
     * positive closure +
     * . for all printable characters
     * ? for optional character/group
+    * Shortcuts: \d
 
         Parameters
         ----------
@@ -48,6 +53,7 @@ class PythonRegex(Regex):
         else:
             re.compile(regex)  # Check if it is valid
         self._python_regex = regex
+        self._replace_shortcuts()
         self._escape_in_brackets()
         self._preprocess_brackets()
         self._preprocess_positive_closure()
@@ -67,20 +73,29 @@ class PythonRegex(Regex):
 
     def _preprocess_brackets(self):
         regex_temp = []
-        in_brackets = False
+        in_brackets = 0
         in_brackets_temp = []
         for symbol in self._python_regex:
             if symbol == "[" and (not regex_temp or regex_temp[-1] != "\\"):
-                regex_temp.append("(")
-                in_brackets = True
+                in_brackets += 1
+                in_brackets_temp.append([])
             elif symbol == "]" and (not regex_temp or regex_temp[-1] != "\\"):
-                regex_temp += self._preprocess_brackets_content(
-                    in_brackets_temp)
-                regex_temp.append(")")
-                in_brackets = False
-                in_brackets_temp = []
-            elif in_brackets:
-                in_brackets_temp.append(symbol)
+                if len(in_brackets_temp) == 1:
+                    regex_temp.append("(")
+                    regex_temp += self._preprocess_brackets_content(
+                        in_brackets_temp[-1])
+                    regex_temp.append(")")
+                else:
+                    in_brackets_temp[-2].append(
+                        "(" +
+                        "".join(
+                            self._preprocess_brackets_content(
+                                in_brackets_temp[-1])) +
+                        ")")
+                in_brackets -= 1
+                in_brackets_temp.pop()
+            elif in_brackets > 0:
+                in_brackets_temp[-1].append(symbol)
             else:
                 if self._should_escape_next_symbol(regex_temp):
                     regex_temp[-1] += symbol
@@ -179,12 +194,17 @@ class PythonRegex(Regex):
                     and not self._should_escape_next_symbol(regex_temp)):
                 in_brackets = True
             elif (symbol == "]"
-                    and not self._should_escape_next_symbol(regex_temp)):
+                  and not self._should_escape_next_symbol(regex_temp)):
                 in_brackets = False
             if (in_brackets
-                and not self._should_escape_next_symbol(regex_temp)
-                and symbol in TO_ESCAPE_IN_BRACKETS):
+                    and not self._should_escape_next_symbol(regex_temp)
+                    and symbol in TO_ESCAPE_IN_BRACKETS):
                 regex_temp.append("\\" + symbol)
             else:
                 regex_temp.append(symbol)
         self._python_regex = "".join(regex_temp)
+
+    def _replace_shortcuts(self):
+        for to_replace, replacement in SHORTCUTS.items():
+            self._python_regex = self._python_regex.replace(to_replace,
+                                                            replacement)
