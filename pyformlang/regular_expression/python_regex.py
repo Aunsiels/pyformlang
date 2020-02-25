@@ -67,10 +67,10 @@ class PythonRegex(Regex):
         in_brackets = False
         in_brackets_temp = []
         for symbol in self._python_regex:
-            if symbol == "[":
+            if symbol == "[" and (not regex_temp or regex_temp[-1] != "\\"):
                 regex_temp.append("(")
                 in_brackets = True
-            elif symbol == "]":
+            elif symbol == "]" and (not regex_temp or regex_temp[-1] != "\\"):
                 regex_temp += self._preprocess_brackets_content(
                     in_brackets_temp)
                 regex_temp.append(")")

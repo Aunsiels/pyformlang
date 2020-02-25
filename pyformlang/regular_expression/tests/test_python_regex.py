@@ -86,3 +86,11 @@ class TestPythonRegex(unittest.TestCase):
     def test_escape_plus(self):
         regex = PythonRegex(r"ab\+")
         self.assertTrue(regex.accepts(["a", "b", "+"]))
+
+    def test_escape_opening_bracket(self):
+        regex = PythonRegex(r"a\[")
+        self.assertTrue(regex.accepts(["a", "["]))
+
+    def test_escape_closing_bracket(self):
+        regex = PythonRegex(r"a\]")
+        self.assertTrue(regex.accepts(["a", "]"]))
