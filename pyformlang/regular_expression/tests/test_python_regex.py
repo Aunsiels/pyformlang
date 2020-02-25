@@ -61,3 +61,16 @@ class TestPythonRegex(unittest.TestCase):
         self.assertTrue(regex.accepts(["a", "\t"]))
         self.assertTrue(regex.accepts(["a", "\v"]))
         self.assertTrue(regex.accepts(["a", "\r"]))
+
+    def test_simple_optional(self):
+        regex = PythonRegex("ab?")
+        self.assertTrue(regex.accepts(["a"]))
+        self.assertTrue(regex.accepts(["a", "b"]))
+        self.assertFalse(regex.accepts(["a", "a"]))
+
+    def test_with_parenthesis_optional(self):
+        regex = PythonRegex("a(bb|c)?")
+        self.assertTrue(regex.accepts(["a"]))
+        self.assertTrue(regex.accepts(["a", "b" , "b"]))
+        self.assertTrue(regex.accepts(["a", "c"]))
+        self.assertFalse(regex.accepts(["a", "b"]))

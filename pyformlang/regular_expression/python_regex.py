@@ -47,6 +47,7 @@ class PythonRegex(Regex):
         self._python_regex = regex
         self._preprocess_brackets()
         self._preprocess_positive_closure()
+        self._preprocess_optional()
         self._preprocess_dot()
         self._separate()
         super().__init__(self._python_regex)
@@ -80,7 +81,8 @@ class PythonRegex(Regex):
                 regex_temp.append(symbol)
         self._python_regex = "".join(regex_temp)
 
-    def _preprocess_brackets_content(self, bracket_content):
+    @staticmethod
+    def _preprocess_brackets_content(bracket_content):
         bracket_content_temp = []
         previous_is_valid_for_range = False
         for i, symbol in enumerate(bracket_content):
@@ -132,3 +134,15 @@ class PythonRegex(Regex):
 
     def _preprocess_dot(self):
         self._python_regex = self._python_regex.replace(".", DOT_REPLACEMENT)
+
+    def _preprocess_optional(self):
+        regex_temp = []
+        for symbol in self._python_regex:
+            if symbol == "?":
+                if regex_temp[-1] == ")":
+                    regex_temp[-1] = "|$)"
+                else:
+                    regex_temp[-1] = "(" + regex_temp[-1] + "|$)"
+            else:
+                regex_temp.append(symbol)
+        self._python_regex = "".join(regex_temp)
