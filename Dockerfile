@@ -14,6 +14,8 @@ RUN apt-get update -yqq && \
 
 RUN pip3 install --upgrade pip
 
+WORKDIR /pyformlang_tests
+
 RUN pip3 install pytest \
     pytest-cov \
     numpydoc \
