@@ -28,9 +28,8 @@ class Variable(CFGObject): # pylint: disable=too-few-public-methods
 
     def __hash__(self):
         if self._hash is None:
-            self._hash = self.compute_new_hash()
+            self._hash = self._compute_new_hash()
         return self._hash
 
-    def compute_new_hash(self):
+    def _compute_new_hash(self):
         return hash(self._value)
-

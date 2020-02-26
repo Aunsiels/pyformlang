@@ -1,13 +1,13 @@
 """ A production or rule of a CFG """
 
-from typing import Iterable
+from typing import List
 
 from .variable import Variable
 from .cfg_object import CFGObject
 from .epsilon import Epsilon
 
 
-class Production(object):
+class Production:
     """ A production or rule of a CFG
 
     Parameters
@@ -18,7 +18,7 @@ class Production(object):
         The body of the production
     """
 
-    def __init__(self, head: Variable, body: Iterable[CFGObject], filtering=True):
+    def __init__(self, head: Variable, body: List[CFGObject], filtering=True):
         if filtering:
             self._body = [x for x in body if not isinstance(x, Epsilon)]
         else:
@@ -28,10 +28,12 @@ class Production(object):
 
     @property
     def head(self) -> Variable:
+        """Get the head variable"""
         return self._head
 
     @property
-    def body(self) -> Iterable[CFGObject]:
+    def body(self) -> List[CFGObject]:
+        """Get the body objects"""
         return self._body
 
     def __repr__(self):

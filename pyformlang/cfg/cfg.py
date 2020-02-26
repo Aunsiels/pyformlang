@@ -7,6 +7,9 @@ import networkx as nx
 from pyformlang.finite_automaton import FiniteAutomaton
 from pyformlang.pda.cfg_variable_converter import CFGVariableConverter
 from pyformlang.regular_expression import Regex
+from pyformlang import pda
+
+from .pda_object_creator import PDAObjectCreator
 from .variable import Variable
 from .terminal import Terminal
 from .production import Production
@@ -15,7 +18,10 @@ from .epsilon import Epsilon
 from .utils import to_variable, to_terminal
 
 
-class CFG(object):
+SUBS_SUFFIX = "#SUBS#"
+
+
+class CFG:
     """ A class representing a context free grammar
 
     Parameters
@@ -29,6 +35,7 @@ class CFG(object):
     productions : set of :class:`~pyformlang.cfg.Production`, optional
         The productions or rules of the CFG
     """
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self,
                  variables: AbstractSet[Variable] = None,
@@ -36,11 +43,11 @@ class CFG(object):
                  start_symbol: Variable = None,
                  productions: Iterable[Production] = None):
         if variables is not None:
-            variables = set([to_variable(x) for x in variables])
+            variables = {to_variable(x) for x in variables}
         self._variables = variables or set()
         self._variables = set(self._variables)
         if terminals is not None:
-            terminals = set([to_terminal(x) for x in terminals])
+            terminals = {to_terminal(x) for x in terminals}
         self._terminals = terminals or set()
         self._terminals = set(self._terminals)
         if start_symbol is not None:
@@ -101,12 +108,13 @@ class CFG(object):
             for symbol_impact, index_impact in self._impacts.get(current, []):
                 if symbol_impact in g_symbols:
                     continue
-                processed_with_modification.append((symbol_impact, index_impact))
+                processed_with_modification.append(
+                    (symbol_impact, index_impact))
                 self._remaining_lists[symbol_impact][index_impact] -= 1
                 if self._remaining_lists[symbol_impact][index_impact] == 0:
                     g_symbols.add(symbol_impact)
                     to_process.append(symbol_impact)
-        # Repare modifications
+        # Fix modifications
         for symbol_impact, index_impact in processed_with_modification:
             self._remaining_lists[symbol_impact][index_impact] += 1
         g_symbols.remove(Epsilon())
@@ -114,7 +122,7 @@ class CFG(object):
 
     def _get_impacts_and_remaining_lists(self, g_symbols):
         if self._impacts is not None:
-            return self._impacts, self._remaining_lists
+            return
         self._added_impacts = set()
         self._remaining_lists = dict()
         self._impacts = dict()
@@ -130,7 +138,8 @@ class CFG(object):
             temp.append(len(body))
             index_impact = len(temp) - 1
             for symbol in body:
-                self._impacts.setdefault(symbol, []).append((head, index_impact))
+                self._impacts.setdefault(symbol, []).append(
+                    (head, index_impact))
 
     def _generate_epsilon(self):
         """ Whether the grammar generates epsilon or not
@@ -255,14 +264,15 @@ class CFG(object):
         unit_pairs = set()
         for variable in self._variables:
             unit_pairs.add((variable, variable))
-        productions = [x for x in self._productions if len(x.body) == 1 and\
-                                                       isinstance(x.body[0], Variable)]
+        productions = [x
+                       for x in self._productions
+                       if len(x.body) == 1 and isinstance(x.body[0], Variable)]
         productions_d = get_productions_d(productions)
         to_process = list(unit_pairs)
         while to_process:
-            var_A, var_B = to_process.pop()
-            for production in productions_d.get(var_B, []):
-                temp = (var_A, production.body[0])
+            var_a, var_b = to_process.pop()
+            for production in productions_d.get(var_b, []):
+                temp = (var_a, production.body[0])
                 if temp not in unit_pairs:
                     unit_pairs.add(temp)
                     to_process.append(temp)
@@ -277,12 +287,15 @@ class CFG(object):
             A new CFG equivalent without unit productions
         """
         unit_pairs = self.get_unit_pairs()
-        productions = [x for x in self._productions if len(x.body) != 1 or\
-                                                       not isinstance(x.body[0], Variable)]
+        productions = [x
+                       for x in self._productions
+                       if len(x.body) != 1
+                       or not isinstance(x.body[0], Variable)]
         productions_d = get_productions_d(productions)
-        for var_A, var_B in unit_pairs:
-            for production in productions_d.get(var_B, []):
-                productions.append(Production(var_A, production.body, filtering=False))
+        for var_a, var_b in unit_pairs:
+            for production in productions_d.get(var_b, []):
+                productions.append(Production(var_a, production.body,
+                                              filtering=False))
         return CFG(self._variables,
                    self._terminals,
                    self._start_symbol,
@@ -311,7 +324,8 @@ class CFG(object):
             new_productions.append(Production(production.head,
                                               new_body))
         for terminal in used:
-            new_productions.append(Production(term_to_var[terminal], [terminal]))
+            new_productions.append(
+                Production(term_to_var[terminal], [terminal]))
         return new_productions
 
     def _get_next_free_variable(self, idx, prefix):
@@ -339,7 +353,7 @@ class CFG(object):
             head = production.head
             stopped = False
             for i in range(len(body) - 2):
-                temp = tuple(body[i+1:])
+                temp = tuple(body[i + 1:])
                 if temp in done:
                     new_productions.append(Production(head,
                                                       [body[i], done[temp]]))
@@ -366,17 +380,18 @@ class CFG(object):
         unit_pairs = self.get_unit_pairs()
         generating = self.get_generating_symbols()
         reachables = self.get_reachable_symbols()
-        if len(nullables) != 0 or len(unit_pairs) != len(self._variables) or\
-                len(generating) != len(self._variables) + len(self._terminals) or \
-                len(reachables) != len(self._variables) + len(self._terminals):
+        if (len(nullables) != 0 or len(unit_pairs) != len(self._variables) or
+                len(generating) != len(self._variables)
+                + len(self._terminals) or
+                len(reachables) != len(self._variables) + len(self._terminals)):
             if len(self._productions) == 0:
                 self._normal_form = self
                 return self
-            new_cfg = self.remove_useless_symbols()\
-                          .remove_epsilon() \
-                          .remove_useless_symbols()\
-                          .eliminate_unit_productions()\
-                          .remove_useless_symbols()
+            new_cfg = self.remove_useless_symbols() \
+                .remove_epsilon() \
+                .remove_useless_symbols() \
+                .eliminate_unit_productions() \
+                .remove_useless_symbols()
             cfg = new_cfg.to_normal_form()
             self._normal_form = cfg
             return cfg
@@ -437,7 +452,8 @@ class CFG(object):
 
         Parameters
         -----------
-        substitution : dict of :class:`~pyformlang.cfg.Terminal` to :class:`~pyformlang.cfg.CFG`
+        substitution : dict of :class:`~pyformlang.cfg.Terminal` to
+        :class:`~pyformlang.cfg.CFG`
             A substitution
 
         Returns
@@ -446,11 +462,10 @@ class CFG(object):
             A new CFG recognizing the substitution
         """
         idx = 0
-        suffix = "#SUBS#"
         new_variables_d = dict()
         new_vars = set()
         for variable in self._variables:
-            temp = Variable(variable.value + suffix + str(idx))
+            temp = Variable(variable.value + SUBS_SUFFIX + str(idx))
             new_variables_d[variable] = temp
             new_vars.add(temp)
             idx += 1
@@ -460,7 +475,7 @@ class CFG(object):
         for ter, cfg in substitution.items():
             new_variables_d_local = dict()
             for variable in cfg.variables:
-                temp = Variable(variable.value + suffix + str(idx))
+                temp = Variable(variable.value + SUBS_SUFFIX + str(idx))
                 new_variables_d_local[variable] = temp
                 new_vars.add(temp)
                 idx += 1
@@ -472,8 +487,9 @@ class CFG(object):
                         body.append(new_variables_d_local[cfgobj])
                     else:
                         body.append(cfgobj)
-                productions.append(Production(new_variables_d_local[production.head],
-                                              body))
+                productions.append(
+                    Production(new_variables_d_local[production.head],
+                               body))
             final_replacement[ter] = new_variables_d_local[cfg.start_symbol]
             terminals = terminals.union(cfg.terminals)
         for production in self._productions:
@@ -509,12 +525,12 @@ class CFG(object):
         start_temp = Variable("#STARTUNION#")
         temp_0 = Terminal("#0UNION#")
         temp_1 = Terminal("#1UNION#")
-        p0 = Production(start_temp, [temp_0])
-        p1 = Production(start_temp, [temp_1])
+        production_0 = Production(start_temp, [temp_0])
+        production_1 = Production(start_temp, [temp_1])
         cfg_temp = CFG({start_temp},
                        {temp_0, temp_1},
                        start_temp,
-                       {p0, p1})
+                       {production_0, production_1})
         return cfg_temp.substitute({temp_0: self,
                                     temp_1: other})
 
@@ -552,11 +568,11 @@ class CFG(object):
         start_temp = Variable("#STARTCONC#")
         temp_0 = Terminal("#0CONC#")
         temp_1 = Terminal("#1CONC#")
-        p0 = Production(start_temp, [temp_0, temp_1])
+        production0 = Production(start_temp, [temp_0, temp_1])
         cfg_temp = CFG({start_temp},
                        {temp_0, temp_1},
                        start_temp,
-                       {p0})
+                       {production0})
         return cfg_temp.substitute({temp_0: self,
                                     temp_1: other})
 
@@ -585,13 +601,13 @@ class CFG(object):
         """
         start_temp = Variable("#STARTCLOS#")
         temp_1 = Terminal("#1CLOS#")
-        p0 = Production(start_temp, [temp_1])
-        p1 = Production(start_temp, [start_temp, start_temp])
-        p2 = Production(start_temp, [])
+        production0 = Production(start_temp, [temp_1])
+        production1 = Production(start_temp, [start_temp, start_temp])
+        production2 = Production(start_temp, [])
         cfg_temp = CFG({start_temp},
                        {temp_1},
                        start_temp,
-                       {p0, p1, p2})
+                       {production0, production1, production2})
         return cfg_temp.substitute({temp_1: self})
 
     def get_positive_closure(self) -> "CFG":
@@ -605,14 +621,14 @@ class CFG(object):
         start_temp = Variable("#STARTPOSCLOS#")
         var_temp = Variable("#VARPOSCLOS#")
         temp_1 = Terminal("#1POSCLOS#")
-        p0 = Production(start_temp, [temp_1, var_temp])
-        p1 = Production(var_temp, [var_temp, var_temp])
-        p2 = Production(var_temp, [temp_1])
-        p3 = Production(var_temp, [])
+        production0 = Production(start_temp, [temp_1, var_temp])
+        production1 = Production(var_temp, [var_temp, var_temp])
+        production2 = Production(var_temp, [temp_1])
+        production3 = Production(var_temp, [])
         cfg_temp = CFG({start_temp, var_temp},
                        {temp_1},
                        start_temp,
-                       {p0, p1, p2, p3})
+                       {production0, production1, production2, production3})
         return cfg_temp.substitute({temp_1: self})
 
     def reverse(self) -> "CFG":
@@ -690,19 +706,20 @@ class CFG(object):
             else:
                 productions_d[temp] = [production.head]
         # Initialization
-        for i, ai in enumerate(word):
-            if (ai,) in productions_d:
-                cyk_table[(i, i+1)] = set(productions_d[(ai,)])
+        for i, terminal in enumerate(word):
+            if (terminal,) in productions_d:
+                cyk_table[(i, i + 1)] = set(productions_d[(terminal,)])
             else:
                 return False
         for j in range(2, len(word) + 1):
             for i in range(len(word) - j + 1):
                 cyk_table[(i, i + j)] = set()
                 for k in range(i + 1, i + j):
-                    for B in cyk_table.setdefault((i, k), set()):
-                        for C in cyk_table.setdefault((k, i + j), set()):
-                            for A in productions_d.setdefault((B, C), []):
-                                cyk_table[(i, i + j)].add(A)
+                    for var_b in cyk_table.setdefault((i, k), set()):
+                        for var_c in cyk_table.setdefault((k, i + j), set()):
+                            for var_a in productions_d.setdefault(
+                                    (var_b, var_c), []):
+                                cyk_table[(i, i + j)].add(var_a)
         return cnf.start_symbol in cyk_table[(0, len(word))]
 
     def to_pda(self) -> "pda.PDA":
@@ -713,14 +730,14 @@ class CFG(object):
         new_pda : :class:`~pyformlang.pda.PDA`
             The equivalent PDA
         """
-        from pyformlang import pda
         state = pda.State("q")
         pda_object_creator = PDAObjectCreator(self._terminals, self._variables)
         input_symbols = [pda_object_creator.get_symbol_from(x)
                          for x in self._terminals]
         stack_alphabet = [pda_object_creator.get_stack_symbol_from(x)
                           for x in self._terminals.union(self._variables)]
-        start_stack_symbol = pda_object_creator.get_stack_symbol_from(self._start_symbol)
+        start_stack_symbol = pda_object_creator.get_stack_symbol_from(
+            self._start_symbol)
         new_pda = pda.PDA(states={state},
                           input_symbols=input_symbols,
                           stack_alphabet=stack_alphabet,
@@ -734,8 +751,10 @@ class CFG(object):
                                    [pda_object_creator.get_stack_symbol_from(x)
                                     for x in production.body])
         for terminal in self._terminals:
-            new_pda.add_transition(state, pda_object_creator.get_symbol_from(terminal),
-                                   pda_object_creator.get_stack_symbol_from(terminal),
+            new_pda.add_transition(state,
+                                   pda_object_creator.get_symbol_from(terminal),
+                                   pda_object_creator.get_stack_symbol_from(
+                                       terminal),
                                    state, [])
         return new_pda
 
@@ -779,23 +798,38 @@ class CFG(object):
             head = production.head
             body = production.body
             if len(body) == 2:
-                for p in states:
-                    for r in states:
-                        new_head = cfg_variable_converter.to_cfg_combined_variable(p, head, r)
-                        for q in states:
-                            body0 = cfg_variable_converter.to_cfg_combined_variable(p, body[0], q)
-                            body1 = cfg_variable_converter.to_cfg_combined_variable(q, body[1], r)
-                            new_productions.append(Production(new_head, [body0, body1], filtering=False))
+                for state_p in states:
+                    for state_r in states:
+                        new_head = \
+                            cfg_variable_converter.to_cfg_combined_variable(
+                                state_p, head, state_r)
+                        for state_q in states:
+                            body0 = \
+                                cfg_variable_converter.to_cfg_combined_variable(
+                                    state_p, body[0], state_q)
+                            body1 = \
+                                cfg_variable_converter.to_cfg_combined_variable(
+                                    state_q, body[1], state_r)
+                            new_productions.append(
+                                Production(new_head, [body0, body1],
+                                           filtering=False))
             else:
-                for p in states:
-                    next_states = other(p, body[0].value)
+                for state_p in states:
+                    next_states = other(state_p, body[0].value)
                     if next_states:
-                        new_head = cfg_variable_converter.to_cfg_combined_variable(p, head, next_states[0])
-                        new_productions.append(Production(new_head, [body[0]], filtering=False))
+                        new_head = \
+                            cfg_variable_converter.to_cfg_combined_variable(
+                                state_p, head, next_states[0])
+                        new_productions.append(
+                            Production(new_head, [body[0]], filtering=False))
         start = Variable("Start")
         start_other = list(other.start_states)[0]
         for final_state in other.final_states:
-            new_body = [cfg_variable_converter.to_cfg_combined_variable(start_other, cfg.start_symbol, final_state)]
+            new_body = [
+                cfg_variable_converter.to_cfg_combined_variable(
+                    start_other,
+                    cfg.start_symbol,
+                    final_state)]
             new_productions.append(Production(start, new_body, filtering=False))
         if generate_empty:
             new_productions.append(Production(start, []))
@@ -820,7 +854,7 @@ class CFG(object):
         """
         return self.intersection(other)
 
-    def get_words(self, max_length: int=-1):
+    def get_words(self, max_length: int = -1):
         """ Get the words generated by the CFG
 
         Parameters
@@ -903,49 +937,14 @@ class CFG(object):
                 di_graph.add_edge(production.head, body[1])
         try:
             nx.find_cycle(di_graph, orientation="original")
-        except:
+        except nx.exception.NetworkXNoCycle:
             return True
         return False
 
 
-class PDAObjectCreator(object):
-
-    def __init__(self, terminals, variables):
-        self._inverse_symbol = dict()
-        self._inverse_stack_symbol = dict()
-        for terminal in terminals:
-            self._inverse_symbol[terminal] = None
-            self._inverse_stack_symbol[terminal] = None
-        for variable in variables:
-            self._inverse_stack_symbol[variable] = None
-
-    def get_symbol_from(self, symbol):
-        from pyformlang import pda
-        if isinstance(symbol, Epsilon):
-            return pda.Epsilon()
-        if self._inverse_symbol[symbol] is None:
-            value = str(symbol.value)
-            temp = pda.Symbol(value)
-            self._inverse_symbol[symbol] = temp
-            return temp
-        return self._inverse_symbol[symbol]
-
-    def get_stack_symbol_from(self, stack_symbol):
-        from pyformlang import pda
-        if isinstance(stack_symbol, Epsilon):
-            return pda.Epsilon()
-        if self._inverse_stack_symbol[stack_symbol] is None:
-            value = str(stack_symbol.value)
-            if isinstance(stack_symbol, Terminal):
-                value = "#TERM#" + value
-            temp = pda.StackSymbol(value)
-            self._inverse_stack_symbol[stack_symbol] = temp
-            return temp
-        return self._inverse_stack_symbol[stack_symbol]
-
-
-def remove_nullable_production_sub(body: Iterable[CFGObject],
-                                   nullables: AbstractSet[CFGObject]) -> List[List[CFGObject]]:
+def remove_nullable_production_sub(body: List[CFGObject],
+                                   nullables: AbstractSet[CFGObject])\
+        -> List[List[CFGObject]]:
     """ Recursive sub function to remove nullable objects """
     if not body:
         return [[]]
@@ -960,10 +959,11 @@ def remove_nullable_production_sub(body: Iterable[CFGObject],
 
 
 def remove_nullable_production(production: Production,
-                               nullables: AbstractSet[CFGObject]) -> List[Production]:
+                               nullables: AbstractSet[CFGObject])\
+        -> List[Production]:
     """ Get all combinations of productions rules after removing nullable """
     next_prod_l = remove_nullable_production_sub(production.body,
-                                               nullables)
+                                                 nullables)
     res = []
     for prod_l in next_prod_l:
         if prod_l:
@@ -976,6 +976,6 @@ def get_productions_d(productions):
     """ Get productions as a dictionary """
     productions_d = dict()
     for production in productions:
-        l = productions_d.setdefault(production.head, [])
-        l.append(production)
+        production_head = productions_d.setdefault(production.head, [])
+        production_head.append(production)
     return productions_d

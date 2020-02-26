@@ -4,19 +4,21 @@ import unittest
 
 from pyformlang.cfg import Terminal
 
+
 class TestTerminal(unittest.TestCase):
     """ Tests the terminal """
+    # pylint: disable=missing-function-docstring
 
     def test_creation(self):
-        t0 = Terminal(0)
-        t1 = Terminal(1)
-        t2 = Terminal(0)
-        t3 = Terminal("0")
-        self.assertEqual(t0, t2)
-        self.assertNotEqual(t0, t1)
-        self.assertNotEqual(t0, t3)
-        self.assertEqual(hash(t0), hash(t2))
-        self.assertNotEqual(hash(t0), hash(t1))
-        self.assertEqual(str(t0), str(t2))
-        self.assertEqual(str(t0), str(t3))
-        self.assertNotEqual(str(t0), str(t1))
+        terminal0 = Terminal(0)
+        terminal1 = Terminal(1)
+        terminal2 = Terminal(0)
+        terminal3 = Terminal("0")
+        self.assertEqual(terminal0, terminal2)
+        self.assertNotEqual(terminal0, terminal1)
+        self.assertNotEqual(terminal0, terminal3)
+        self.assertEqual(hash(terminal0), hash(terminal2))
+        self.assertNotEqual(hash(terminal0), hash(terminal1))
+        self.assertEqual(str(terminal0), str(terminal2))
+        self.assertEqual(str(terminal0), str(terminal3))
+        self.assertNotEqual(str(terminal0), str(terminal1))

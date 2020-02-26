@@ -4,25 +4,27 @@ import unittest
 
 from pyformlang.cfg import Production, Variable, Terminal
 
+
 class TestProduction(unittest.TestCase):
     """ Tests the production """
+    # pylint: disable=missing-function-docstring
 
     def test_creation(self):
-        p0 = Production(Variable("S0"), [Terminal("S1"), Variable("a")])
-        p1 = Production(Variable("S0"), [Terminal("S1"), Variable("a")])
-        p2 = Production(Variable("S0'"), [Terminal("S1"), Variable("a")])
-        p3 = Production(Variable("S0"), [Terminal("S2"), Variable("a")])
-        p4 = Production(Variable("S0"), [Terminal("S2"), Variable("b")])
-        self.assertEqual(p0, p1)
-        self.assertNotEqual(p0, p2)
-        self.assertNotEqual(p0, p3)
-        self.assertNotEqual(p0, p4)
-        self.assertEqual(str(p0), str(p1))
-        self.assertNotEqual(str(p0), str(p2))
-        self.assertNotEqual(str(p0), str(p3))
-        self.assertNotEqual(str(p0), str(p4))
-        self.assertEqual(hash(p0), hash(p1))
-        self.assertNotEqual(hash(p0), hash(p2))
-        self.assertNotEqual(hash(p0), hash(p3))
-        self.assertNotEqual(hash(p0), hash(p4))
-        self.assertIn(" -> ", str(p0))
+        prod0 = Production(Variable("S0"), [Terminal("S1"), Variable("a")])
+        prod1 = Production(Variable("S0"), [Terminal("S1"), Variable("a")])
+        prod2 = Production(Variable("S0'"), [Terminal("S1"), Variable("a")])
+        prod3 = Production(Variable("S0"), [Terminal("S2"), Variable("a")])
+        prod4 = Production(Variable("S0"), [Terminal("S2"), Variable("b")])
+        self.assertEqual(prod0, prod1)
+        self.assertNotEqual(prod0, prod2)
+        self.assertNotEqual(prod0, prod3)
+        self.assertNotEqual(prod0, prod4)
+        self.assertEqual(str(prod0), str(prod1))
+        self.assertNotEqual(str(prod0), str(prod2))
+        self.assertNotEqual(str(prod0), str(prod3))
+        self.assertNotEqual(str(prod0), str(prod4))
+        self.assertEqual(hash(prod0), hash(prod1))
+        self.assertNotEqual(hash(prod0), hash(prod2))
+        self.assertNotEqual(hash(prod0), hash(prod3))
+        self.assertNotEqual(hash(prod0), hash(prod4))
+        self.assertIn(" -> ", str(prod0))

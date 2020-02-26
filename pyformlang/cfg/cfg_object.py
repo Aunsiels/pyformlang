@@ -3,7 +3,7 @@
 from typing import Any
 
 
-class CFGObject(object): # pylint: disable=too-few-public-methods
+class CFGObject: # pylint: disable=too-few-public-methods
     """ An object in a CFG
 
     Parameters
@@ -12,10 +12,11 @@ class CFGObject(object): # pylint: disable=too-few-public-methods
         The value of the object
     """
 
-    def __init__(self, value : Any):
+    def __init__(self, value: Any):
         self._value = value
         self._hash = None
 
     @property
     def value(self) -> Any:
+        """Gets the value of the object"""
         return self._value
