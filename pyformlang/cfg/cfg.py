@@ -21,7 +21,6 @@ from .cfg_object import CFGObject
 from .epsilon import Epsilon
 from .utils import to_variable, to_terminal
 
-
 SUBS_SUFFIX = "#SUBS#"
 
 
@@ -39,6 +38,7 @@ class CFG:
     productions : set of :class:`~pyformlang.cfg.Production`, optional
         The productions or rules of the CFG
     """
+
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self,
@@ -251,7 +251,8 @@ class CFG:
         new_productions = []
         nullables = self.get_nullable_symbols()
         for production in self._productions:
-            new_productions += remove_nullable_production(production, nullables)
+            new_productions += remove_nullable_production(production,
+                                                          nullables)
         return CFG(self._variables,
                    self._terminals,
                    self._start_symbol,
@@ -385,9 +386,10 @@ class CFG:
         generating = self.get_generating_symbols()
         reachables = self.get_reachable_symbols()
         if (len(nullables) != 0 or len(unit_pairs) != len(self._variables) or
-                len(generating) != len(self._variables)
-                + len(self._terminals) or
-                len(reachables) != len(self._variables) + len(self._terminals)):
+                len(generating) !=
+                len(self._variables) + len(self._terminals) or
+                len(reachables) !=
+                len(self._variables) + len(self._terminals)):
             if len(self._productions) == 0:
                 self._normal_form = self
                 return self
@@ -756,7 +758,8 @@ class CFG:
                                     for x in production.body])
         for terminal in self._terminals:
             new_pda.add_transition(state,
-                                   pda_object_creator.get_symbol_from(terminal),
+                                   pda_object_creator.get_symbol_from(
+                                       terminal),
                                    pda_object_creator.get_stack_symbol_from(
                                        terminal),
                                    state, [])
@@ -796,7 +799,7 @@ class CFG:
         generate_empty = self.contains([]) and other.accepts([])
         cfg = self.to_normal_form()
         states = list(other.states)
-        cfg_variable_converter = \
+        cv_converter = \
             cvc.CFGVariableConverter(states, cfg.variables)
         new_productions = []
         for production in cfg.productions:
@@ -806,14 +809,14 @@ class CFG:
                 for state_p in states:
                     for state_r in states:
                         new_head = \
-                            cfg_variable_converter.to_cfg_combined_variable(
+                            cv_converter.to_cfg_combined_variable(
                                 state_p, head, state_r)
                         for state_q in states:
                             body0 = \
-                                cfg_variable_converter.to_cfg_combined_variable(
+                                cv_converter.to_cfg_combined_variable(
                                     state_p, body[0], state_q)
                             body1 = \
-                                cfg_variable_converter.to_cfg_combined_variable(
+                                cv_converter.to_cfg_combined_variable(
                                     state_q, body[1], state_r)
                             new_productions.append(
                                 Production(new_head, [body0, body1],
@@ -823,7 +826,7 @@ class CFG:
                     next_states = other(state_p, body[0].value)
                     if next_states:
                         new_head = \
-                            cfg_variable_converter.to_cfg_combined_variable(
+                            cv_converter.to_cfg_combined_variable(
                                 state_p, head, next_states[0])
                         new_productions.append(
                             Production(new_head, [body[0]], filtering=False))
@@ -831,11 +834,12 @@ class CFG:
         start_other = list(other.start_states)[0]
         for final_state in other.final_states:
             new_body = [
-                cfg_variable_converter.to_cfg_combined_variable(
+                cv_converter.to_cfg_combined_variable(
                     start_other,
                     cfg.start_symbol,
                     final_state)]
-            new_productions.append(Production(start, new_body, filtering=False))
+            new_productions.append(
+                Production(start, new_body, filtering=False))
         if generate_empty:
             new_productions.append(Production(start, []))
         res_cfg = CFG(start_symbol=start, productions=new_productions)
@@ -948,7 +952,7 @@ class CFG:
 
 
 def remove_nullable_production_sub(body: List[CFGObject],
-                                   nullables: AbstractSet[CFGObject])\
+                                   nullables: AbstractSet[CFGObject]) \
         -> List[List[CFGObject]]:
     """ Recursive sub function to remove nullable objects """
     if not body:
@@ -964,7 +968,7 @@ def remove_nullable_production_sub(body: List[CFGObject],
 
 
 def remove_nullable_production(production: Production,
-                               nullables: AbstractSet[CFGObject])\
+                               nullables: AbstractSet[CFGObject]) \
         -> List[Production]:
     """ Get all combinations of productions rules after removing nullable """
     next_prod_l = remove_nullable_production_sub(production.body,

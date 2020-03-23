@@ -4,7 +4,11 @@
 class DoublyLinkedNode:
     """Represents doubly linked list of nodes from a doubly linked list"""
 
-    def __init__(self, list_in, next_node=None, previous_node=None, value=None):
+    def __init__(self,
+                 list_in,
+                 next_node=None,
+                 previous_node=None,
+                 value=None):
         self.next_node = next_node
         self.previous_node = previous_node
         self.value = value

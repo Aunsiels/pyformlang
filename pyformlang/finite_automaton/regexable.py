@@ -2,6 +2,7 @@
 a regex
 """
 
+
 class Regexable:
     """ An abstract class to represent something which are be transformed into
     a regex

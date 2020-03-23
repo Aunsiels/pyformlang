@@ -1,6 +1,6 @@
 """
-Representation of a consumption rule, i.e. a rule that consumes something on the
-stack
+Representation of a consumption rule, i.e. a rule that consumes something on \
+the stack
 """
 
 from typing import Any, Iterable, AbstractSet

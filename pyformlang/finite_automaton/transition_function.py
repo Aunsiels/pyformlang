@@ -160,10 +160,10 @@ class TransitionFunction:
 
     def to_dict(self):
         """
-        Get the dictionary representation of the transition function. The keys \
-        of the dictionary are the source nodes. The items are dictionaries \
-        where the keys are the symbols of the transitions and the items are \
-        the set of target nodes.
+        Get the dictionary representation of the transition function. The \
+        keys of the dictionary are the source nodes. The items are \
+        dictionaries where the keys are the symbols of the transitions and \
+        the items are the set of target nodes.
 
         Returns
         -------

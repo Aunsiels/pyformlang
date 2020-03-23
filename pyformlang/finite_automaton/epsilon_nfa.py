@@ -42,12 +42,13 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
     """
 
     # pylint: disable=too-many-arguments
-    def __init__(self,
-                 states: AbstractSet[State] = None,
-                 input_symbols: AbstractSet[Symbol] = None,
-                 transition_function: NondeterministicTransitionFunction = None,
-                 start_state: AbstractSet[State] = None,
-                 final_states: AbstractSet[State] = None):
+    def __init__(
+            self,
+            states: AbstractSet[State] = None,
+            input_symbols: AbstractSet[Symbol] = None,
+            transition_function: NondeterministicTransitionFunction = None,
+            start_state: AbstractSet[State] = None,
+            final_states: AbstractSet[State] = None):
         super().__init__()
         if states is not None:
             states = {to_state(x) for x in states}
@@ -55,8 +56,8 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         if input_symbols is not None:
             input_symbols = {to_symbol(x) for x in input_symbols}
         self._input_symbols = input_symbols or set()
-        self._transition_function = transition_function or \
-            NondeterministicTransitionFunction()
+        self._transition_function = \
+            transition_function or NondeterministicTransitionFunction()
         if start_state is not None:
             start_state = {to_state(x) for x in start_state}
         self._start_state = start_state or set()
@@ -78,7 +79,8 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
 
         Parameters
         ----------
-        current_states : iterable of :class:`~pyformlang.finite_automaton.State`
+        current_states : iterable of \
+        :class:`~pyformlang.finite_automaton.State`
             The considered list of states
         symbol : Symbol
             The symbol of the link
@@ -113,7 +115,8 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         for symbol in word:
             if symbol == Epsilon():
                 continue
-            next_states = self._get_next_states_iterable(current_states, symbol)
+            next_states = self._get_next_states_iterable(current_states,
+                                                         symbol)
             current_states = self.eclose_iterable(next_states)
         return any([self.is_final_state(x) for x in current_states])
 
@@ -169,12 +172,12 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         is_deterministic : bool
            Whether the automaton is deterministic
         """
-        return len(self._start_state) <= 1 and \
-            self._transition_function.is_deterministic() and \
-            all([{x} == self.eclose(x) for x in self._states])
+        return len(self._start_state) <= 1 \
+            and self._transition_function.is_deterministic()\
+            and all([{x} == self.eclose(x) for x in self._states])
 
     def _to_deterministic_internal(self,
-                                   eclose: bool)\
+                                   eclose: bool) \
             -> "DeterministicFiniteAutomaton":
         """ Transforms the epsilon-nfa into a dfa
 
@@ -447,7 +450,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         """
         return self.get_intersection(other)
 
-    def get_difference(self, other: "EpsilonNFA")\
+    def get_difference(self, other: "EpsilonNFA") \
             -> "EpsilonNFA":
         """ Compute the difference with another Epsilon NFA
 
@@ -623,8 +626,8 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
     def _create_or_transitions(self):
         """ Creates a OR transition instead of several connections
 
-        CAREFUL: This method modifies the automaton and is designed for internal
-        use only!
+        CAREFUL: This method modifies the automaton and is designed for \
+        internal use only!
         """
         for state in self._states:
             new_transitions = dict()
@@ -651,7 +654,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         return not self.is_empty()
 
 
-def get_temp(start_to_end: str, end_to_start: str, end_to_end: str)\
+def get_temp(start_to_end: str, end_to_start: str, end_to_end: str) \
         -> (str, str):
     """ Gets a temp values in the computation of the simple automaton regex """
     temp = "epsilon"

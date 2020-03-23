@@ -35,7 +35,8 @@ class RuleOrdering:
 
         Returns
         ----------
-        new_rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+        new_rules : iterable of \
+        :class:`~pyformlang.indexed_grammar.ReducedRule`
             The reversed rules
         """
         return self.rules[::1]
@@ -69,7 +70,8 @@ class RuleOrdering:
 
         Returns
         ----------
-        new_rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+        new_rules : iterable of \
+        :class:`~pyformlang.indexed_grammar.ReducedRule`
             The rules ordered using core number
         """
         # Graph construction
@@ -94,7 +96,8 @@ class RuleOrdering:
 
         Returns
         ----------
-        new_rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+        new_rules : iterable of \
+        :class:`~pyformlang.indexed_grammar.ReducedRule`
             The rules ordered using core number
         """
         di_graph = self._get_graph()
@@ -148,7 +151,8 @@ class RuleOrdering:
 
         Returns
         ----------
-        new_rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+        new_rules : iterable of \
+        :class:`~pyformlang.indexed_grammar.ReducedRule`
             The rules ordered by number of edges
         """
         di_graph = self._get_graph()
@@ -163,7 +167,8 @@ class RuleOrdering:
 
         Returns
         ----------
-        new_rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+        new_rules : iterable of \
+        :class:`~pyformlang.indexed_grammar.ReducedRule`
             The rules ordered at random
         """
         random.shuffle(self.rules)

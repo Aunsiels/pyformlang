@@ -209,7 +209,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             The pair of distinguishable
         """
         disting = DistinguishableStates(len(self._states))
-        to_process = self._initialize_distinguishable_states_to_process(disting)
+        to_process = \
+            self._initialize_distinguishable_states_to_process(disting)
         previous_transitions = self._get_previous_transitions()
         append = to_process.append
         not_contains_and_add = disting.not_contains_and_add
@@ -330,7 +331,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         # + 1 for trash node
         processing_list = HopcroftProcessingList(len(self._states) + 1,
                                                  self._input_symbols)
-        to_add = 0 # 0 is the index of finals, 1 of non_finals
+        to_add = 0  # 0 is the index of finals, 1 of non_finals
         if len(non_finals) < len(finals):
             to_add = 1
         for symbol in self._input_symbols:
@@ -387,7 +388,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         while to_process:
             current_self, current_other = to_process.pop()
             if (self_minimal.is_final_state(current_self)
-                    and not other_minimal.is_final_state(current_other)) or\
+                    and not other_minimal.is_final_state(current_other)) or \
                     (not self_minimal.is_final_state(current_self)
                      and other_minimal.is_final_state(current_other)):
                 return False

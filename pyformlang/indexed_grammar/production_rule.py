@@ -102,7 +102,7 @@ class ProductionRule(ReducedRule):
     def __repr__(self):
         """Gets the string representation of the rule"""
         return self._left_term + " -> " + \
-               self._right_term + "[ " + self._production + " ]"
+            self._right_term + "[ " + self._production + " ]"
 
     def __eq__(self, other):
         return other.is_production() and other.left_term == \

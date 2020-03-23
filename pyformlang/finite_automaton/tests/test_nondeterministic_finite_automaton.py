@@ -4,7 +4,8 @@ Tests for nondeterministic finite automata
 
 import unittest
 
-from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, Epsilon
+from pyformlang.finite_automaton import NondeterministicFiniteAutomaton,\
+    Epsilon
 from pyformlang.finite_automaton import State
 from pyformlang.finite_automaton import Symbol
 from pyformlang.finite_automaton.transition_function import \

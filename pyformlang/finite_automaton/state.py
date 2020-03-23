@@ -6,7 +6,7 @@ from typing import Any
 from .finite_automaton_object import FiniteAutomatonObject
 
 
-class State(FiniteAutomatonObject): # pylint: disable=too-few-public-methods
+class State(FiniteAutomatonObject):  # pylint: disable=too-few-public-methods
     """ A state in a finite automaton
 
     Parameters

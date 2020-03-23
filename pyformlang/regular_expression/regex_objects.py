@@ -3,7 +3,7 @@ Representation of some objects used in regex.
 """
 
 
-class Node: # pylint: disable=too-few-public-methods
+class Node:  # pylint: disable=too-few-public-methods
     """ Represents a node in the tree representation of a regex
 
     Parameters
@@ -76,7 +76,7 @@ def to_node(value: str) -> Node:
     return res
 
 
-class Operator(Node): # pylint: disable=too-few-public-methods
+class Operator(Node):  # pylint: disable=too-few-public-methods
     """ Represents an operator
 
     Parameters
@@ -92,7 +92,7 @@ class Operator(Node): # pylint: disable=too-few-public-methods
         return "Operator(" + str(self._value) + ")"
 
 
-class Symbol(Node): # pylint: disable=too-few-public-methods
+class Symbol(Node):  # pylint: disable=too-few-public-methods
     """ Represents a symbol
 
     Parameters
@@ -108,7 +108,7 @@ class Symbol(Node): # pylint: disable=too-few-public-methods
         return "Symbol(" + str(self._value) + ")"
 
 
-class Concatenation(Operator): # pylint: disable=too-few-public-methods
+class Concatenation(Operator):  # pylint: disable=too-few-public-methods
     """ Represents a concatenation
     """
 
@@ -119,7 +119,7 @@ class Concatenation(Operator): # pylint: disable=too-few-public-methods
         super().__init__("Concatenation")
 
 
-class Union(Operator): # pylint: disable=too-few-public-methods
+class Union(Operator):  # pylint: disable=too-few-public-methods
     """ Represents a union
     """
 
@@ -130,7 +130,7 @@ class Union(Operator): # pylint: disable=too-few-public-methods
         super().__init__("Union")
 
 
-class KleeneStar(Operator): # pylint: disable=too-few-public-methods
+class KleeneStar(Operator):  # pylint: disable=too-few-public-methods
     """ Represents an epsilon symbol
     """
 
@@ -141,7 +141,7 @@ class KleeneStar(Operator): # pylint: disable=too-few-public-methods
         super().__init__("Kleene Star")
 
 
-class Epsilon(Symbol): # pylint: disable=too-few-public-methods
+class Epsilon(Symbol):  # pylint: disable=too-few-public-methods
     """ Represents an epsilon symbol
     """
 
@@ -152,7 +152,7 @@ class Epsilon(Symbol): # pylint: disable=too-few-public-methods
         super().__init__("Epsilon")
 
 
-class Empty(Symbol): # pylint: disable=too-few-public-methods
+class Empty(Symbol):  # pylint: disable=too-few-public-methods
     """ Represents an empty symbol
     """
 

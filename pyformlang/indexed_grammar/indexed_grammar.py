@@ -86,7 +86,7 @@ class IndexedGrammar:
                         right_term_marked1.append(temp)
                     else:
                         self.marked[rule.left_term].add(temp)
-                    # Stop condition, no need to continuer
+                    # Stop condition, no need to continue
                     if rule.left_term == self.start_variable and len(
                             temp) == 0:
                         need_stop = True
@@ -124,7 +124,8 @@ class IndexedGrammar:
             return was_modified, True
         # Is it useful?
         if rule.right_term in marked_symbols:
-            for term in [term for term in l_temp if rule.right_term == term[0]]:
+            for term in [term for term in l_temp
+                         if rule.right_term == term[0]]:
                 for sub_term in [sub_term
                                  for sub_term in term[1]
                                  if sub_term not in
@@ -351,7 +352,7 @@ class IndexedGrammar:
 
         Raises
         ------
-        NotEmplementedError
+        NotImplementedError
             When trying to intersection with something else than a regular
             expression or a finite automaton
         """
@@ -383,8 +384,8 @@ def exists(list_elements, check_function):
     """exists
     Check whether at least an element x of l is True for f(x)
     :param list_elements: A list of elements to test
-    :param check_function: The checking function (takes one parameter and return
-    a boolean)
+    :param check_function: The checking function (takes one parameter and  \
+    return a boolean)
     """
     for element in list_elements:
         if check_function(element):
@@ -424,8 +425,6 @@ def addrec_ter(l_sets, marked_left):
         production rule
     :param marked_left: Sets which are marked for the non-terminal on the
     left of the production rule
-    :param marked_right: Sets which are marked for the non-terminal on the
-    right of the production rule
     :return Whether an element was actually marked
     """
     # End condition, nothing left to process
@@ -449,9 +448,10 @@ def addrec_ter(l_sets, marked_left):
     while to_process:
         index, new_temp = to_process.pop()
         if index >= len(l_sets):
-            # Check if at least one non-terminal was considered, then if the set
-            # of non-terminals considered is marked of the right non-terminal in
-            # the production rule, then if a new set is marked or not
+            # Check if at least one non-terminal was considered, then if the
+            # set of non-terminals considered is marked of the right
+            # non-terminal in the production rule, then if a new set is
+            # marked or not
             if new_temp not in marked_left:
                 marked_left.add(new_temp)
                 res = True
@@ -460,7 +460,7 @@ def addrec_ter(l_sets, marked_left):
             to_append = (index + 1, new_temp)
             to_process.append(to_append)
         if not exists_before[index]:
-            # For all sets which were marked for the current comsumption rule
+            # For all sets which were marked for the current consumption rule
             for marked_set in marked_sets[index]:
                 if marked_set <= new_temp:
                     to_append = (index + 1, new_temp)

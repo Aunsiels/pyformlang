@@ -2,7 +2,7 @@
 
 from typing import Any, Iterable
 
-from pyformlang.indexed_grammar import DuplicationRule, ProductionRule,\
+from pyformlang.indexed_grammar import DuplicationRule, ProductionRule, \
     EndRule, ConsumptionRule, IndexedGrammar, Rules
 
 
@@ -145,8 +145,8 @@ class FST:
         input_word : iterable of any
             The word to translate
         max_length : int, optional
-            The maximum size of the output word, to prevent infinite generation\
-            due to epsilon transitions
+            The maximum size of the output word, to prevent infinite \
+            generation due to epsilon transitions
 
         Returns
         ----------
@@ -163,16 +163,16 @@ class FST:
                 yield generated
             # We try to read an input
             if len(remaining) != 0:
-                for next_state, output_string in self._delta.get((current_state,
-                                                                  remaining[0]),
-                                                                 []):
-                    to_process.append((remaining[1:], generated + output_string,
-                                       next_state))
+                for next_state, output_string in self._delta.get(
+                        (current_state, remaining[0]), []):
+                    to_process.append(
+                        (remaining[1:],
+                         generated + output_string,
+                         next_state))
             # We try to read an epsilon transition
             if max_length == -1 or len(generated) < max_length:
-                for next_state, output_string in self._delta.get((current_state,
-                                                                  "epsilon"),
-                                                                 []):
+                for next_state, output_string in self._delta.get(
+                        (current_state, "epsilon"), []):
                     to_process.append((remaining,
                                        generated + output_string,
                                        next_state))

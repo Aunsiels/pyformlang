@@ -31,7 +31,8 @@ class FiniteAutomaton:
         Takes as arguments a state and an input symbol and returns a state.
     _start_state : set of :class:`~pyformlang.finite_automaton.State`, optional
         A start state, element of states
-    _final_states : set of :class:`~pyformlang.finite_automaton.State`, optional
+    _final_states : set of :class:`~pyformlang.finite_automaton.State`, \
+     optional
         A set of final or accepting states. It is a subset of states.
     """
 
@@ -265,8 +266,8 @@ class FiniteAutomaton:
     def to_fst(self) -> "FST":
         """ Turns the finite automaton into a finite state transducer
 
-        The transducers accepts only the words in the language of the automaton\
-            and output the input word
+        The transducers accepts only the words in the language of the \
+        automaton and output the input word
 
         Returns
         ----------
@@ -344,8 +345,8 @@ class FiniteAutomaton:
     def from_networkx(cls, graph):
         """
         Import a networkx graph into an finite state automaton. \
-        The imported graph requires to have the good format, i.e. to come from \
-        the function to_networkx
+        The imported graph requires to have the good format, i.e. to come \
+        from the function to_networkx
 
         Parameters
         ----------
@@ -427,10 +428,10 @@ class FiniteAutomaton:
 
     def to_dict(self):
         """
-        Get the dictionary representation of the transition function. The keys \
-        of the dictionary are the source nodes. The items are dictionaries \
-        where the keys are the symbols of the transitions and the items are \
-        the set of target nodes.
+        Get the dictionary representation of the transition function. The \
+        keys of the dictionary are the source nodes. The items are \
+        dictionaries where the keys are the symbols of the transitions and \
+        the items are the set of target nodes.
 
         Returns
         -------

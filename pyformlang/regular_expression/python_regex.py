@@ -50,17 +50,17 @@ class PythonRegex(regex.Regex):
 
         Parameters
         ----------
-        regex : str
+        python_regex : str
             The regex represented as a string or a compiled regex (
             re.compile(...))
     """
 
-    def __init__(self, regex):
-        if not isinstance(regex, str):
-            regex = regex.pattern
+    def __init__(self, python_regex):
+        if not isinstance(python_regex, str):
+            python_regex = python_regex.pattern
         else:
-            re.compile(regex)  # Check if it is valid
-        self._python_regex = regex
+            re.compile(python_regex)  # Check if it is valid
+        self._python_regex = python_regex
         self._replace_shortcuts()
         self._escape_in_brackets()
         self._preprocess_brackets()

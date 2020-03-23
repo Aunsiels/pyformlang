@@ -3,7 +3,7 @@
 from .cfg_object import CFGObject
 
 
-class Variable(CFGObject): # pylint: disable=too-few-public-methods
+class Variable(CFGObject):  # pylint: disable=too-few-public-methods
     """ An variable in a CFG
 
     Parameters

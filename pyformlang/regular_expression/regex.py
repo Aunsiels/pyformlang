@@ -120,8 +120,9 @@ class Regex(RegexReader):
         elif isinstance(self.head,
                         pyformlang.regular_expression.regex_objects.Union):
             self._process_to_enfa_union(s_from, s_to)
-        elif isinstance(self.head,
-                        pyformlang.regular_expression.regex_objects.KleeneStar):
+        elif isinstance(
+                self.head,
+                pyformlang.regular_expression.regex_objects.KleeneStar):
             self._process_to_enfa_kleene_star(s_from, s_to)
 
     def _process_to_enfa_kleene_star(self, s_from, s_to):
@@ -237,7 +238,8 @@ class Regex(RegexReader):
             The concatenation of the two regex
         """
         regex = Regex("")
-        regex.head = pyformlang.regular_expression.regex_objects.Concatenation()
+        regex.head = \
+            pyformlang.regular_expression.regex_objects.Concatenation()
         regex.sons = [self, other]
         return regex
 

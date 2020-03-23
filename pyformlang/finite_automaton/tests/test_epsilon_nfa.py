@@ -177,7 +177,8 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(enfa2.accepts([symb_a, symb_a]))
         self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b]))
         self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b, symb_b]))
-        self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b, symb_b, symb_a]))
+        self.assertTrue(enfa2.accepts([symb_a, symb_a,
+                                       symb_b, symb_b, symb_a]))
         self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b,
                                        symb_b, symb_a, symb_b]))
         self.assertFalse(enfa2.accepts([symb_b]))

@@ -3,7 +3,7 @@
 from typing import Any
 
 
-class CFGObject: # pylint: disable=too-few-public-methods
+class CFGObject:  # pylint: disable=too-few-public-methods
     """ An object in a CFG
 
     Parameters

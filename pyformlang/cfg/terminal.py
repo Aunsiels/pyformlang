@@ -3,7 +3,7 @@
 from .cfg_object import CFGObject
 
 
-class Terminal(CFGObject): # pylint: disable=too-few-public-methods
+class Terminal(CFGObject):  # pylint: disable=too-few-public-methods
     """ An terminal in a CFG
 
     Parameters

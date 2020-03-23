@@ -4,10 +4,12 @@ from typing import AbstractSet, List, Iterable, Any
 from itertools import product
 import numpy as np
 
+
 from pyformlang.pda.cfg_variable_converter import CFGVariableConverter
 from pyformlang import finite_automaton
 from pyformlang.regular_expression import Regex
 from pyformlang import cfg
+
 
 from .state import State
 from .symbol import Symbol
@@ -16,6 +18,7 @@ from .epsilon import Epsilon
 from .transition_function import TransitionFunction
 from .utils import PDAObjectCreator
 from ..finite_automaton import FiniteAutomaton
+
 
 INPUT_SYMBOL = 1
 
