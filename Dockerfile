@@ -9,7 +9,7 @@ RUN apt-get update -yqq && \
     python3-dev \
     build-essential \
     python3-pip \
-    pylint \
+    pylint3 \
 && rm -rf /var/lib/apt/lists/*  
 
 RUN pip3 install --upgrade pip
