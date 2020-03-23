@@ -10,7 +10,9 @@ import numpy as np
 from .state import State
 from .symbol import Symbol
 from .transition_function import TransitionFunction
+# pylint: disable=cyclic-import
 from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
+# pylint: disable=cyclic-import
 from .epsilon_nfa import to_single_state
 from .finite_automaton import to_state, to_symbol
 from .distinguishable_states import DistinguishableStates
@@ -18,7 +20,8 @@ from .partition import Partition
 from .hopcroft_processing_list import HopcroftProcessingList
 
 
-class PreviousTransitions(object):
+class PreviousTransitions:
+    """For internal usage"""
 
     def __init__(self, states, symbols):
         self._to_index_state = dict()
@@ -28,9 +31,11 @@ class PreviousTransitions(object):
         self._to_index_symbol = dict()
         for i, symbol in enumerate(symbols):
             self._to_index_symbol[symbol] = i
-        self._conversion = np.empty((len(states) + 1, len(symbols)), dtype=object)
+        self._conversion = np.empty((len(states) + 1, len(symbols)),
+                                    dtype=object)
 
     def add(self, next0, symbol, state):
+        """ Internal """
         i_next0 = self._to_index_state[next0]
         i_symbol = self._to_index_symbol[symbol]
         if self._conversion[i_next0, i_symbol] is None:
@@ -39,6 +44,7 @@ class PreviousTransitions(object):
             self._conversion[i_next0, i_symbol].append(state)
 
     def get(self, next0, symbol):
+        """ Internal """
         i_next0 = self._to_index_state[next0]
         i_symbol = self._to_index_symbol[symbol]
         return self._conversion[i_next0, i_symbol] or []
@@ -53,9 +59,11 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
     ----------
     states : set of :class:`~pyformlang.finite_automaton.State`, optional
         A finite set of states
-    input_symbols : set of :class:`~pyformlang.finite_automaton.Symbol`, optional
+    input_symbols : set of :class:`~pyformlang.finite_automaton.Symbol`,  \
+    optional
         A finite set of input symbols
-    transition_function : :class:`~pyformlang.finite_automaton.TransitionFunction`, optional
+    transition_function : \
+    :class:`~pyformlang.finite_automaton.TransitionFunction`, optional
         Takes as arguments a state and an input symbol and returns a state.
     start_state : :class:`~pyformlang.finite_automaton.State`, optional
         A start state, element of states
@@ -160,7 +168,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         Returns
         ----------
-        dfa : :class:`~pyformlang.deterministic_finite_automaton.DeterministicFiniteAutomaton`
+        dfa :  :class:`~pyformlang.deterministic_finite_automaton\
+        .DeterministicFiniteAutomaton`
             A dfa equivalent to the current nfa
         """
         return self
@@ -170,7 +179,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         Returns
         ----------
-        enfa : :class:`~pyformlang.finite_automaton.DeterministicFiniteAutomaton`
+        enfa :  :class:`~pyformlang.finite_automaton\
+        .DeterministicFiniteAutomaton`
             A copy of the current DFA
         """
         dfa = DeterministicFiniteAutomaton()
@@ -230,7 +240,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         return to_process
 
     def _get_previous_transitions(self):
-        previous_transitions = PreviousTransitions(self._states, self._input_symbols)
+        previous_transitions = PreviousTransitions(self._states,
+                                                   self._input_symbols)
         for state in self._states:
             for symbol in self._input_symbols:
                 next0 = self._transition_function(state, symbol)
@@ -265,7 +276,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         Returns
         ----------
-        dfa : :class:`~pyformlang.deterministic_finite_automaton.DeterministicFiniteAutomaton`
+        dfa :  :class:`~pyformlang.deterministic_finite_automaton\
+        .DeterministicFiniteAutomaton`
             The minimal DFA
         """
         if not self._start_state or not self._final_states:
@@ -316,7 +328,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         partition.add_class(finals)
         partition.add_class(non_finals)
         # + 1 for trash node
-        processing_list = HopcroftProcessingList(len(self._states) + 1, self._input_symbols)
+        processing_list = HopcroftProcessingList(len(self._states) + 1,
+                                                 self._input_symbols)
         to_add = 0 # 0 is the index of finals, 1 of non_finals
         if len(non_finals) < len(finals):
             to_add = 1
@@ -326,13 +339,15 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             current_class, current_symbol = processing_list.pop()
             inverse = []
             for element in partition.part[current_class]:
-                inverse += previous_transitions.get(element.value, current_symbol)
+                inverse += previous_transitions.get(element.value,
+                                                    current_symbol)
             for valid_set in partition.get_valid_sets(inverse):
                 new_class = partition.split(valid_set, inverse)
                 for symbol in self._input_symbols:
                     if processing_list.contains(valid_set, symbol):
                         processing_list.insert(new_class, symbol)
-                    elif len(partition.part[valid_set]) < len(partition.part[valid_set]):
+                    elif (len(partition.part[valid_set]) <
+                          len(partition.part[valid_set])):
                         processing_list.insert(valid_set, symbol)
                     else:
                         processing_list.insert(new_class, symbol)
@@ -343,7 +358,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         Parameters
         ----------
-        other : :class:`~pyformlang.deterministic_finite_automaton.FiniteAutomaton`
+        other :  :class:`~pyformlang.deterministic_finite_automaton\
+        .FiniteAutomaton`
             A sequence of input symbols
 
         Returns
@@ -360,6 +376,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
     @property
     def start_state(self) -> State:
+        """ The start state """
         return list(self._start_state)[0]
 
     @staticmethod
@@ -369,8 +386,10 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         matches = {self_minimal.start_state: other_minimal.start_state}
         while to_process:
             current_self, current_other = to_process.pop()
-            if (self_minimal.is_final_state(current_self) and not other_minimal.is_final_state(current_other)) or\
-                    (not self_minimal.is_final_state(current_self) and other_minimal.is_final_state(current_other)):
+            if (self_minimal.is_final_state(current_self)
+                    and not other_minimal.is_final_state(current_other)) or\
+                    (not self_minimal.is_final_state(current_self)
+                     and other_minimal.is_final_state(current_other)):
                 return False
             next_self = self_minimal(current_self)
             next_other = other_minimal(current_other)

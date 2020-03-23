@@ -1,16 +1,20 @@
 """ A general finite automaton representation """
 
-from typing import Set, List, Any
+from typing import List, Any
 
 import networkx as nx
 from networkx.drawing.nx_pydot import write_dot
+
+from pyformlang.fst import FST
+# pylint: disable=cyclic-import
+from pyformlang import finite_automaton
 
 from .epsilon import Epsilon
 from .state import State
 from .symbol import Symbol
 
 
-class FiniteAutomaton(object):
+class FiniteAutomaton:
     """ Represents a general finite automaton
 
 
@@ -18,10 +22,12 @@ class FiniteAutomaton(object):
     ----------
     _states : set of :class:`~pyformlang.finite_automaton.State`, optional
         A finite set of states
-    _input_symbols : set of :class:`~pyformlang.finite_automaton.Symbol`, optional
+    _input_symbols : set of :class:`~pyformlang.finite_automaton.Symbol`, \
+     optional
         A finite set of input symbols
-    _transition_function : :class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`\
-, optional
+    _transition_function :  \
+    :class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`\
+    , optional
         Takes as arguments a state and an input symbol and returns a state.
     _start_state : set of :class:`~pyformlang.finite_automaton.State`, optional
         A start state, element of states
@@ -36,7 +42,8 @@ class FiniteAutomaton(object):
         self._start_state = set()
         self._final_states = set()
 
-    def add_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
+    def add_transition(self, s_from: State, symb_by: Symbol,
+                       s_to: State) -> int:
         """ Adds a transition to the nfa
 
         Parameters
@@ -69,7 +76,8 @@ class FiniteAutomaton(object):
             self._input_symbols.add(symb_by)
         return temp
 
-    def remove_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
+    def remove_transition(self, s_from: State, symb_by: Symbol,
+                          s_to: State) -> int:
         """ Remove a transition of the nfa
 
         Parameters
@@ -118,10 +126,12 @@ class FiniteAutomaton(object):
 
     @property
     def symbols(self):
+        """The symbols"""
         return self._input_symbols
 
     @property
     def final_states(self):
+        """The final states"""
         return self._final_states
 
     def add_start_state(self, state: State) -> int:
@@ -198,7 +208,7 @@ class FiniteAutomaton(object):
             return 1
         return 0
 
-    def __call__(self, state: State, symbol: Symbol=None) -> List[State]:
+    def __call__(self, state: State, symbol: Symbol = None) -> List[State]:
         """ Gives the states obtained after calling a symbol on a state
         Calls the transition function
 
@@ -238,6 +248,7 @@ class FiniteAutomaton(object):
 
     @property
     def start_states(self):
+        """The start states"""
         return self._start_state
 
     def add_symbol(self, symbol: Symbol):
@@ -262,7 +273,6 @@ class FiniteAutomaton(object):
         fst : :class:`~pyformlang.fst.FST`
             The equivalent FST
         """
-        from pyformlang.fst import FST
         fst = FST()
         for start_state in self._start_state:
             fst.add_start_state(start_state.value)
@@ -276,6 +286,15 @@ class FiniteAutomaton(object):
         return fst
 
     def is_acyclic(self) -> bool:
+        """
+        Checks if the automaton is acyclic
+
+        Returns
+        -------
+        is_acyclic : bool
+            Whether the automaton is acyclic or not
+
+        """
         to_process = []
         for state in self._start_state:
             to_process.append((state, set()))
@@ -293,6 +312,15 @@ class FiniteAutomaton(object):
         return True
 
     def to_networkx(self) -> nx.MultiDiGraph:
+        """
+        Transform the current automaton into a networkx graph
+
+        Returns
+        -------
+        graph :  networkx.MultiDiGraph
+            A networkx MultiDiGraph representing the automaton
+
+        """
         graph = nx.MultiDiGraph()
         for state in self._states:
             graph.add_node(state.value,
@@ -314,9 +342,27 @@ class FiniteAutomaton(object):
 
     @classmethod
     def from_networkx(cls, graph):
-        # TODO We lose the type of the node value if going through a dot file
-        from pyformlang.finite_automaton import EpsilonNFA
-        enfa = EpsilonNFA()
+        """
+        Import a networkx graph into an finite state automaton. \
+        The imported graph requires to have the good format, i.e. to come from \
+        the function to_networkx
+
+        Parameters
+        ----------
+        graph :
+            The graph representation of the automaton
+
+        Returns
+        -------
+        enfa :
+            A epsilon nondeterministic finite automaton read from the graph
+
+        TODO
+        -------
+        * We lose the type of the node value if going through a dot file
+        * Explain the format
+        """
+        enfa = finite_automaton.EpsilonNFA()
         for s_from in graph:
             for s_to in graph[s_from]:
                 for transition in graph[s_from][s_to].values():
@@ -332,16 +378,41 @@ class FiniteAutomaton(object):
         return enfa
 
     def write_as_dot(self, filename):
+        """
+        Write the automaton in dot format into a file
+
+        Parameters
+        ----------
+        filename : str
+            The filename where to write the dot file
+
+        """
         write_dot(self.to_networkx(), filename)
 
     def is_equivalent_to(self, other):
+        """
+        Checks if the current automaton is equivalent to a given one.
+
+        Parameters
+        ----------
+        other :
+            An other finite state automaton
+
+        Returns
+        -------
+        is_equivalent : bool
+            Whether the two automata are equivalent or not
+
+        """
         self_dfa = self.to_deterministic()
         return self_dfa.is_equivalent_to(other)
 
     def to_deterministic(self):
+        """ Turns the automaton into a deterministic one"""
         raise NotImplementedError
 
     def is_deterministic(self):
+        """ Checks if the automaton is deterministic """
         raise NotImplementedError
 
     def __eq__(self, other):
@@ -355,6 +426,17 @@ class FiniteAutomaton(object):
         yield from self._transition_function.get_edges()
 
     def to_dict(self):
+        """
+        Get the dictionary representation of the transition function. The keys \
+        of the dictionary are the source nodes. The items are dictionaries \
+        where the keys are the symbols of the transitions and the items are \
+        the set of target nodes.
+
+        Returns
+        -------
+        transition_dict : dict
+            The transitions as a dictionary.
+        """
         return self._transition_function.to_dict()
 
 

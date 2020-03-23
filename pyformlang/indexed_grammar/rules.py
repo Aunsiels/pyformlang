@@ -79,7 +79,8 @@ class Rules:
 
         Returns
         ----------
-        non_consumption_rules :  iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
+        non_consumption_rules :  iterable of \
+        :class:`~pyformlang.indexed_grammar.ReducedRule`
             The non consumption rules
         """
         return self._rules
@@ -104,7 +105,8 @@ class Rules:
         ----------
         consumption_rules : dict of any to iterable of \
             :class:`~pyformlang.indexed_grammar.ConsumptionRule`
-            A dictionary contains the consumption rules gathered by consumed symbols
+            A dictionary contains the consumption rules gathered by consumed \
+            symbols
         """
         return self._consumption_rules
 

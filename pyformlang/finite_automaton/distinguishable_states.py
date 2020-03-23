@@ -1,7 +1,13 @@
+""" Represents distinguishable states, for internal usage"""
+
 import array
 
 
-class DistinguishableStates(object):
+class DistinguishableStates:
+    """
+    A class to represent distinguishable states.
+    For internal usage.
+    """
 
     def __init__(self, number_states):
         self.number_states = number_states + 1
@@ -13,6 +19,7 @@ class DistinguishableStates(object):
         self.uniqueness_counter = 1
 
     def add(self, element):
+        """ Add an element """
         index = self._get_index(element)
         self.distinguishable[index] = True
 
@@ -43,6 +50,7 @@ class DistinguishableStates(object):
         return self.distinguishable[index]
 
     def not_contains_and_add(self, element):
+        """Check if does not contain element and adds it if it is the case """
         index = self._get_index(element)
         contained = self.distinguishable[index]
         if not contained:
@@ -50,6 +58,7 @@ class DistinguishableStates(object):
         return not contained
 
     def get_non_distinguishable(self):
+        """ Get non distinguishable states """
         for i in range(1, self.number_states + 1):
             for j in range(i + 1, self.number_states + 1):
                 index = i + self.number_states * j
@@ -57,4 +66,4 @@ class DistinguishableStates(object):
                     state0 = self.inverse_conversion[i]
                     state1 = self.inverse_conversion[j]
                     if state0 is not None and state1 is not None:
-                        yield (state0, state1)
+                        yield state0, state1

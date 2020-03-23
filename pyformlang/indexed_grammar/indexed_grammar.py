@@ -155,7 +155,7 @@ class IndexedGrammar:
             was_modified = False
             for rule in self.rules.rules:
                 # If we have a duplication rule, we mark all combinations of
-                # the sets marked on the right side for the symbole on the left
+                # the sets marked on the right side for the symbol on the left
                 # side
                 if rule.is_duplication():
                     dup_res = self._duplication_processing(rule)
@@ -291,8 +291,8 @@ class IndexedGrammar:
     def remove_useless_rules(self) -> "IndexedGrammar":
         """ Remove useless rules in the grammar
 
-        More precisely, we remove rules which do not contain only generating or reachable \
-            non terminals.
+        More precisely, we remove rules which do not contain only generating \
+        or  reachable non terminals.
 
         Returns
         ----------

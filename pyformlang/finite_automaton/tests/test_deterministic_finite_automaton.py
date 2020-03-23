@@ -8,12 +8,15 @@ from pyformlang.finite_automaton import DeterministicFiniteAutomaton, Epsilon
 from pyformlang.finite_automaton import State
 from pyformlang.finite_automaton import Symbol
 from pyformlang.finite_automaton import TransitionFunction
-from pyformlang.finite_automaton.transition_function import InvalidEpsilonTransition
+from pyformlang.finite_automaton.transition_function import \
+    InvalidEpsilonTransition
 
 
 class TestDeterministicFiniteAutomaton(unittest.TestCase):
     """ Tests for deterministic finite automata
     """
+
+    # pylint: disable=missing-function-docstring, protected-access
 
     def test_can_create(self):
         """ Test the creation of dfa
@@ -157,7 +160,6 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa = DeterministicFiniteAutomaton()
         symb_0 = Symbol("0")
         symb_0_minus = Symbol("0-")
-        symb_1 = Symbol("1")
         symb_1_minus = Symbol("1-")
         symb_star = Symbol("STAR")
         start = State("start")
@@ -185,9 +187,13 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa.add_transition(states[1], symb_0_minus, states[5])
         dfa.add_transition(states[6], symb_0_minus, states[7])
         dfa.add_transition(states[3], symb_1_minus, states[4])
-        self.assertFalse(dfa.accepts(["0", "STAR", "0-", "STAR", "0-", "0", "STAR", "0", "0", "STAR", "0-", "STAR", "0-", "1-"]))
+        self.assertFalse(dfa.accepts(["0", "STAR", "0-", "STAR", "0-", "0",
+                                      "STAR", "0", "0", "STAR", "0-", "STAR",
+                                      "0-", "1-"]))
         dfa = dfa.minimize()
-        self.assertFalse(dfa.accepts(["0", "STAR", "0-", "STAR", "0-", "0", "STAR", "0", "0", "STAR", "0-", "STAR", "0-", "1-"]))
+        self.assertFalse(dfa.accepts(["0", "STAR", "0-", "STAR", "0-", "0",
+                                      "STAR", "0", "0", "STAR", "0-", "STAR",
+                                      "0-", "1-"]))
 
     def test_minimize_repetition(self):
         dfa = DeterministicFiniteAutomaton()

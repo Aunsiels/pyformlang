@@ -1,14 +1,19 @@
+"""A doubly linked list"""
+
 from .doubly_linked_node import DoublyLinkedNode
 
 
-class DoublyLinkedList(object):
+class DoublyLinkedList:
+    """  A doubly linked list """
 
     def __init__(self):
         self.first = None
         self.last = None
         self.size = 0
+        self._current_node = None
 
     def append(self, value):
+        """ Appends an element """
         if self.last is not None:
             self.last = self.last.append(value)
         else:
@@ -19,6 +24,7 @@ class DoublyLinkedList(object):
         return self.last
 
     def delete(self, node):
+        """ Delete an element """
         if node.next_node is not None:
             node.next_node.previous_node = node.previous_node
         else:
@@ -42,4 +48,3 @@ class DoublyLinkedList(object):
         res = self._current_node
         self._current_node = res.next_node
         return res
-

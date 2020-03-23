@@ -13,6 +13,9 @@ from ..regexable import Regexable
 class TestEpsilonNFA(unittest.TestCase):
     """ Tests epsilon NFA """
 
+    # pylint: disable=missing-function-docstring, protected-access
+    # pylint: disable=too-many-statements, too-many-public-methods
+
     def test_eclose(self):
         """ Test of the epsilon closure """
         states = [State(x) for x in range(8)]
@@ -175,7 +178,8 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b]))
         self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b, symb_b]))
         self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b, symb_b, symb_a]))
-        self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b, symb_b, symb_a, symb_b]))
+        self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b,
+                                       symb_b, symb_a, symb_b]))
         self.assertFalse(enfa2.accepts([symb_b]))
 
     def test_to_regex3(self):
@@ -195,8 +199,10 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(enfa2.accepts([symb_a]))
         self.assertFalse(enfa2.accepts([symb_a, symb_a]))
         self.assertFalse(enfa2.accepts([symb_a, symb_a, symb_b]))
-        self.assertFalse(enfa2.accepts([symb_a, symb_a, symb_b, symb_b, symb_a]))
-        self.assertFalse(enfa2.accepts([symb_a, symb_a, symb_b, symb_b, symb_a, symb_b]))
+        self.assertFalse(enfa2.accepts([symb_a, symb_a,
+                                        symb_b, symb_b, symb_a]))
+        self.assertFalse(enfa2.accepts([symb_a, symb_a, symb_b,
+                                        symb_b, symb_a, symb_b]))
         self.assertFalse(enfa2.accepts([symb_b]))
         epsilon = Epsilon()
         enfa.add_transition(state0, epsilon, state1)
@@ -207,7 +213,8 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertTrue(enfa2.accepts([symb_a]))
         self.assertTrue(enfa2.accepts([symb_a, symb_a]))
         self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b, symb_b]))
-        self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b, symb_b, symb_a, symb_b]))
+        self.assertTrue(enfa2.accepts([symb_a, symb_a, symb_b, symb_b,
+                                       symb_a, symb_b]))
         self.assertTrue(enfa2.accepts([symb_b]))
         self.assertTrue(enfa2.accepts([]))
         enfa.remove_transition(state0, symb_a, state0)
@@ -216,8 +223,10 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(enfa2.accepts([symb_a]))
         self.assertFalse(enfa2.accepts([symb_a, symb_a]))
         self.assertFalse(enfa2.accepts([symb_a, symb_a, symb_b]))
-        self.assertFalse(enfa2.accepts([symb_a, symb_a, symb_b, symb_b, symb_a]))
-        self.assertFalse(enfa2.accepts([symb_a, symb_a, symb_b, symb_b, symb_a, symb_b]))
+        self.assertFalse(enfa2.accepts([symb_a, symb_a, symb_b,
+                                        symb_b, symb_a]))
+        self.assertFalse(enfa2.accepts([symb_a, symb_a, symb_b, symb_b,
+                                        symb_a, symb_b]))
         self.assertTrue(enfa2.accepts([symb_b]))
         self.assertTrue(enfa2.accepts([]))
         enfa.remove_transition(state1, symb_b, state1)
@@ -404,9 +413,9 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertEqual(len(fst.output_symbols), 0)
         self.assertEqual(fst.get_number_transitions(), 0)
 
-        s0 = State("q0")
+        state0 = State("q0")
         s0bis = State("q0bis")
-        enfa.add_start_state(s0)
+        enfa.add_start_state(state0)
         enfa.add_start_state(s0bis)
         fst = enfa.to_fst()
         self.assertEqual(len(fst.states), 2)
@@ -428,9 +437,9 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertEqual(len(fst.output_symbols), 0)
         self.assertEqual(fst.get_number_transitions(), 0)
 
-        enfa.add_transition(s0, Symbol("a"), sfinal)
+        enfa.add_transition(state0, Symbol("a"), sfinal)
         enfa.add_transition(sfinal, Symbol("b"), sfinal)
-        enfa.add_transition(s0, Symbol("c"), sfinalbis)
+        enfa.add_transition(state0, Symbol("c"), sfinalbis)
         fst = enfa.to_fst()
         self.assertEqual(len(fst.states), 4)
         self.assertEqual(len(fst.final_states), 2)
@@ -439,7 +448,7 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertEqual(len(fst.output_symbols), 3)
         self.assertEqual(fst.get_number_transitions(), 3)
 
-        enfa.add_transition(s0, Epsilon(), sfinalbis)
+        enfa.add_transition(state0, Epsilon(), sfinalbis)
         fst = enfa.to_fst()
         self.assertEqual(len(fst.states), 4)
         self.assertEqual(len(fst.final_states), 2)

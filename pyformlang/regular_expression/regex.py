@@ -4,8 +4,10 @@ Representation of a regular expression
 from typing import Iterable
 
 from pyformlang import finite_automaton
+# pylint: disable=cyclic-import
 import pyformlang.regular_expression.regex_objects
 from pyformlang.finite_automaton import State
+# pylint: disable=cyclic-import
 from pyformlang.regular_expression.regex_reader import RegexReader
 from pyformlang import regular_expression
 
@@ -111,8 +113,9 @@ class Regex(RegexReader):
             self._enfa.add_transition(s_from, symbol, s_to)
 
     def _process_to_enfa_when_sons(self, s_from, s_to):
-        if isinstance(self.head,
-                      pyformlang.regular_expression.regex_objects.Concatenation):
+        if isinstance(
+                self.head,
+                pyformlang.regular_expression.regex_objects.Concatenation):
             self._process_to_enfa_concatenation(s_from, s_to)
         elif isinstance(self.head,
                         pyformlang.regular_expression.regex_objects.Union):

@@ -62,14 +62,20 @@ class TestNondeterministicTransitionFunction(unittest.TestCase):
         s_to = State(1)
         symb_by = Symbol("a")
         transition_function.add_transition(s_from, symb_by, s_to)
-        self.assertEqual(transition_function.remove_transition(s_from, symb_by, s_to), 1)
+        self.assertEqual(transition_function.remove_transition(s_from,
+                                                               symb_by,
+                                                               s_to), 1)
         self.assertEqual(transition_function.get_number_transitions(), 0)
         self.assertEqual(len(transition_function(s_to, symb_by)), 0)
         self.assertEqual(len(transition_function(s_from, symb_by)), 0)
-        self.assertEqual(transition_function.remove_transition(s_from, symb_by, s_to), 0)
+        self.assertEqual(transition_function.remove_transition(s_from,
+                                                               symb_by,
+                                                               s_to), 0)
         transition_function.add_transition(s_from, symb_by, s_to)
         transition_function.add_transition(s_from, symb_by, s_from)
-        self.assertEqual(transition_function.remove_transition(s_from, symb_by, s_to), 1)
+        self.assertEqual(transition_function.remove_transition(s_from,
+                                                               symb_by,
+                                                               s_to), 1)
         self.assertEqual(transition_function.get_number_transitions(), 1)
         self.assertEqual(len(transition_function(s_from, symb_by)), 1)
 

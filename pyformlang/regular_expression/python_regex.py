@@ -5,7 +5,8 @@ A class to read Python format regex
 import re
 import string
 
-from pyformlang.regular_expression import Regex
+# pylint: disable=cyclic-import
+from pyformlang.regular_expression import regex
 
 PRINTABLES = list(string.printable)
 
@@ -37,7 +38,7 @@ SHORTCUTS = {
 }
 
 
-class PythonRegex(Regex):
+class PythonRegex(regex.Regex):
     """ Represents a regular expression as used in Python. It adds the
     following features to the basic regex:
 

@@ -5,10 +5,14 @@ from typing import AbstractSet, List, Iterable, Tuple, Dict, Any
 import networkx as nx
 
 from pyformlang.finite_automaton import FiniteAutomaton
-from pyformlang.pda.cfg_variable_converter import CFGVariableConverter
+
+# pylint: disable=cyclic-import
+from pyformlang.pda import cfg_variable_converter as cvc
 from pyformlang.regular_expression import Regex
+# pylint: disable=cyclic-import
 from pyformlang import pda
 
+# pylint: disable=cyclic-import
 from .pda_object_creator import PDAObjectCreator
 from .variable import Variable
 from .terminal import Terminal
@@ -792,7 +796,8 @@ class CFG:
         generate_empty = self.contains([]) and other.accepts([])
         cfg = self.to_normal_form()
         states = list(other.states)
-        cfg_variable_converter = CFGVariableConverter(states, cfg.variables)
+        cfg_variable_converter = \
+            cvc.CFGVariableConverter(states, cfg.variables)
         new_productions = []
         for production in cfg.productions:
             head = production.head

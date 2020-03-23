@@ -1,5 +1,5 @@
 """
-Repretation of a transition function
+Representation of a transition function
 """
 import copy
 from typing import List
@@ -11,10 +11,11 @@ from .symbol import Symbol
 
 
 class InvalidEpsilonTransition(Exception):
-    pass
+    """Exception raised when an epsilon transition is created in
+    deterministic automaton"""
 
 
-class TransitionFunction(object):
+class TransitionFunction:
     """ A transition function in a finite automaton.
 
     This is a deterministic transition function.
@@ -33,7 +34,8 @@ class TransitionFunction(object):
     def __init__(self):
         self._transitions = dict()
 
-    def add_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
+    def add_transition(self, s_from: State, symb_by: Symbol,
+                       s_to: State) -> int:
         """ Adds a new transition to the function
 
         Parameters
@@ -64,7 +66,8 @@ class TransitionFunction(object):
                     raise DuplicateTransitionError(s_from,
                                                    symb_by,
                                                    s_to,
-                                                   self._transitions[s_from][symb_by])
+                                                   self._transitions[s_from][
+                                                       symb_by])
             else:
                 self._transitions[s_from][symb_by] = s_to
         else:
@@ -72,7 +75,8 @@ class TransitionFunction(object):
             self._transitions[s_from][symb_by] = s_to
         return 1
 
-    def remove_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
+    def remove_transition(self, s_from: State, symb_by: Symbol,
+                          s_to: State) -> int:
         """ Removes a transition to the function
 
         Parameters
@@ -98,7 +102,7 @@ class TransitionFunction(object):
             return 1
         return 0
 
-    def __call__(self, s_from: State, symb_by: Symbol=None) -> List[State]:
+    def __call__(self, s_from: State, symb_by: Symbol = None) -> List[State]:
         """ Calls the transition function as a real function
 
         Parameters
@@ -123,7 +127,8 @@ class TransitionFunction(object):
         return []
 
     def get_number_transitions(self) -> int:
-        """ Gives the number of transitions describe by the deterministic function
+        """ Gives the number of transitions describe by the deterministic \
+        function
 
         Returns
         ----------
@@ -154,6 +159,17 @@ class TransitionFunction(object):
         yield from self.get_edges()
 
     def to_dict(self):
+        """
+        Get the dictionary representation of the transition function. The keys \
+        of the dictionary are the source nodes. The items are dictionaries \
+        where the keys are the symbols of the transitions and the items are \
+        the set of target nodes.
+
+        Returns
+        -------
+        transition_dict : dict
+            The transitions as a dictionary.
+        """
         return copy.deepcopy(self._transitions)
 
 
@@ -183,9 +199,9 @@ class DuplicateTransitionError(Exception):
                  symb_by: Symbol,
                  s_to: State,
                  s_to_old: State):
-        super().__init__("Transition from " + str(s_from) + \
-            " by " + str(symb_by) +\
-            " goes to " + str(s_to_old) + " not " + str(s_to))
+        super().__init__("Transition from " + str(s_from) +
+                         " by " + str(symb_by) +
+                         " goes to " + str(s_to_old) + " not " + str(s_to))
         self.s_from = s_from
         self.symb_by = symb_by
         self.s_to = s_to

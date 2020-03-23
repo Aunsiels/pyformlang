@@ -9,7 +9,8 @@ from .reduced_rule import ReducedRule
 
 
 class ConsumptionRule(ReducedRule):
-    """ Contains a representation of a consumption rule, i.e. a rule of the form:
+    """ Contains a representation of a consumption rule, i.e. a rule of the \
+    form:
             C[ r sigma] -> B[sigma]
 
     Parameters

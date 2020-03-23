@@ -2,8 +2,8 @@
 
 from typing import Any, Iterable
 
-from pyformlang.indexed_grammar import DuplicationRule, ProductionRule, EndRule,\
-    ConsumptionRule, IndexedGrammar, Rules
+from pyformlang.indexed_grammar import DuplicationRule, ProductionRule,\
+    EndRule, ConsumptionRule, IndexedGrammar, Rules
 
 
 class FST:
@@ -12,11 +12,12 @@ class FST:
     def __init__(self):
         self._states = set()  # Set of states
         self._input_symbols = set()  # Set of input symbols
-        self._output_symbols = set()  # Set of output symnols
-        # Dict from _states x _input_symbols U {epsilon} into a subset of _states X _output_symbols*
+        self._output_symbols = set()  # Set of output symbols
+        # Dict from _states x _input_symbols U {epsilon} into a subset of
+        # _states X _output_symbols*
         self._delta = dict()
         self._start_states = set()
-        self._final_states = set()  # _final_statesinal states
+        self._final_states = set()  # _final_states is final states
 
     @property
     def states(self):
@@ -144,8 +145,8 @@ class FST:
         input_word : iterable of any
             The word to translate
         max_length : int, optional
-            The maximum size of the output word, to prevent infinite generation due to\
-                epsilon transitions
+            The maximum size of the output word, to prevent infinite generation\
+            due to epsilon transitions
 
         Returns
         ----------
@@ -162,14 +163,19 @@ class FST:
                 yield generated
             # We try to read an input
             if len(remaining) != 0:
-                for next_state, output_string in self._delta.get((current_state, remaining[0]),
+                for next_state, output_string in self._delta.get((current_state,
+                                                                  remaining[0]),
                                                                  []):
-                    to_process.append((remaining[1:], generated + output_string, next_state))
+                    to_process.append((remaining[1:], generated + output_string,
+                                       next_state))
             # We try to read an epsilon transition
             if max_length == -1 or len(generated) < max_length:
-                for next_state, output_string in self._delta.get((current_state, "epsilon"),
+                for next_state, output_string in self._delta.get((current_state,
+                                                                  "epsilon"),
                                                                  []):
-                    to_process.append((remaining, generated + output_string, next_state))
+                    to_process.append((remaining,
+                                       generated + output_string,
+                                       next_state))
 
     def intersection(self, indexed_grammar):
         """ Compute the intersection with an other object
@@ -178,8 +184,7 @@ class FST:
           >> fst and indexed_grammar
         """
         rules = indexed_grammar.rules
-        new_rules = []
-        new_rules.append(EndRule("T", "epsilon"))
+        new_rules = [EndRule("T", "epsilon")]
         self._extract_consumption_rules_intersection(rules, new_rules)
         self._extract_indexed_grammar_rules_intersection(rules, new_rules)
         self._extract_terminals_intersection(rules, new_rules)

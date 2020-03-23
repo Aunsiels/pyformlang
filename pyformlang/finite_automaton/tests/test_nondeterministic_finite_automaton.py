@@ -7,13 +7,16 @@ import unittest
 from pyformlang.finite_automaton import NondeterministicFiniteAutomaton, Epsilon
 from pyformlang.finite_automaton import State
 from pyformlang.finite_automaton import Symbol
-from pyformlang.finite_automaton.transition_function import InvalidEpsilonTransition
+from pyformlang.finite_automaton.transition_function import \
+    InvalidEpsilonTransition
 
 
 class TestNondeterministicFiniteAutomaton(unittest.TestCase):
     """
     Tests for nondeterministic finite automata
     """
+
+    # pylint: disable=missing-function-docstring, protected-access
 
     def test_creation(self):
         """ Test the creation of nfa

@@ -8,7 +8,7 @@ from .state import State
 from .symbol import Symbol
 
 
-class NondeterministicTransitionFunction(object):
+class NondeterministicTransitionFunction:
     """ A nondeterministic transition function in a finite automaton.
 
     The difference with a deterministic transition is that the return value is
@@ -18,7 +18,8 @@ class NondeterministicTransitionFunction(object):
     def __init__(self):
         self._transitions = dict()
 
-    def add_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
+    def add_transition(self, s_from: State, symb_by: Symbol,
+                       s_to: State) -> int:
         """ Adds a new transition to the function
 
         Parameters
@@ -47,7 +48,8 @@ class NondeterministicTransitionFunction(object):
             self._transitions[s_from][symb_by] = {s_to}
         return 1
 
-    def remove_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
+    def remove_transition(self, s_from: State, symb_by: Symbol,
+                          s_to: State) -> int:
         """ Removes a transition to the function
 
         Parameters
@@ -91,7 +93,7 @@ class NondeterministicTransitionFunction(object):
     def __len__(self):
         return self.get_number_transitions()
 
-    def __call__(self, s_from: State, symb_by: Symbol=None) -> Set[State]:
+    def __call__(self, s_from: State, symb_by: Symbol = None) -> Set[State]:
         """ Calls the transition function as a real function
 
         Parameters
@@ -149,4 +151,15 @@ class NondeterministicTransitionFunction(object):
         yield from self.get_edges()
 
     def to_dict(self):
+        """
+        Get the dictionary representation of the transition function. The keys
+        of the dictionary are the source nodes. The items are dictionaries
+        where the keys are the symbols of the transitions and the items are
+        the set of target nodes.
+
+        Returns
+        -------
+        transition_dict : dict
+            The transitions as a dictionary.
+        """
         return copy.deepcopy(self._transitions)

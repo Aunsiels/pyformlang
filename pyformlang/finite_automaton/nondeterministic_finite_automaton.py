@@ -4,7 +4,8 @@ Representation of a nondeterministic finite automaton
 
 from typing import Iterable
 
-from pyformlang.finite_automaton.epsilon import Epsilon
+# pylint: disable=cyclic-import
+from pyformlang.finite_automaton import epsilon
 
 from .state import State
 from .epsilon_nfa import EpsilonNFA
@@ -22,9 +23,11 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
     ----------
     states : set of :class:`~pyformlang.finite_automaton.State`, optional
         A finite set of states
-    input_symbols : set of :class:`~pyformlang.finite_automaton.Symbol`, optional
+    input_symbols : set of :class:`~pyformlang.finite_automaton.Symbol`, \
+    optional
         A finite set of input symbols
-    transition_function : :class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`\
+    transition_function :  \
+    :class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`\
         , optional
         Takes as arguments a state and an input symbol and returns a state.
     start_state : :class:`~pyformlang.finite_automaton.State`, optional
@@ -69,12 +72,16 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
 
         Returns
         ----------
-        dfa : :class:`~pyformlang.deterministic_finite_automaton.DeterministicFiniteAutomaton`
+        dfa :  :class:`~pyformlang.deterministic_finite_automaton\
+        .DeterministicFiniteAutomaton`
             A dfa equivalent to the current nfa
         """
         return self._to_deterministic_internal(False)
 
-    def add_transition(self, s_from: State, symb_by: Symbol, s_to: State) -> int:
-        if symb_by == Epsilon():
+    def add_transition(self,
+                       s_from: State,
+                       symb_by: Symbol,
+                       s_to: State) -> int:
+        if symb_by == epsilon.Epsilon():
             raise InvalidEpsilonTransition
         return super().add_transition(s_from, symb_by, s_to)

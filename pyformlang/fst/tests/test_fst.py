@@ -3,8 +3,9 @@
 import unittest
 
 from pyformlang.fst import FST
-from pyformlang.indexed_grammar import DuplicationRule, ProductionRule, EndRule,\
-    ConsumptionRule, IndexedGrammar, Rules
+from pyformlang.indexed_grammar import (
+    DuplicationRule, ProductionRule, EndRule,
+    ConsumptionRule, IndexedGrammar, Rules)
 
 
 class TestFST(unittest.TestCase):

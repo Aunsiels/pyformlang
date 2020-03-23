@@ -20,7 +20,8 @@ class RuleOrdering:
     ----------
     rules : iterable of :class:`~pyformlang.indexed_grammar.ReducedRule`
         The non consumption rules of the indexed grammar
-    conso_rules : dict of any to :class:`~pyformlang.indexed_grammar.ConsumptionRule`
+    conso_rules : dict of any to \
+      :class:`~pyformlang.indexed_grammar.ConsumptionRule`
         The consumption rules of the indexed grammar
     """
 
@@ -123,8 +124,8 @@ class RuleOrdering:
 
     @staticmethod
     def _get_len_out(di_graph, rule):
-        """Get the number of out edges of a rule (more exactly, the non terminal at
-        its left.
+        """Get the number of out edges of a rule (more exactly, the non \
+        terminal at its left.
 
         Parameters
         ----------

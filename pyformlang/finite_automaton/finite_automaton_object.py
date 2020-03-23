@@ -4,7 +4,8 @@ Represents an object of a finite state automaton
 
 from typing import Any
 
-class FiniteAutomatonObject(object): # pylint: disable=too-few-public-methods
+
+class FiniteAutomatonObject:  # pylint: disable=too-few-public-methods
     """ Represents an object in a finite state automaton
 
     Parameters
