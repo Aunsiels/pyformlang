@@ -123,3 +123,16 @@ class TestFST(unittest.TestCase):
         self.assertEqual(translation, [["c"]])
         translation = list(fst_repeated.translate(["a", "b"]))
         self.assertEqual(translation, [])
+
+        fst_repeated = fst0 | fst1
+        self.assertEqual(len(fst0.start_states), 1)
+        self.assertEqual(len(fst1.start_states), 1)
+        self.assertEqual(len(fst_repeated.start_states), 2)
+        self.assertEqual(len(fst_repeated.final_states), 2)
+        self.assertEqual(fst_repeated.get_number_transitions(), 2)
+        translation = list(fst_repeated.translate(["a"]))
+        self.assertEqual(translation, [["b"]])
+        translation = list(fst_repeated.translate(["b"]))
+        self.assertEqual(translation, [["c"]])
+        translation = list(fst_repeated.translate(["a", "b"]))
+        self.assertEqual(translation, [])

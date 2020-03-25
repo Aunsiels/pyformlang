@@ -289,7 +289,7 @@ class FST:
 
     def union(self, other_fst):
         """
-        Makes the unions of two fst
+        Makes the union of two fst
         Parameters
         ----------
         other_fst : :class:`~pyformlang.fst.FST`
@@ -309,6 +309,22 @@ class FST:
         self._copy_into(union_fst, state_renaming, 0)
         other_fst._copy_into(union_fst, state_renaming, 1)
         return union_fst
+
+    def __or__(self, other_fst):
+        """
+        Makes the union of two fst
+        Parameters
+        ----------
+        other_fst : :class:`~pyformlang.fst.FST`
+            The other FST
+
+        Returns
+        -------
+        union_fst : :class:`~pyformlang.fst.FST`
+            A new FST which is the union of the two given FST
+
+        """
+        return self.union(other_fst)
 
     def _copy_into(self, union_fst, state_renaming, idx):
         self._add_extremity_states_to(union_fst, state_renaming, idx)
