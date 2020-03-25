@@ -150,3 +150,33 @@ class TestFST(unittest.TestCase):
         self.assertEqual(translation, [["b", "b"]])
         translation = list(fst_star.translate([]))
         self.assertEqual(translation, [[]])
+
+    def test_generate_empty_word_from_nothing(self):
+        """ Generate empty word from nothing """
+        fst = FST()
+        fst.add_start_state("q0")
+        fst.add_transition("q0", "epsilon", "q1", [])
+        fst.add_final_state("q1")
+        translation = list(fst.translate([]))
+        self.assertEqual(translation, [[]])
+
+    def test_epsilon_loop(self):
+        """ Test empty loop """
+        fst = FST()
+        fst.add_start_state("q0")
+        fst.add_transition("q0", "epsilon", "q1", [])
+        fst.add_final_state("q1")
+        fst.add_transition("q1", "epsilon", "q0", [])
+        translation = list(fst.translate([]))
+        self.assertEqual(translation, [[]])
+
+    def test_epsilon_loop2(self):
+        """ Test empty loop bis """
+        fst = FST()
+        fst.add_start_state("q0")
+        fst.add_transition("q0", "epsilon", "q1", [])
+        fst.add_transition("q1", "a", "q2", ["b"])
+        fst.add_final_state("q2")
+        fst.add_transition("q1", "epsilon", "q0", [])
+        translation = list(fst.translate(["a"]))
+        self.assertEqual(translation, [["b"]])

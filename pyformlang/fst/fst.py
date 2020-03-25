@@ -160,10 +160,14 @@ class FST:
         """
         # (remaining in the input, generated so far, current_state)
         to_process = []
+        seen_by_state = {state: [] for state in self.states}
         for start_state in self._start_states:
             to_process.append((input_word, [], start_state))
         while to_process:
             remaining, generated, current_state = to_process.pop()
+            if (remaining, generated) in seen_by_state[current_state]:
+                continue
+            seen_by_state[current_state].append((remaining, generated))
             if len(remaining) == 0 and current_state in self._final_states:
                 yield generated
             # We try to read an input
@@ -388,6 +392,14 @@ class FST:
         return state_renaming
 
     def kleene_star(self):
+        """
+        Computes the kleene star of the FST
+
+        Returns
+        -------
+        fst_star : :class:`~pyformlang.fst.FST`
+            A FST representing the kleene star of the FST
+        """
         fst_star = FST()
         state_renaming = FSTStateRemaining()
         state_renaming.add_states(self.states, 0)
