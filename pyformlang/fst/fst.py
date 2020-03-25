@@ -74,6 +74,11 @@ class FST:
         """
         return self._final_states
 
+    @property
+    def transitions(self):
+        """Gives the transitions as a dictionary"""
+        return self._delta
+
     def get_number_transitions(self) -> int:
         """ Get the number of transitions in the FST
 
@@ -281,3 +286,106 @@ class FST:
 
     def __and__(self, other):
         return self.intersection(other)
+
+    def union(self, other_fst):
+        """
+        Makes the unions of two fst
+        Parameters
+        ----------
+        other_fst : :class:`~pyformlang.fst.FST`
+            The other FST
+
+        Returns
+        -------
+        union_fst : :class:`~pyformlang.fst.FST`
+            A new FST which is the union of the two given FST
+
+        """
+        state_renaming = FSTStateRemaining()
+        state_renaming.add_states(self.states, 0)
+        state_renaming.add_states(other_fst.states, 1)
+        union_fst = FST()
+        self._copy_into(union_fst, state_renaming, 0)
+        other_fst._copy_into(union_fst, state_renaming, 1)
+        return union_fst
+
+    def _copy_into(self, union_fst, state_renaming, idx):
+        self._add_extremity_states_to(union_fst, state_renaming, idx)
+        self._add_transitions_to(union_fst, state_renaming, idx)
+
+    def _add_transitions_to(self, union_fst, state_renaming, idx):
+        for head in self.transitions:
+            s_from, input_symbol = head
+            for s_to, output_symbols in self.transitions[head]:
+                union_fst.add_transition(
+                    state_renaming.get_name(s_from, idx),
+                    input_symbol,
+                    state_renaming.get_name(s_to, idx),
+                    output_symbols)
+
+    def _add_extremity_states_to(self, union_fst, state_renaming, idx):
+        for state in self.start_states:
+            union_fst.add_start_state(state_renaming.get_name(state, idx))
+        for state in self.final_states:
+            union_fst.add_final_state(state_renaming.get_name(state, idx))
+
+
+class FSTStateRemaining:
+    """Class for remaining the states in FST"""
+
+    def __init__(self):
+        self._state_renaming = dict()
+        self._seen_states = set()
+
+    def add_state(self, state, idx):
+        """
+        Add a state
+        Parameters
+        ----------
+        state : str
+            The state to add
+        idx : int
+            The index of the FST
+        """
+        if state in self._seen_states:
+            counter = 0
+            new_state = state + str(counter)
+            while new_state in self._seen_states:
+                counter += 1
+                new_state = state + str(counter)
+            self._state_renaming[(state, idx)] = new_state
+            self._seen_states.add(new_state)
+        else:
+            self._state_renaming[(state, idx)] = state
+            self._seen_states.add(state)
+
+    def add_states(self, states, idx):
+        """
+        Add states
+        Parameters
+        ----------
+        states : list of str
+            The states to add
+        idx : int
+            The index of the FST
+        """
+        for state in states:
+            self.add_state(state, idx)
+
+    def get_name(self, state, idx):
+        """
+        Get the renaming.
+
+        Parameters
+        ----------
+        state : str
+            The state to rename
+        idx : int
+            The index of the FST
+
+        Returns
+        -------
+        new_name : str
+            The new name of the state
+        """
+        return self._state_renaming[(state, idx)]
