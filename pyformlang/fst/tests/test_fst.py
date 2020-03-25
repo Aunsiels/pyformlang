@@ -104,6 +104,7 @@ class TestFST(unittest.TestCase):
         self.assertFalse(intersection.is_empty())
 
     def test_union(self):
+        """ Tests the union"""
         fst0 = FST()
         fst0.add_start_state("q0")
         fst0.add_transition("q0", "a", "q1", ["b"])

@@ -305,6 +305,7 @@ class FST:
         state_renaming.add_states(self.states, 0)
         state_renaming.add_states(other_fst.states, 1)
         union_fst = FST()
+        # pylint: disable=protected-access
         self._copy_into(union_fst, state_renaming, 0)
         other_fst._copy_into(union_fst, state_renaming, 1)
         return union_fst
