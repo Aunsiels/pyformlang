@@ -11,6 +11,16 @@ from pyformlang.indexed_grammar import (
 class TestFST(unittest.TestCase):
     """ Tests FST """
 
+    def setUp(self) -> None:
+        self.fst0 = FST()
+        self.fst0.add_start_state("q0")
+        self.fst0.add_transition("q0", "a", "q1", ["b"])
+        self.fst0.add_final_state("q1")
+        self.fst1 = FST()
+        self.fst1.add_start_state("q1")
+        self.fst1.add_transition("q1", "b", "q2", ["c"])
+        self.fst1.add_final_state("q2")
+
     def test_creation(self):
         """ Test Translate """
         fst = FST()
@@ -105,34 +115,38 @@ class TestFST(unittest.TestCase):
 
     def test_union(self):
         """ Tests the union"""
-        fst0 = FST()
-        fst0.add_start_state("q0")
-        fst0.add_transition("q0", "a", "q1", ["b"])
-        fst0.add_final_state("q1")
-        fst1 = FST()
-        fst1.add_start_state("q1")
-        fst1.add_transition("q1", "b", "q2", ["c"])
-        fst1.add_final_state("q2")
-        fst_repeated = fst0.union(fst1)
-        self.assertEqual(len(fst_repeated.start_states), 2)
-        self.assertEqual(len(fst_repeated.final_states), 2)
-        self.assertEqual(fst_repeated.get_number_transitions(), 2)
-        translation = list(fst_repeated.translate(["a"]))
+        fst_union = self.fst0.union(self.fst1)
+        self._test_fst_union(fst_union)
+        fst_union = self.fst0 | self.fst1
+        self._test_fst_union(fst_union)
+
+    def _test_fst_union(self, fst_union):
+        self.assertEqual(len(fst_union.start_states), 2)
+        self.assertEqual(len(fst_union.final_states), 2)
+        self.assertEqual(fst_union.get_number_transitions(), 2)
+        translation = list(fst_union.translate(["a"]))
         self.assertEqual(translation, [["b"]])
-        translation = list(fst_repeated.translate(["b"]))
+        translation = list(fst_union.translate(["b"]))
         self.assertEqual(translation, [["c"]])
-        translation = list(fst_repeated.translate(["a", "b"]))
+        translation = list(fst_union.translate(["a", "b"]))
         self.assertEqual(translation, [])
 
-        fst_repeated = fst0 | fst1
-        self.assertEqual(len(fst0.start_states), 1)
-        self.assertEqual(len(fst1.start_states), 1)
-        self.assertEqual(len(fst_repeated.start_states), 2)
-        self.assertEqual(len(fst_repeated.final_states), 2)
-        self.assertEqual(fst_repeated.get_number_transitions(), 2)
-        translation = list(fst_repeated.translate(["a"]))
-        self.assertEqual(translation, [["b"]])
-        translation = list(fst_repeated.translate(["b"]))
-        self.assertEqual(translation, [["c"]])
-        translation = list(fst_repeated.translate(["a", "b"]))
+    def test_concatenate(self):
+        """ Tests the concatenation """
+        fst_concatenate = self.fst0.concatenate(self.fst1)
+        translation = list(fst_concatenate.translate(["a", "b"]))
+        self.assertEqual(translation, [["b", "c"]])
+        translation = list(fst_concatenate.translate(["a"]))
         self.assertEqual(translation, [])
+        translation = list(fst_concatenate.translate(["b"]))
+        self.assertEqual(translation, [])
+
+    def test_kleene_start(self):
+        """ Tests the kleene star on a fst"""
+        fst_star = self.fst0.kleene_star()
+        translation = list(fst_star.translate(["a"]))
+        self.assertEqual(translation, [["b"]])
+        translation = list(fst_star.translate(["a", "a"]))
+        self.assertEqual(translation, [["b", "b"]])
+        translation = list(fst_star.translate([]))
+        self.assertEqual(translation, [[]])

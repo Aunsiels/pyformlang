@@ -301,9 +301,7 @@ class FST:
             A new FST which is the union of the two given FST
 
         """
-        state_renaming = FSTStateRemaining()
-        state_renaming.add_states(self.states, 0)
-        state_renaming.add_states(other_fst.states, 1)
+        state_renaming = self._get_state_renaming(other_fst)
         union_fst = FST()
         # pylint: disable=protected-access
         self._copy_into(union_fst, state_renaming, 0)
@@ -341,10 +339,77 @@ class FST:
                     output_symbols)
 
     def _add_extremity_states_to(self, union_fst, state_renaming, idx):
-        for state in self.start_states:
-            union_fst.add_start_state(state_renaming.get_name(state, idx))
+        self._add_start_states_to(union_fst, state_renaming, idx)
+        self._add_final_states_to(union_fst, state_renaming, idx)
+
+    def _add_final_states_to(self, union_fst, state_renaming, idx):
         for state in self.final_states:
             union_fst.add_final_state(state_renaming.get_name(state, idx))
+
+    def _add_start_states_to(self, union_fst, state_renaming, idx):
+        for state in self.start_states:
+            union_fst.add_start_state(state_renaming.get_name(state, idx))
+
+    def concatenate(self, other_fst):
+        """
+        Makes the concatenation of two fst
+        Parameters
+        ----------
+        other_fst : :class:`~pyformlang.fst.FST`
+            The other FST
+
+        Returns
+        -------
+        fst_concatenate : :class:`~pyformlang.fst.FST`
+            A new FST which is the concatenation of the two given FST
+
+        """
+        state_renaming = self._get_state_renaming(other_fst)
+        fst_concatenate = FST()
+        self._add_start_states_to(fst_concatenate, state_renaming, 0)
+        # pylint: disable=protected-access
+        other_fst._add_final_states_to(fst_concatenate, state_renaming, 1)
+        self._add_transitions_to(fst_concatenate, state_renaming, 0)
+        other_fst._add_transitions_to(fst_concatenate, state_renaming, 1)
+        for final_state in self.final_states:
+            for start_state in other_fst.start_states:
+                fst_concatenate.add_transition(
+                    state_renaming.get_name(final_state, 0),
+                    "epsilon",
+                    state_renaming.get_name(start_state, 1),
+                    []
+                )
+        return fst_concatenate
+
+    def _get_state_renaming(self, other_fst):
+        state_renaming = FSTStateRemaining()
+        state_renaming.add_states(self.states, 0)
+        state_renaming.add_states(other_fst.states, 1)
+        return state_renaming
+
+    def kleene_star(self):
+        fst_star = FST()
+        state_renaming = FSTStateRemaining()
+        state_renaming.add_states(self.states, 0)
+        self._add_extremity_states_to(fst_star, state_renaming, 0)
+        self._add_transitions_to(fst_star, state_renaming, 0)
+        for final_state in self.final_states:
+            for start_state in self.start_states:
+                fst_star.add_transition(
+                    state_renaming.get_name(final_state, 0),
+                    "epsilon",
+                    state_renaming.get_name(start_state, 0),
+                    []
+                )
+        for final_state in self.start_states:
+            for start_state in self.final_states:
+                fst_star.add_transition(
+                    state_renaming.get_name(final_state, 0),
+                    "epsilon",
+                    state_renaming.get_name(start_state, 0),
+                    []
+                )
+        return fst_star
 
 
 class FSTStateRemaining:
