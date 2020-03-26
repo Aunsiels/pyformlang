@@ -1,7 +1,7 @@
 """
 Testing python regex parsing
 """
-
+import re
 import unittest
 
 from pyformlang.regular_expression.python_regex import PythonRegex
@@ -40,6 +40,14 @@ class TestPythonRegex(unittest.TestCase):
     def test_range_in_brackets_trap2(self):
         regex = PythonRegex("[a-e-g-z]*")
         self.assertTrue(regex.accepts(["a", "-", "y"]))
+
+    def test_range_in_brackets_trap2_bis(self):
+        regex = PythonRegex(re.compile("[a-e-g-z]*"))
+        self.assertTrue(regex.accepts(["a", "-", "y"]))
+
+    def test_parenthesis(self):
+        regex = PythonRegex("((a)|(b))+")
+        self.assertTrue(regex.accepts(["a", "b"]))
 
     def test_plus(self):
         regex = PythonRegex("a+")

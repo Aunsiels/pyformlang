@@ -33,7 +33,7 @@ class Regexable:
         """
         regex0 = self.to_regex()
         regex1 = other.to_regex()
-        regex = regex0.union(regex1)
+        regex = regex0 | regex1
         return regex.to_epsilon_nfa()
 
     def concatenate(self, other: "Regexable") -> "EpsilonNFA":
@@ -51,7 +51,7 @@ class Regexable:
         """
         regex0 = self.to_regex()
         regex1 = other.to_regex()
-        regex = regex0.concatenate(regex1)
+        regex = regex0 + regex1
         return regex.to_epsilon_nfa()
 
     def kleene_star(self) -> "EpsilonNFA":

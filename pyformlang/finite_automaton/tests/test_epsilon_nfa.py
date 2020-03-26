@@ -1,7 +1,7 @@
 """
 Tests for epsilon NFA
 """
-
+import copy
 import unittest
 
 import networkx
@@ -47,10 +47,10 @@ class TestEpsilonNFA(unittest.TestCase):
         """ Tests the copy of enda """
         self._perform_tests_digits(True)
 
-    def _perform_tests_digits(self, copy=False):
+    def _perform_tests_digits(self, should_copy=False):
         enfa, digits, epsilon, plus, minus, point = get_digits_enfa()
-        if copy:
-            enfa = enfa.copy()
+        if should_copy:
+            enfa = copy.copy(enfa)
         self.assertTrue(enfa.accepts([plus, digits[1], point, digits[9]]))
         self.assertTrue(enfa.accepts([minus, digits[1], point, digits[9]]))
         self.assertTrue(enfa.accepts([digits[1], point, digits[9]]))
@@ -295,7 +295,7 @@ class TestEpsilonNFA(unittest.TestCase):
         enfa.add_final_state(state2)
         enfa.add_transition(state0, Epsilon(), state1)
         enfa.add_transition(state1, symb_a, state2)
-        enfa_comp = enfa.get_complement()
+        enfa_comp = -enfa
         self.assertFalse(enfa_comp.accepts([symb_a]))
 
     def test_intersection(self):
@@ -317,7 +317,7 @@ class TestEpsilonNFA(unittest.TestCase):
         enfa1.add_transition(state1, symb_a, state2)
         enfa1.add_transition(state2, eps, state3)
         enfa1.add_transition(state3, symb_b, state4)
-        enfa = enfa0.get_intersection(enfa1)
+        enfa = enfa0 & enfa1
         self.assertEqual(len(enfa.start_states), 4)
         self.assertEqual(len(enfa.final_states), 2)
         self.assertEqual(len(enfa.symbols), 2)
@@ -334,7 +334,7 @@ class TestEpsilonNFA(unittest.TestCase):
         symb_a = Symbol("a")
         symb_b = Symbol("b")
         symb_c = Symbol("c")
-        enfa = enfa0.get_difference(enfa1)
+        enfa = enfa0 - enfa1
         self.assertTrue(enfa.accepts([symb_a, symb_b]))
         self.assertTrue(enfa.accepts([symb_b]))
         self.assertFalse(enfa.accepts([symb_c]))
@@ -354,7 +354,7 @@ class TestEpsilonNFA(unittest.TestCase):
         enfa0 = get_enfa_example0()
         symb_a = Symbol("a")
         symb_b = Symbol("b")
-        enfa = enfa0.reverse()
+        enfa = ~enfa0
         self.assertTrue(enfa.accepts([symb_b]))
         self.assertTrue(enfa.accepts([symb_b, symb_a]))
         self.assertTrue(enfa.accepts([symb_b, symb_a, symb_a]))
@@ -364,7 +364,7 @@ class TestEpsilonNFA(unittest.TestCase):
 
     def test_empty(self):
         """ Tests the emptiness of a finite automaton """
-        self.assertFalse(get_enfa_example0().is_empty())
+        self.assertTrue(get_enfa_example0())
         self.assertFalse(get_enfa_example1().is_empty())
         enfa = EpsilonNFA()
         state0 = State(0)
@@ -577,6 +577,14 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertIn(state0, d_enfa)
         self.assertIn(symb_a, d_enfa[state0])
         self.assertIn(state1, d_enfa[state0][symb_a])
+
+    def test_len(self):
+        enfa = get_enfa_example1()
+        self.assertEqual(len(enfa), 1)
+
+    def test_call(self):
+        enfa = get_enfa_example1()
+        self.assertEqual(len(enfa(2)), 1)
 
 
 def get_digits_enfa():

@@ -145,11 +145,10 @@ class PythonRegex(regex.Regex):
             temp = split_sequence[i]
             if temp == ")":
                 counter += 1
-            elif temp == "(" and counter == 0:
+            elif temp == "(" and counter == 1:
                 return i
             elif temp == "(":
                 counter -= 1
-        return -1  # Not supposed to happen if valid
 
     def _preprocess_positive_closure(self):
         regex_temp = []

@@ -2,7 +2,9 @@
 
 import unittest
 
+from pyformlang import pda
 from pyformlang.cfg import Production, Variable, Terminal, CFG, Epsilon
+from pyformlang.cfg.pda_object_creator import PDAObjectCreator
 from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.finite_automaton import State
 from pyformlang.finite_automaton import Symbol
@@ -257,7 +259,7 @@ class TestCFG(unittest.TestCase):
         prod0 = Production(var_s, [ter_a, var_s, ter_b])
         prod1 = Production(var_s, [])
         cfg = CFG({var_s}, {ter_a, ter_b}, var_s, {prod0, prod1})
-        new_cfg = cfg.union(cfg)
+        new_cfg = cfg | cfg
         self.assertEqual(len(new_cfg.variables), 3)
         self.assertEqual(len(new_cfg.terminals), 2)
         self.assertEqual(len(new_cfg.productions), 6)
@@ -272,7 +274,7 @@ class TestCFG(unittest.TestCase):
         prod0 = Production(var_s, [ter_a, var_s, ter_b])
         prod1 = Production(var_s, [])
         cfg = CFG({var_s}, {ter_a, ter_b}, var_s, {prod0, prod1})
-        new_cfg = cfg.concatenate(cfg)
+        new_cfg = cfg + cfg
         self.assertEqual(len(new_cfg.variables), 3)
         self.assertEqual(len(new_cfg.terminals), 2)
         self.assertEqual(len(new_cfg.productions), 5)
@@ -324,11 +326,11 @@ class TestCFG(unittest.TestCase):
         prod0 = Production(var_s, [ter_a, var_s, ter_b])
         prod1 = Production(var_s, [])
         cfg = CFG({var_s}, {ter_a, ter_b}, var_s, {prod0, prod1})
-        new_cfg = cfg.reverse()
+        new_cfg = ~cfg
         self.assertEqual(len(new_cfg.variables), 1)
         self.assertEqual(len(new_cfg.terminals), 2)
         self.assertEqual(len(new_cfg.productions), 2)
-        self.assertFalse(new_cfg.is_empty())
+        self.assertFalse(not new_cfg)
         self.assertTrue(new_cfg.contains([ter_b, ter_b, ter_a, ter_a]))
 
     def test_emptiness(self):
@@ -439,7 +441,7 @@ class TestCFG(unittest.TestCase):
         self.assertFalse(cfg.contains([ter_b, ter_b, ter_c, ter_a, ter_a]))
 
     @staticmethod
-    def _test_profiling_conversions():
+    def test_profiling_conversions():
         """ Tests multiple conversions """
         ter_a = Terminal("a")
         ter_b = Terminal("b")
@@ -516,7 +518,7 @@ class TestCFG(unittest.TestCase):
     def test_intersection(self):
         """ Tests the intersection with a regex """
         regex = Regex("a*b*")
-        dfa = regex.to_epsilon_nfa().to_deterministic()
+        dfa = regex.to_epsilon_nfa()
         symb_a = Symbol("a")
         symb_b = Symbol("b")
         self.assertTrue(dfa.accepts([symb_a, symb_a, symb_b, symb_b]))
@@ -534,6 +536,22 @@ class TestCFG(unittest.TestCase):
         self.assertTrue(cfg_i.contains([ter_a, ter_a, ter_b, ter_b]))
         self.assertFalse(cfg_i.contains([ter_a, ter_a, ter_b]))
         self.assertTrue(cfg_i.contains([]))
+        cfg_i = cfg.intersection(dfa)
+        self.assertTrue(cfg_i.contains([ter_a, ter_a, ter_b, ter_b]))
+        self.assertFalse(cfg_i.contains([ter_a, ter_a, ter_b]))
+        self.assertTrue(cfg_i.contains([]))
+
+    def test_intersection_empty(self):
+        regex = Regex("")
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        var_s = Variable("S")
+        productions = {Production(var_s, [ter_a, var_s, ter_b]),
+                       Production(var_s, [ter_b, var_s, ter_a]),
+                       Production(var_s, [])}
+        cfg = CFG(productions=productions, start_symbol=var_s)
+        cfg_i = cfg & regex
+        self.assertFalse(cfg_i)
 
     def test_intersection_dfa(self):
         state0 = State(0)
@@ -581,7 +599,8 @@ class TestCFG(unittest.TestCase):
         var_t = Variable("T")
         productions = {Production(var_s, [var_l, var_t]),
                        Production(var_l, [Epsilon()]),
-                       Production(var_t, [ter_a])}
+                       Production(var_t, [ter_a]),
+                       Production(var_t, [Epsilon()])}
         cfg = CFG(productions=productions, start_symbol=var_s)
         self.assertFalse(cfg.is_empty())
         self.assertTrue(cfg.contains([ter_a]))
@@ -656,3 +675,13 @@ class TestCFG(unittest.TestCase):
         self.assertFalse(cfg_i.is_empty())
         self.assertTrue(cfg_i.contains([ter_a] * size + [ter_b] * size))
         self.assertFalse(cfg_i.contains([]))
+
+    def test_pda_object_creator(self):
+        pda_oc = PDAObjectCreator([], [])
+        self.assertEqual(pda_oc.get_symbol_from(Epsilon()), pda.Epsilon())
+        self.assertEqual(pda_oc.get_stack_symbol_from(Epsilon()),
+                         pda.Epsilon())
+
+    def test_string_variable(self):
+        var = Variable("A")
+        self.assertEqual(var.__repr__(), "Variable(A)")

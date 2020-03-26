@@ -385,6 +385,22 @@ class FST:
                 )
         return fst_concatenate
 
+    def __add__(self, other):
+        """
+        Makes the concatenation of two fst
+        Parameters
+        ----------
+        other_fst : :class:`~pyformlang.fst.FST`
+            The other FST
+
+        Returns
+        -------
+        fst_concatenate : :class:`~pyformlang.fst.FST`
+            A new FST which is the concatenation of the two given FST
+
+        """
+        return self.concatenate(other)
+
     def _get_state_renaming(self, other_fst):
         state_renaming = FSTStateRemaining()
         state_renaming.add_states(self.states, 0)

@@ -424,7 +424,7 @@ class FiniteAutomaton:
         return len(self._transition_function)
 
     def __iter__(self):
-        yield from self._transition_function.get_edges()
+        yield from self._transition_function.__iter__()
 
     def to_dict(self):
         """

@@ -91,7 +91,7 @@ class TestFST(unittest.TestCase):
         rules = Rules(l_rules)
         indexed_grammar = IndexedGrammar(rules)
         fst = FST()
-        intersection = fst.intersection(indexed_grammar)
+        intersection = fst & indexed_grammar
         self.assertTrue(intersection.is_empty())
 
         l_rules.append(ProductionRule("S", "D", "f"))
@@ -133,9 +133,19 @@ class TestFST(unittest.TestCase):
 
     def test_concatenate(self):
         """ Tests the concatenation """
-        fst_concatenate = self.fst0.concatenate(self.fst1)
+        fst_concatenate = self.fst0 + self.fst1
         translation = list(fst_concatenate.translate(["a", "b"]))
         self.assertEqual(translation, [["b", "c"]])
+        translation = list(fst_concatenate.translate(["a"]))
+        self.assertEqual(translation, [])
+        translation = list(fst_concatenate.translate(["b"]))
+        self.assertEqual(translation, [])
+
+    def test_concatenate2(self):
+        """ Tests the concatenation """
+        fst_concatenate = self.fst0 + self.fst1 + self.fst1
+        translation = list(fst_concatenate.translate(["a", "b", "b"]))
+        self.assertEqual(translation, [["b", "c", "c"]])
         translation = list(fst_concatenate.translate(["a"]))
         self.assertEqual(translation, [])
         translation = list(fst_concatenate.translate(["b"]))

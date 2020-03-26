@@ -5,8 +5,8 @@ Test the transition functions
 
 import unittest
 
-from pyformlang.finite_automaton import State, Symbol, TransitionFunction,\
-    DuplicateTransitionError
+from pyformlang.finite_automaton import State, Symbol, TransitionFunction, \
+    DuplicateTransitionError, InvalidEpsilonTransition, Epsilon
 
 
 class TestTransitionFunction(unittest.TestCase):
@@ -85,3 +85,8 @@ class TestTransitionFunction(unittest.TestCase):
         transition_function.add_transition(s_from, symb_by, s_to)
         self.assertEqual(transition_function(s_from, symb_by), [s_to])
         self.assertEqual(transition_function(s_to, symb_by), [])
+
+    def test_invalid_epsilon(self):
+        transition_function = TransitionFunction()
+        with self.assertRaises(InvalidEpsilonTransition):
+            transition_function.add_transition("1", Epsilon(), "2")

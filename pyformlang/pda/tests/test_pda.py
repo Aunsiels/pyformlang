@@ -5,6 +5,8 @@ import unittest
 from pyformlang.pda import PDA, State, StackSymbol, Symbol, Epsilon
 from pyformlang.cfg import Terminal
 from pyformlang import finite_automaton
+from pyformlang.pda.utils import PDAObjectCreator
+from pyformlang.regular_expression import Regex
 
 
 class TestPDA(unittest.TestCase):
@@ -18,6 +20,7 @@ class TestPDA(unittest.TestCase):
         self.assertEqual(len(pda.final_states), 0)
         self.assertEqual(len(pda.input_symbols), 0)
         self.assertEqual(len(pda.stack_symbols), 0)
+        self.assertEqual(len(pda.to_dict()), 0)
 
         pda = PDA(start_state=State("A"))
         self.assertIsNotNone(pda)
@@ -313,3 +316,17 @@ class TestPDA(unittest.TestCase):
         new_pda = pda.intersection(
             finite_automaton.DeterministicFiniteAutomaton())
         self.assertEqual(new_pda.get_number_transitions(), 0)
+
+        new_pda = pda.intersection(Regex(""))
+        pda_es = new_pda.to_empty_stack()
+        cfg = pda_es.to_cfg()
+        self.assertFalse(cfg)
+
+        new_pda = pda & Regex("z|y").to_epsilon_nfa()
+        pda_es = new_pda.to_empty_stack()
+        cfg = pda_es.to_cfg()
+        self.assertFalse(cfg)
+
+    def test_pda_object_creator_epsilon(self):
+        poc = PDAObjectCreator()
+        self.assertEqual(poc.to_stack_symbol(Epsilon()), Epsilon())

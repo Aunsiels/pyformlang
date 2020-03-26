@@ -365,18 +365,16 @@ class TestIndexedGrammar(unittest.TestCase):
         self.assertEqual(i_grammar2.non_terminals,
                          i_grammar2.get_reachable_non_terminals())
 
-    def _test_intersection(self):
+    def test_intersection(self):
         """ Tests the intersection of indexed grammar with regex
         Long to run!
         """
-        l_rules = []
-        l_rules.append(ProductionRule("S", "D", "f"))
-        l_rules.append(DuplicationRule("D", "A", "B"))
-        l_rules.append(ConsumptionRule("f", "A", "Afinal"))
-        l_rules.append(ConsumptionRule("f", "B", "Bfinal"))
-        l_rules.append(EndRule("Afinal", "a"))
-        l_rules.append(EndRule("Bfinal", "b"))
+        l_rules = [ProductionRule("S", "D", "f"),
+                   DuplicationRule("D", "A", "B"),
+                   ConsumptionRule("f", "A", "Afinal"),
+                   ConsumptionRule("f", "B", "Bfinal"), EndRule("Afinal", "a"),
+                   EndRule("Bfinal", "b")]
         rules = Rules(l_rules, 6)
         indexed_grammar = IndexedGrammar(rules)
-        i_inter = indexed_grammar.intersection(Regex("(a|b)*"))
-        self.assertFalse(i_inter.is_empty())
+        i_inter = indexed_grammar.intersection(Regex("a.b"))
+        self.assertTrue(i_inter)

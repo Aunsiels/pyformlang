@@ -1,6 +1,7 @@
 """
 Representation of a reduced rule
 """
+from abc import abstractmethod
 
 
 class ReducedRule:
@@ -57,6 +58,7 @@ class ReducedRule:
         return False
 
     @property
+    @abstractmethod
     def f_parameter(self):
         """The f parameter
 
@@ -68,6 +70,7 @@ class ReducedRule:
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def left_term(self):
         """The left term
 
@@ -79,6 +82,7 @@ class ReducedRule:
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def right_terms(self):
         """The right terms
 
@@ -90,6 +94,7 @@ class ReducedRule:
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def right_term(self):
         """The unique right term
 
@@ -101,6 +106,7 @@ class ReducedRule:
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def production(self):
         """The production
 
