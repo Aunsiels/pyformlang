@@ -15,7 +15,6 @@ from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
 # pylint: disable=cyclic-import
 from .epsilon_nfa import to_single_state
 from .finite_automaton import to_state, to_symbol
-from .distinguishable_states import DistinguishableStates
 from .partition import Partition
 from .hopcroft_processing_list import HopcroftProcessingList
 
@@ -199,47 +198,6 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                     dfa.add_transition(state, symbol, state_to)
         return dfa
 
-    def _get_distinguishable_states(self):
-        """ Get all the pair of states which are distinguishable
-
-        Returns
-        ----------
-        states : set of (:class:`~pyformlang.finite_automaton.State`,\
-                :class:`~pyformlang.finite_automaton.State`)
-            The pair of distinguishable
-        """
-        disting = DistinguishableStates(len(self._states))
-        to_process = \
-            self._initialize_distinguishable_states_to_process(disting)
-        previous_transitions = self._get_previous_transitions()
-        append = to_process.append
-        not_contains_and_add = disting.not_contains_and_add
-        get = previous_transitions.get
-        symbols = self._input_symbols
-        pop = to_process.pop
-        while to_process:
-            next0, next1 = pop()
-            for symbol in symbols:
-                next_states0 = get(next0, symbol)
-                next_states1 = get(next1, symbol)
-                for state0 in next_states0:
-                    for state1 in next_states1:
-                        state_combined = (state0, state1)
-                        if not_contains_and_add(state_combined):
-                            append(state_combined)
-        return disting
-
-    def _initialize_distinguishable_states_to_process(self, disting):
-        to_process = deque()
-        for final in self._final_states:
-            for state in self._states:
-                if state not in self._final_states:
-                    disting.add((final, state))
-                    to_process.append((final, state))
-            disting.add((None, final))
-            to_process.append((None, final))
-        return to_process
-
     def _get_previous_transitions(self):
         previous_transitions = PreviousTransitions(self._states,
                                                    self._input_symbols)
@@ -409,21 +367,3 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                 matches[next_state_self] = next_state_other
                 to_process.append((next_state_self, next_state_other))
         return True
-
-
-def get_groups(states, distinguishable) -> Iterable[AbstractSet[State]]:
-    """ Get the groups in the minimization """
-    groups = []
-    were_grouped = set()
-    states = list(states)
-    for state0, state1 in distinguishable.get_non_distinguishable():
-        were_grouped.add(state0)
-        were_grouped.add(state1)
-        new_groups = [{state0, state1}]
-        for group in groups:
-            if state0 in group or state1 in group:
-                new_groups[0] = new_groups[0].union(group)
-            else:
-                new_groups.append(group)
-        groups = new_groups
-    return (groups, were_grouped)
