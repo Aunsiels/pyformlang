@@ -116,11 +116,11 @@ class TestFST(unittest.TestCase):
     def test_union(self):
         """ Tests the union"""
         fst_union = self.fst0.union(self.fst1)
-        self._test_fst_union(fst_union)
+        self._make_test_fst_union(fst_union)
         fst_union = self.fst0 | self.fst1
-        self._test_fst_union(fst_union)
+        self._make_test_fst_union(fst_union)
 
-    def _test_fst_union(self, fst_union):
+    def _make_test_fst_union(self, fst_union):
         self.assertEqual(len(fst_union.start_states), 2)
         self.assertEqual(len(fst_union.final_states), 2)
         self.assertEqual(fst_union.get_number_transitions(), 2)

@@ -627,8 +627,8 @@ class TestCFG(unittest.TestCase):
         self.assertTrue(cfg_i.contains([ter_a, ter_a, ter_b, ter_b]))
         self.assertTrue(cfg_i.contains([]))
 
-    def _test_profiling_intersection(self):
-        size = 50
+    def test_profiling_intersection(self):
+        size = 3
         states = [State(i) for i in range(size * 2 + 1)]
         symb_a = Symbol("a")
         symb_b = Symbol("b")

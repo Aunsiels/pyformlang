@@ -12,6 +12,8 @@ class CFGObject:  # pylint: disable=too-few-public-methods
         The value of the object
     """
 
+    __slots__ = ["_value", "_hash"]
+
     def __init__(self, value: Any):
         self._value = value
         self._hash = None

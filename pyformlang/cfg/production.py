@@ -18,6 +18,8 @@ class Production:
         The body of the production
     """
 
+    __slots__ = ["_body", "_head", "_hash"]
+
     def __init__(self, head: Variable, body: List[CFGObject], filtering=True):
         if filtering:
             self._body = [x for x in body if not isinstance(x, Epsilon)]

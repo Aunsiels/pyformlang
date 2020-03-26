@@ -1,6 +1,6 @@
 """ A context free grammar """
 from copy import deepcopy
-from typing import AbstractSet, List, Iterable, Tuple, Dict, Any
+from typing import AbstractSet, Iterable, Tuple, Dict, Any
 
 import networkx as nx
 
@@ -14,6 +14,7 @@ from pyformlang import pda
 
 # pylint: disable=cyclic-import
 from .pda_object_creator import PDAObjectCreator
+from .utils_cfg import remove_nullable_production, get_productions_d
 from .variable import Variable
 from .terminal import Terminal
 from .production import Production
@@ -92,10 +93,11 @@ class CFG:
 
     def _get_generating_or_nullable(self, nullable=False):
         """ Merge of nullable and generating """
-        g_symbols = {Epsilon()}
         to_process = [Epsilon()]
+        g_symbols = {Epsilon()}
 
-        self._get_impacts_and_remaining_lists(g_symbols)
+        self._set_impacts_and_remaining_lists()
+
         for symbol in self._added_impacts:
             if symbol not in g_symbols:
                 g_symbols.add(symbol)
@@ -124,16 +126,14 @@ class CFG:
         g_symbols.remove(Epsilon())
         return g_symbols
 
-    def _get_impacts_and_remaining_lists(self, g_symbols):
+    def _set_impacts_and_remaining_lists(self):
         if self._impacts is not None:
             return
         self._added_impacts = set()
         self._remaining_lists = dict()
         self._impacts = dict()
         for production in self._productions:
-            head = production.head
-            if head in g_symbols:
-                continue
+            head = production.head  # Should check if head is not Epsilon?
             body = production.body
             if not body:
                 self._added_impacts.add(head)
@@ -156,7 +156,7 @@ class CFG:
         generate_epsilon = {Epsilon()}
         to_process = [Epsilon()]
 
-        self._get_impacts_and_remaining_lists(generate_epsilon)
+        self._set_impacts_and_remaining_lists()
 
         for symbol in self._added_impacts:
             if symbol == self._start_symbol:
@@ -803,47 +803,83 @@ class CFG:
             cvc.CFGVariableConverter(states, cfg.variables)
         new_productions = []
         for production in cfg.productions:
-            head = production.head
-            body = production.body
-            if len(body) == 2:
-                for state_p in states:
-                    for state_r in states:
-                        new_head = \
-                            cv_converter.to_cfg_combined_variable(
-                                state_p, head, state_r)
-                        for state_q in states:
-                            body0 = \
-                                cv_converter.to_cfg_combined_variable(
-                                    state_p, body[0], state_q)
-                            body1 = \
-                                cv_converter.to_cfg_combined_variable(
-                                    state_q, body[1], state_r)
-                            new_productions.append(
-                                Production(new_head, [body0, body1],
-                                           filtering=False))
+            if len(production.body) == 2:
+                new_productions += self._intersection_when_two_non_terminals(
+                    production, states, cv_converter)
             else:
-                for state_p in states:
-                    next_states = other(state_p, body[0].value)
-                    if next_states:
-                        new_head = \
-                            cv_converter.to_cfg_combined_variable(
-                                state_p, head, next_states[0])
-                        new_productions.append(
-                            Production(new_head, [body[0]], filtering=False))
+                new_productions += self._intersection_when_terminal(
+                    other,
+                    production,
+                    cv_converter,
+                    states)
+        new_productions += self._intersection_starting_rules(cfg,
+                                                             other,
+                                                             cv_converter)
         start = Variable("Start")
-        start_other = list(other.start_states)[0]
+        if generate_empty:
+            new_productions.append(Production(start, []))
+        res_cfg = CFG(start_symbol=start, productions=new_productions)
+        return res_cfg
+
+    @staticmethod
+    def _intersection_starting_rules(cfg, other, cv_converter):
+        start = Variable("Start")
+        productions_temp = []
+        start_other = list(other.start_states)[0]  # it is deterministic
         for final_state in other.final_states:
             new_body = [
                 cv_converter.to_cfg_combined_variable(
                     start_other,
                     cfg.start_symbol,
                     final_state)]
-            new_productions.append(
+            productions_temp.append(
                 Production(start, new_body, filtering=False))
-        if generate_empty:
-            new_productions.append(Production(start, []))
-        res_cfg = CFG(start_symbol=start, productions=new_productions)
-        return res_cfg
+        return productions_temp
+
+    @staticmethod
+    def _intersection_when_terminal(other_fst, production,
+                                    cv_converter, states):
+        productions_temp = []
+        for state_p in states:
+            next_states = other_fst(state_p, production.body[0].value)
+            if next_states:
+                new_head = \
+                    cv_converter.to_cfg_combined_variable(
+                        state_p, production.head, next_states[0])
+                productions_temp.append(
+                    Production(new_head,
+                               [production.body[0]],
+                               filtering=False))
+        return productions_temp
+
+    @staticmethod
+    def _intersection_when_two_non_terminals(production, states,
+                                             cv_converter):
+        productions_temp = []
+        for state_p in states:
+            for state_r in states:
+                bodies = CFG._get_all_bodies(production,
+                                             state_p, state_r,
+                                             states, cv_converter)
+                new_head = \
+                    cv_converter.to_cfg_combined_variable(
+                        state_p, production.head, state_r)
+                productions_temp += [Production(new_head,
+                                                body,
+                                                filtering=False)
+                                     for body in bodies]
+        return productions_temp
+
+    @staticmethod
+    def _get_all_bodies(production, state_p, state_r, states, cv_converter):
+        return [
+            [cv_converter.to_cfg_combined_variable(state_p,
+                                                   production.body[0],
+                                                   state_q),
+             cv_converter.to_cfg_combined_variable(state_q,
+                                                   production.body[1],
+                                                   state_r)]
+            for state_q in states]
 
     def __and__(self, other):
         """ Gives the intersection of the current CFG with an other object
@@ -949,42 +985,3 @@ class CFG:
         except nx.exception.NetworkXNoCycle:
             return True
         return False
-
-
-def remove_nullable_production_sub(body: List[CFGObject],
-                                   nullables: AbstractSet[CFGObject]) \
-        -> List[List[CFGObject]]:
-    """ Recursive sub function to remove nullable objects """
-    if not body:
-        return [[]]
-    all_next = remove_nullable_production_sub(body[1:], nullables)
-    res = []
-    for body_temp in all_next:
-        if body[0] in nullables:
-            res.append(body_temp)
-        if body[0] != Epsilon():
-            res.append([body[0]] + body_temp.copy())
-    return res
-
-
-def remove_nullable_production(production: Production,
-                               nullables: AbstractSet[CFGObject]) \
-        -> List[Production]:
-    """ Get all combinations of productions rules after removing nullable """
-    next_prod_l = remove_nullable_production_sub(production.body,
-                                                 nullables)
-    res = []
-    for prod_l in next_prod_l:
-        if prod_l:
-            res.append(Production(production.head,
-                                  prod_l))
-    return res
-
-
-def get_productions_d(productions):
-    """ Get productions as a dictionary """
-    productions_d = dict()
-    for production in productions:
-        production_head = productions_d.setdefault(production.head, [])
-        production_head.append(production)
-    return productions_d
