@@ -77,6 +77,31 @@ class FiniteAutomaton:
             self._input_symbols.add(symb_by)
         return temp
 
+    def add_transitions(self, transitions_list):
+        """
+        Adds several transitions to the automaton
+
+        Parameters
+        ----------
+        transitions_list : list of triples of (s_from, symb_by, s_to)
+            A list of all the transitions represented as triples as they \
+            would be used in add_transition
+
+        Returns
+        --------
+        done : int
+            Always 1
+
+        Raises
+        --------
+        DuplicateTransitionError
+            If the transition already exists
+        """
+        temp = 0
+        for s_from, symb_by, s_to in transitions_list:
+            temp = self.add_transition(s_from, symb_by, s_to)
+        return temp
+
     def remove_transition(self, s_from: State, symb_by: Symbol,
                           s_to: State) -> int:
         """ Remove a transition of the nfa

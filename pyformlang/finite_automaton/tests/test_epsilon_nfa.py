@@ -602,13 +602,15 @@ def get_digits_enfa():
     enfa.add_transition(states[0], plus, states[1])
     enfa.add_transition(states[0], minus, states[1])
     for digit in digits:
-        enfa.add_transition(states[1], digit, states[1])
-        enfa.add_transition(states[1], digit, states[4])
-        enfa.add_transition(states[2], digit, states[3])
-        enfa.add_transition(states[3], digit, states[3])
-    enfa.add_transition(states[1], point, states[2])
-    enfa.add_transition(states[4], point, states[3])
-    enfa.add_transition(states[3], epsilon, states[5])
+        enfa.add_transitions([
+            (states[1], digit, states[1]),
+            (states[1], digit, states[4]),
+            (states[2], digit, states[3]),
+            (states[3], digit, states[3])])
+    enfa.add_transitions([
+        (states[1], point, states[2]),
+        (states[4], point, states[3]),
+        (states[3], epsilon, states[5])])
     return enfa, digits, epsilon, plus, minus, point
 
 
