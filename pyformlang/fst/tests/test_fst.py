@@ -184,9 +184,10 @@ class TestFST(unittest.TestCase):
         """ Test empty loop bis """
         fst = FST()
         fst.add_start_state("q0")
-        fst.add_transition("q0", "epsilon", "q1", [])
-        fst.add_transition("q1", "a", "q2", ["b"])
+        fst.add_transitions(
+            [("q0", "epsilon", "q1", []),
+             ("q1", "a", "q2", ["b"]),
+             ("q1", "epsilon", "q0", [])])
         fst.add_final_state("q2")
-        fst.add_transition("q1", "epsilon", "q0", [])
         translation = list(fst.translate(["a"]))
         self.assertEqual(translation, [["b"]])

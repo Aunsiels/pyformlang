@@ -119,6 +119,23 @@ class FST:
         else:
             self._delta[head] = [(s_to, output_symbols)]
 
+    def add_transitions(self, transitions_list):
+        """
+        Adds several transitions to the FST
+
+        Parameters
+        ----------
+        transitions_list : list of tuples
+            The tuples have the form (s_from, in_symbol, s_to, out_symbols)
+        """
+        for s_from, input_symbol, s_to, output_symbols in transitions_list:
+            self.add_transition(
+                s_from,
+                input_symbol,
+                s_to,
+                output_symbols
+            )
+
     def add_start_state(self, start_state: Any):
         """ Add a start state
 
