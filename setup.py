@@ -11,7 +11,7 @@ requirements = [
 
 setuptools.setup(
     name='pyformlang',
-    version='0.1.16',
+    version='0.1.17',
     #scripts=['pyformlang'] ,
     author="Julien Romero",
     author_email="romerojulien34@gmail.com",

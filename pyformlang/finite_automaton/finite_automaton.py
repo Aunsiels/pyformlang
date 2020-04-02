@@ -327,7 +327,7 @@ class FiniteAutomaton:
             graph.add_node(state.value,
                            is_start=state in self.start_states,
                            is_final=state in self.final_states,
-                           peripheries=2,
+                           peripheries=2 if state in self.final_states else 1,
                            label=state.value)
             if state in self.start_states:
                 graph.add_node(str(state.value) + "_starting",
