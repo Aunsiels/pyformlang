@@ -1,4 +1,5 @@
 """ A context free grammar """
+import string
 from copy import deepcopy
 from typing import AbstractSet, Iterable, Tuple, Dict, Any
 
@@ -757,10 +758,10 @@ class CFG:
         """
         state = pda.State("q")
         pda_object_creator = PDAObjectCreator(self._terminals, self._variables)
-        input_symbols = [pda_object_creator.get_symbol_from(x)
-                         for x in self._terminals]
-        stack_alphabet = [pda_object_creator.get_stack_symbol_from(x)
-                          for x in self._terminals.union(self._variables)]
+        input_symbols = {pda_object_creator.get_symbol_from(x)
+                         for x in self._terminals}
+        stack_alphabet = {pda_object_creator.get_stack_symbol_from(x)
+                          for x in self._terminals.union(self._variables)}
         start_stack_symbol = pda_object_creator.get_stack_symbol_from(
             self._start_symbol)
         new_pda = pda.PDA(states={state},
@@ -1004,3 +1005,30 @@ class CFG:
         except nx.exception.NetworkXNoCycle:
             return True
         return False
+
+    @classmethod
+    def from_text(cls, text, start_symbol=Variable("S")):
+        variables = set()
+        productions = set()
+        terminals = set()
+        for line in text.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            head_s, body_s = line.split("->")
+            head = Variable(head_s.strip())
+            variables.add(head)
+            for sub_body in body_s.split("|"):
+                body = []
+                for body_component in sub_body.split():
+                    if body_component[0] in string.ascii_uppercase:
+                        body_var = Variable(body_component)
+                        variables.add(body_var)
+                        body.append(body_var)
+                    elif body_component not in ["epsilon", "$"]:
+                        body_ter = Terminal(body_component)
+                        terminals.add(body_ter)
+                        body.append(body_ter)
+                productions.add(Production(head, body))
+        return CFG(variables=variables, terminals=terminals,
+                   productions=productions, start_symbol=start_symbol)

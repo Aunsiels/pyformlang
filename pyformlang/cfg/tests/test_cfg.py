@@ -745,3 +745,53 @@ class TestCFG(unittest.TestCase):
         cfg = CFG(productions=productions, start_symbol=var_s)
         derivation = cfg.get_cnf_rightmost_derivation([])
         self.assertEqual([var_s], derivation)
+
+    def test_from_text(self):
+        text = """
+        S ->  A  B
+        A -> Bobo r
+        """
+        cfg = CFG.from_text(text)
+        self.assertEqual(len(cfg.variables), 4)
+        self.assertEqual(len(cfg.productions), 2)
+        self.assertEqual(len(cfg.terminals), 1)
+        self.assertEqual(cfg.start_symbol, Variable("S"))
+
+    def test_from_text2(self):
+        text = """
+        S  -> A B
+        A -> a
+        B -> b
+        """
+        cfg = CFG.from_text(text)
+        self.assertTrue(cfg.contains(["a", "b"]))
+
+    def test_from_text_union(self):
+        text = """
+        S -> a | b
+        """
+        cfg = CFG.from_text(text)
+        self.assertEqual(2, len(cfg.productions))
+
+    def test_epsilon(self):
+        text = "S -> epsilon"
+        cfg = CFG.from_text(text)
+        self.assertTrue(cfg.generate_epsilon())
+        self.assertEqual(len(cfg.terminals), 0)
+
+    def test_epsilon2(self):
+        text = "S ->$"
+        cfg = CFG.from_text(text)
+        self.assertTrue(cfg.generate_epsilon())
+
+    def test_generate_epsilon(self):
+        var_s = Variable("S")
+        ter_a = Terminal("a")
+        productions = [Production(var_s, [ter_a])]
+        cfg = CFG(productions=productions, start_symbol=var_s)
+        self.assertFalse(cfg.generate_epsilon())
+
+    def test_change_starting_variable(self):
+        text = """S1 -> a"""
+        cfg = CFG.from_text(text, start_symbol="S1")
+        self.assertEqual(Variable("S1"), cfg.start_symbol)
