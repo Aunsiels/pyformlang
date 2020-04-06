@@ -6,7 +6,9 @@ import re
 import string
 
 # pylint: disable=cyclic-import
-from pyformlang.regular_expression import regex
+from pyformlang.regular_expression import regex, MisformedRegexError
+from pyformlang.regular_expression.regex_reader import \
+    WRONG_PARENTHESIS_MESSAGE
 
 PRINTABLES = list(string.printable)
 
@@ -138,8 +140,7 @@ class PythonRegex(regex.Regex):
                     previous_is_valid_for_range = True
         return "|".join(bracket_content_temp)
 
-    @staticmethod
-    def _find_previous_opening_parenthesis(split_sequence):
+    def _find_previous_opening_parenthesis(self, split_sequence):
         counter = 0
         for i in range(len(split_sequence) - 1, -1, -1):
             temp = split_sequence[i]
@@ -149,6 +150,8 @@ class PythonRegex(regex.Regex):
                 return i
             elif temp == "(":
                 counter -= 1
+        raise MisformedRegexError(WRONG_PARENTHESIS_MESSAGE,
+                                  self._python_regex)
 
     def _preprocess_positive_closure(self):
         regex_temp = []

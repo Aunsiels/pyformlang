@@ -3,20 +3,19 @@ Representation of a deterministic finite automaton
 """
 
 from typing import AbstractSet, Iterable
-from collections import deque
 
 import numpy as np
 
-from .state import State
-from .symbol import Symbol
-from .transition_function import TransitionFunction
-# pylint: disable=cyclic-import
-from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
 # pylint: disable=cyclic-import
 from .epsilon_nfa import to_single_state
 from .finite_automaton import to_state, to_symbol
-from .partition import Partition
 from .hopcroft_processing_list import HopcroftProcessingList
+# pylint: disable=cyclic-import
+from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
+from .partition import Partition
+from .state import State
+from .symbol import Symbol
+from .transition_function import TransitionFunction
 
 
 class PreviousTransitions:

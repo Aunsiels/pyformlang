@@ -328,5 +328,6 @@ class TestPDA(unittest.TestCase):
         self.assertFalse(cfg)
 
     def test_pda_object_creator_epsilon(self):
+        """ Test creation objects """
         poc = PDAObjectCreator()
         self.assertEqual(poc.to_stack_symbol(Epsilon()), Epsilon())

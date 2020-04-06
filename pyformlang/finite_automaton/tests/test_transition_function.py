@@ -87,6 +87,7 @@ class TestTransitionFunction(unittest.TestCase):
         self.assertEqual(transition_function(s_to, symb_by), [])
 
     def test_invalid_epsilon(self):
+        """ Tests invalid transition """
         transition_function = TransitionFunction()
         with self.assertRaises(InvalidEpsilonTransition):
             transition_function.add_transition("1", Epsilon(), "2")

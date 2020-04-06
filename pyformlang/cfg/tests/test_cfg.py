@@ -4,6 +4,7 @@ import unittest
 
 from pyformlang import pda
 from pyformlang.cfg import Production, Variable, Terminal, CFG, Epsilon
+from pyformlang.cfg.cyk_table import DerivationDoesNotExist
 from pyformlang.cfg.pda_object_creator import PDAObjectCreator
 from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.finite_automaton import State
@@ -417,12 +418,12 @@ class TestCFG(unittest.TestCase):
                    ter_par_close, ter_mult, ter_plus},
                   var_e,
                   productions)
-        pda = cfg.to_pda()
-        self.assertEqual(len(pda.states), 1)
-        self.assertEqual(len(pda.final_states), 0)
-        self.assertEqual(len(pda.input_symbols), 8)
-        self.assertEqual(len(pda.stack_symbols), 10)
-        self.assertEqual(pda.get_number_transitions(), 19)
+        pda_equivalent = cfg.to_pda()
+        self.assertEqual(len(pda_equivalent.states), 1)
+        self.assertEqual(len(pda_equivalent.final_states), 0)
+        self.assertEqual(len(pda_equivalent.input_symbols), 8)
+        self.assertEqual(len(pda_equivalent.stack_symbols), 10)
+        self.assertEqual(pda_equivalent.get_number_transitions(), 19)
 
     def test_conversions(self):
         """ Tests multiple conversions """
@@ -685,3 +686,62 @@ class TestCFG(unittest.TestCase):
     def test_string_variable(self):
         var = Variable("A")
         self.assertEqual(var.__repr__(), "Variable(A)")
+
+    def test_get_leftmost_derivation(self):
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        var_s = Variable("S")
+        var_a = Variable("A")
+        var_b = Variable("B")
+        var_c = Variable("C")
+        productions = [Production(var_s, [var_c, var_b]),
+                       Production(var_c, [var_a, var_a]),
+                       Production(var_a, [ter_a]),
+                       Production(var_b, [ter_b])
+                       ]
+        cfg = CFG(productions=productions, start_symbol=var_s)
+        derivation = cfg.get_cnf_leftmost_derivation([ter_a, ter_a, ter_b])
+        self.assertEqual(derivation,
+                         [[var_s],
+                          [var_c, var_b],
+                          [var_a, var_a, var_b],
+                          [ter_a, var_a, var_b],
+                          [ter_a, ter_a, var_b],
+                          [ter_a, ter_a, ter_b]])
+
+    def test_get_rightmost_derivation(self):
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        var_s = Variable("S")
+        var_a = Variable("A")
+        var_b = Variable("B")
+        var_c = Variable("C")
+        productions = [Production(var_s, [var_c, var_b]),
+                       Production(var_c, [var_a, var_a]),
+                       Production(var_a, [ter_a]),
+                       Production(var_b, [ter_b])
+                       ]
+        cfg = CFG(productions=productions, start_symbol=var_s)
+        derivation = cfg.get_cnf_rightmost_derivation([ter_a, ter_a, ter_b])
+        self.assertEqual(derivation,
+                         [[var_s],
+                          [var_c, var_b],
+                          [var_c, ter_b],
+                          [var_a, var_a, ter_b],
+                          [var_a, ter_a, ter_b],
+                          [ter_a, ter_a, ter_b]])
+
+    def test_derivation_does_not_exist(self):
+        var_s = Variable("S")
+        ter_a = Terminal("a")
+        ter_b = Terminal("b")
+        cfg = CFG(productions=[], start_symbol=var_s)
+        with self.assertRaises(DerivationDoesNotExist):
+            cfg.get_cnf_rightmost_derivation([ter_a, ter_b])
+
+    def test_derivation_empty(self):
+        var_s = Variable("S")
+        productions = [Production(var_s, [Epsilon()])]
+        cfg = CFG(productions=productions, start_symbol=var_s)
+        derivation = cfg.get_cnf_rightmost_derivation([])
+        self.assertEqual([var_s], derivation)

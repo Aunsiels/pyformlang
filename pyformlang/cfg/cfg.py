@@ -13,6 +13,7 @@ from pyformlang.regular_expression import Regex
 from pyformlang import pda
 
 # pylint: disable=cyclic-import
+from .cyk_table import CYKTable, DerivationDoesNotExist
 from .pda_object_creator import PDAObjectCreator
 from .utils_cfg import remove_nullable_production, get_productions_d
 from .variable import Variable
@@ -145,7 +146,7 @@ class CFG:
                 self._impacts.setdefault(symbol, []).append(
                     (head, index_impact))
 
-    def _generate_epsilon(self):
+    def generate_epsilon(self):
         """ Whether the grammar generates epsilon or not
 
         Returns
@@ -689,7 +690,7 @@ class CFG:
 
         Parameters
         ----------
-        word : iterable of :class:`~pyformlang.cfg.CFG`
+        word : iterable of :class:`~pyformlang.cfg.Terminal`
             The word to check
 
         Returns
@@ -700,33 +701,51 @@ class CFG:
         # Remove epsilons
         word = [to_terminal(x) for x in word if x != Epsilon()]
         if not word:
-            return self._generate_epsilon()
-        cnf = self.to_normal_form()
-        cyk_table = dict()
-        # Organize productions
-        productions_d = dict()
-        for production in cnf.productions:
-            temp = tuple(production.body)
-            if temp in productions_d:
-                productions_d[temp].append(production.head)
-            else:
-                productions_d[temp] = [production.head]
-        # Initialization
-        for i, terminal in enumerate(word):
-            if (terminal,) in productions_d:
-                cyk_table[(i, i + 1)] = set(productions_d[(terminal,)])
-            else:
-                return False
-        for j in range(2, len(word) + 1):
-            for i in range(len(word) - j + 1):
-                cyk_table[(i, i + j)] = set()
-                for k in range(i + 1, i + j):
-                    for var_b in cyk_table.setdefault((i, k), set()):
-                        for var_c in cyk_table.setdefault((k, i + j), set()):
-                            for var_a in productions_d.setdefault(
-                                    (var_b, var_c), []):
-                                cyk_table[(i, i + j)].add(var_a)
-        return cnf.start_symbol in cyk_table[(0, len(word))]
+            return self.generate_epsilon()
+        cyk_table = CYKTable(self, word)
+        return cyk_table.generate_word()
+
+    def get_cnf_leftmost_derivation(self, word):
+        """
+        Get the leftmost derivation of the CNF form of this grammar
+
+        Parameters
+        ----------
+        word : iterable of :class:`~pyformlang.cfg.Terminal`
+            The word to check
+
+        Returns
+        -------
+        derivation : list of list of :class:`~pyformlang.cfg.CFGObject`
+            The derivation
+
+        """
+        word = [to_terminal(x) for x in word if x != Epsilon()]
+        if not word and not self.generate_epsilon():
+            raise DerivationDoesNotExist
+        cyk_table = CYKTable(self, word)
+        return cyk_table.get_leftmost_derivation()
+
+    def get_cnf_rightmost_derivation(self, word):
+        """
+        Get the rightmost derivation of the CNF form of this grammar
+
+        Parameters
+        ----------
+        word : iterable of :class:`~pyformlang.cfg.Terminal`
+            The word to check
+
+        Returns
+        -------
+        derivation : list of list of :class:`~pyformlang.cfg.CFGObject`
+            The derivation
+
+        """
+        word = [to_terminal(x) for x in word if x != Epsilon()]
+        if not word and not self.generate_epsilon():
+            raise DerivationDoesNotExist
+        cyk_table = CYKTable(self, word)
+        return cyk_table.get_rightmost_derivation()
 
     def to_pda(self) -> "pda.PDA":
         """ Convert the CFG to a PDA equivalent on empty stack
