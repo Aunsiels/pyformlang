@@ -3,6 +3,8 @@ Representation of a CYK table
 """
 from collections import deque
 
+from pyformlang.cfg.parse_tree import ParseTree
+
 
 class CYKTable:
     """
@@ -97,71 +99,33 @@ class CYKTable:
         """Get leftmost derivation"""
         return self._get_side_derivation(True)
 
-    @staticmethod
-    def _get_current_append(current, left, right, is_left=True):
-        if is_left:
-            if right is not None:
-                current.appendleft(right)
-            current.appendleft(left)
-        else:
-            current.append(left)
-            if right is not None:
-                current.append(right)
-
-    @staticmethod
-    def _get_extend(result, done, is_left):
-        if is_left:
-            result[-1].extendleft(done)
-        else:
-            result[-1].extend(done)
-
     def _get_side_derivation(self, is_left=True):
         if self._word and not self.generate_word():
             raise DerivationDoesNotExist
         if not self._word:
             return [self._cnf.start_symbol]
-        current = deque(
-            [x
-             for x in self._cyk_table[(0, len(self._word))]
-             if x == self._cnf.start_symbol])
-        result = []
-        done = deque()
-        current_pop = self._get_current_pop(current, is_left)
-
-        def current_append(left, right):
-            self._get_current_append(current, left, right, is_left)
-
-        def done_append(value):
-            self._get_current_append(done, value, None, not is_left)
-
-        while current:
-            result.append(deque([x.value for x in current]))
-            self._get_extend(result, done, is_left)
-            node = current_pop()
-            if node.left_son is None:
-                done_append(node.value)
-                if current:
-                    result.pop()
-            else:
-                current_append(node.left_son, node.right_son)
-        return [list(x) for x in result]
-
-    @staticmethod
-    def _get_current_pop(current, is_left):
+        current = [
+            x
+            for x in self._cyk_table[(0, len(self._word))]
+            if x == self._cnf.start_symbol][0]
         if is_left:
-            current_pop = current.popleft
+            return current.get_leftmost_derivation()
         else:
-            current_pop = current.pop
-        return current_pop
+            return current.get_rightmost_derivation()
 
 
-class CYKNode:
+class CYKNode(ParseTree):
     """A node in the CYK table"""
 
     def __init__(self, value, left_son=None, right_son=None):
+        super().__init__(value)
         self.value = value
         self.left_son = left_son
         self.right_son = right_son
+        if left_son is not None:
+            self.sons.append(left_son)
+        if right_son is not None:
+            self.sons.append(right_son)
 
     def __eq__(self, other):
         if isinstance(other, CYKNode):

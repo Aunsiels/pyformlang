@@ -1026,7 +1026,7 @@ class TestCFG(unittest.TestCase):
              [Variable("T"), Terminal("+"), Variable("T"), Variable("E’")],
              [Variable("T"), Terminal("+"), Variable("T")],
              [Variable("T"), Terminal("+"), Variable("F"), Variable("T’")],
-             [Variable("T"), Terminal("+"), Variable("F"),Terminal("*"),
+             [Variable("T"), Terminal("+"), Variable("F"), Terminal("*"),
               Variable("F"), Variable("T’")],
              [Variable("T"), Terminal("+"), Variable("F"), Terminal("*"),
               Variable("F")],

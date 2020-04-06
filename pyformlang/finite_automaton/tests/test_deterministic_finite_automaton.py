@@ -36,7 +36,7 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
                                            start_state,
                                            final_states)
         self.assertEqual(len(dfa.to_dict()), 1)
-        self.assertEqual(len([x for x in dfa]), 1)
+        self.assertEqual(len(dfa), 1)
         self.assertIsNotNone(dfa)
         dfa = DeterministicFiniteAutomaton()
         self.assertIsNotNone(dfa)

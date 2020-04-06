@@ -15,6 +15,7 @@ from pyformlang import pda
 
 # pylint: disable=cyclic-import
 from .cyk_table import CYKTable, DerivationDoesNotExist
+from .parse_tree import ParseTree
 from .pda_object_creator import PDAObjectCreator
 from .set_queue import SetQueue
 from .utils_cfg import remove_nullable_production, get_productions_d
@@ -30,8 +31,8 @@ EPSILON_SYMBOLS = ["epsilon", "$", "ε", "ϵ", "Є"]
 SUBS_SUFFIX = "#SUBS#"
 
 
-class NotParsableException:
-    pass
+class NotParsableException(Exception):
+    """When the grammar cannot be parsed (parser not powerful enough)"""
 
 
 class CFG:
@@ -1083,13 +1084,14 @@ class CFG:
                 length_before = len(first_set.get(production.head, set()))
                 first_set[production.head] = first_set.get(
                     production.head, set()).union(
-                    first_set_temp)
+                        first_set_temp)
                 if len(first_set[production.head]) != length_before:
                     for triggered in triggers.get(production.head, []):
                         to_process.append(triggered)
         return first_set
 
-    def _get_first_set_production(self, production, first_set):
+    @staticmethod
+    def _get_first_set_production(production, first_set):
         first_not_containing_epsilon = 0
         first_set_temp = set()
         for body_component in production.body:
@@ -1182,6 +1184,7 @@ class CFG:
         return triggers
 
     def get_llone_parsing_table(self):
+        """ Get the LL(1) parsing table """
         first_set = self.get_first_set()
         follow_set = self.get_follow_set()
         nullables = self.get_nullable_symbols()
@@ -1230,11 +1233,12 @@ class CFG:
         return True
 
     def get_llone_parse_tree(self, word):
+        """ Get LL(1) parse Tree"""
         word = [to_terminal(x) for x in word if x != Epsilon()]
         word.append("$")
         word = word[::-1]
         parsing_table = self.get_llone_parsing_table()
-        parse_tree = ParseTreeNode(self.start_symbol)
+        parse_tree = ParseTree(self.start_symbol)
         stack = ["$", parse_tree]
         while stack:
             current = stack.pop()
@@ -1247,74 +1251,10 @@ class CFG:
                                     .get(word[-1], []))
                 if len(rule_applied) == 1:
                     for component in rule_applied[0].body[::-1]:
-                        new_node = ParseTreeNode(component)
+                        new_node = ParseTree(component)
                         current.sons.append(new_node)
                         stack.append(new_node)
                 else:
                     raise NotParsableException
                 current.sons = current.sons[::-1]
         raise NotParsableException
-
-
-class ParseTreeNode:
-
-    def __init__(self, value):
-        self.value = value
-        self.sons = []
-
-    def __repr__(self):
-        return "ParseTree(" + str(self.value) + ", " + str(self.sons) + ")"
-
-    def get_leftmost_derivation(self):
-        """
-        Get the leftmost derivation
-
-        Returns
-        -------
-        derivation : list of list of :class:`~pyformlang.cfg.CFGObject`
-            The derivation
-
-        """
-        if len(self.sons) == 0 and isinstance(self.value, Variable):
-            return [[self.value], []]
-        if len(self.sons) == 0:
-            return [[self.value]]
-        res = [[self.value]]
-        start = []
-        for i, son in enumerate(self.sons):
-            end = [x.value for x in self.sons[i + 1:]]
-            derivation = []
-            derivations = son.get_leftmost_derivation()
-            if i != 0 and derivations and derivations[0]:
-                del derivations[0]
-            for derivation in derivations:
-                res.append(start + derivation + end)
-            start = start + derivation
-        return res
-
-    def get_rightmost_derivation(self):
-        """
-        Get the leftmost derivation
-
-        Returns
-        -------
-        derivation : list of list of :class:`~pyformlang.cfg.CFGObject`
-            The derivation
-
-        """
-        if len(self.sons) == 0 and isinstance(self.value, Variable):
-            return [[self.value], []]
-        if len(self.sons) == 0:
-            return [[self.value]]
-        res = [[self.value]]
-        end = []
-        for i, son in enumerate(self.sons[::-1]):
-            start = [x.value for x in self.sons[:-1 - i]]
-            derivation = []
-            derivations = son.get_rightmost_derivation()
-            if i != 0 and derivations and derivations[0]:
-                del derivations[0]
-            for derivation in derivations:
-                res.append(start + derivation + end)
-            end = derivation + end
-        return res
