@@ -839,3 +839,46 @@ class TestCFG(unittest.TestCase):
                          {Terminal(x) for x in {"g"}}.union({Epsilon()}))
         self.assertEqual(first_set[Variable("C")],
                          {Terminal(x) for x in {"h"}}.union({Epsilon()}))
+
+    def test_get_follow_set(self):
+        # Example from:
+        # https://www.geeksforgeeks.org/follow-set-in-syntax-analysis/
+        text = """
+            E  -> T E’
+            E’ -> + T E’ | Є
+            T  -> F T’
+            T’ -> * F T’ | Є
+            F  -> ( E ) | id
+        """
+        cfg = CFG.from_text(text, start_symbol="E")
+        follow_set = cfg.get_follow_set()
+        self.assertEqual(follow_set[Variable("E")],
+                         {"$", Terminal(")")})
+        self.assertEqual(follow_set[Variable("E’")],
+                         {"$", Terminal(")")})
+        self.assertEqual(follow_set[Variable("T")],
+                         {"$", Terminal("+"), Terminal(")")})
+        self.assertEqual(follow_set[Variable("T’")],
+                         {"$", Terminal("+"), Terminal(")")})
+        self.assertEqual(follow_set[Variable("F")],
+                         {"$", Terminal("+"), Terminal("*"), Terminal(")")})
+
+    def test_get_follow_set2(self):
+        # Example from:
+        # https://www.geeksforgeeks.org/follow-set-in-syntax-analysis/
+        text = """
+            S -> A C B | C b b | B a
+            A -> d a | B C
+            B -> g | Є
+            C -> h | Є
+        """
+        cfg = CFG.from_text(text)
+        follow_set = cfg.get_follow_set()
+        self.assertEqual(follow_set["S"],
+                         {"$"})
+        self.assertEqual(follow_set["A"],
+                         {"$", Terminal("h"), Terminal("g")})
+        self.assertEqual(follow_set["B"],
+                         {"$", Terminal("h"), Terminal("g"), Terminal("a")})
+        self.assertEqual(follow_set["C"],
+                         {"$", Terminal("h"), Terminal("g"), Terminal("b")})
