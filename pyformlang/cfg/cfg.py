@@ -16,6 +16,7 @@ from pyformlang import pda
 # pylint: disable=cyclic-import
 from .cyk_table import CYKTable, DerivationDoesNotExist
 from .pda_object_creator import PDAObjectCreator
+from .set_queue import SetQueue
 from .utils_cfg import remove_nullable_production, get_productions_d
 from .variable import Variable
 from .terminal import Terminal
@@ -1062,22 +1063,11 @@ class CFG:
             productions.add(Production(head, body))
 
     def get_first_set(self):
+        """ Used in LL(1) """
         # Algorithm from:
         # https://www.geeksforgeeks.org/first-set-in-syntax-analysis/
         triggers = self._get_triggers()
-        to_process = SetQueue()
-        first_set = dict()
-        # Initialisation
-        for x in self._terminals:
-            first_set[x] = {x}
-            for triggered in triggers.get(x, []):
-                to_process.append(triggered)
-        # Generate only epsilon
-        for production in self._productions:
-            if not production.body:
-                first_set[production.head] = {Epsilon()}
-                for triggered in triggers.get(production.head, []):
-                    to_process.append(triggered)
+        first_set, to_process = self._initialize_first_set(triggers)
         production_by_head = get_productions_d(self._productions)
         while to_process:
             current = to_process.pop()
@@ -1100,11 +1090,27 @@ class CFG:
                 length_before = len(first_set.get(production.head, set()))
                 first_set[production.head] = first_set.get(
                     production.head, set()).union(
-                    first_set_temp)
+                        first_set_temp)
                 if len(first_set[production.head]) != length_before:
                     for triggered in triggers.get(production.head, []):
                         to_process.append(triggered)
         return first_set
+
+    def _initialize_first_set(self, triggers):
+        to_process = SetQueue()
+        first_set = dict()
+        # Initialisation
+        for terminal in self._terminals:
+            first_set[terminal] = {terminal}
+            for triggered in triggers.get(terminal, []):
+                to_process.append(triggered)
+        # Generate only epsilon
+        for production in self._productions:
+            if not production.body:
+                first_set[production.head] = {Epsilon()}
+                for triggered in triggers.get(production.head, []):
+                    to_process.append(triggered)
+        return first_set, to_process
 
     def _get_triggers(self):
         triggers = dict()
@@ -1114,23 +1120,3 @@ class CFG:
                     triggers[body_component] = []
                 triggers[body_component].append(production.head)
         return triggers
-
-
-class SetQueue:
-
-    def __init__(self):
-        self._to_process = []
-        self._processing = set()
-
-    def append(self, value):
-        if value not in self._processing:
-            self._to_process.append(value)
-            self._processing.add(value)
-
-    def pop(self):
-        popped = self._to_process.pop()
-        self._processing.remove(popped)
-        return popped
-
-    def __bool__(self):
-        return bool(self._to_process)
