@@ -988,7 +988,7 @@ class TestCFG(unittest.TestCase):
         cfg = CFG.from_text(text, start_symbol="E")
         parse_tree = cfg.get_llone_parse_tree(["id", "+", "id", "*", "id"])
         self.assertEqual(
-            parse_tree.get_left_most_derivation(),
+            parse_tree.get_leftmost_derivation(),
             [[Variable("E")],
              [Variable("T"), Variable("E’")],
              [Variable("F"), Variable("T’"), Variable("E’")],
@@ -1007,4 +1007,37 @@ class TestCFG(unittest.TestCase):
               Terminal("id"), Variable("E’")],
              [Terminal("id"), Terminal("+"), Terminal("id"), Terminal("*"),
               Terminal("id")]
+             ])
+
+    def test_get_llone_rightmost_derivation(self):
+        text = """
+                    E  -> T E’
+                    E’ -> + T E’ | Є
+                    T  -> F T’
+                    T’ -> * F T’ | Є
+                    F  -> ( E ) | id
+                """
+        cfg = CFG.from_text(text, start_symbol="E")
+        parse_tree = cfg.get_llone_parse_tree(["id", "+", "id", "*", "id"])
+        self.assertEqual(
+            parse_tree.get_rightmost_derivation(),
+            [[Variable("E")],
+             [Variable("T"), Variable("E’")],
+             [Variable("T"), Terminal("+"), Variable("T"), Variable("E’")],
+             [Variable("T"), Terminal("+"), Variable("T")],
+             [Variable("T"), Terminal("+"), Variable("F"), Variable("T’")],
+             [Variable("T"), Terminal("+"), Variable("F"),Terminal("*"),
+              Variable("F"), Variable("T’")],
+             [Variable("T"), Terminal("+"), Variable("F"), Terminal("*"),
+              Variable("F")],
+             [Variable("T"), Terminal("+"), Variable("F"), Terminal("*"),
+              Terminal("id")],
+             [Variable("T"), Terminal("+"), Terminal("id"), Terminal("*"),
+              Terminal("id")],
+             [Variable("F"), Variable("T’"), Terminal("+"), Terminal("id"),
+              Terminal("*"), Terminal("id")],
+             [Variable("F"), Terminal("+"), Terminal("id"),
+              Terminal("*"), Terminal("id")],
+             [Terminal("id"), Terminal("+"), Terminal("id"),
+              Terminal("*"), Terminal("id")],
              ])
