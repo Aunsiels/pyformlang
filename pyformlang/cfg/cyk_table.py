@@ -1,7 +1,6 @@
 """
 Representation of a CYK table
 """
-from collections import deque
 
 from pyformlang.cfg.parse_tree import ParseTree
 
@@ -110,8 +109,7 @@ class CYKTable:
             if x == self._cnf.start_symbol][0]
         if is_left:
             return current.get_leftmost_derivation()
-        else:
-            return current.get_rightmost_derivation()
+        return current.get_rightmost_derivation()
 
 
 class CYKNode(ParseTree):
