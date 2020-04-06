@@ -1,4 +1,4 @@
-""" Usefull functions """
+""" Useful functions """
 
 from .variable import Variable
 from .terminal import Terminal

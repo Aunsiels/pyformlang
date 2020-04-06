@@ -759,9 +759,8 @@ class TestCFG(unittest.TestCase):
 
     def test_from_text2(self):
         text = """
-        S  -> A B
-        A -> a
-        B -> b
+        S  -> A B\n\rA -> a
+        B -> b\r
         """
         cfg = CFG.from_text(text)
         self.assertTrue(cfg.contains(["a", "b"]))

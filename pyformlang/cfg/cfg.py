@@ -1008,27 +1008,53 @@ class CFG:
 
     @classmethod
     def from_text(cls, text, start_symbol=Variable("S")):
+        """
+        Read a context free grammar from a text.
+        The text contains one rule per line.
+        The structure of a production is:
+        head -> body1 | body2 | ... | bodyn
+        where | separates the bodies.
+        A variable (or non terminal) begins by a capital letter.
+        A terminal begins by a non-capital character
+        Terminals and Variables are separated by spaces.
+
+        Parameters
+        ----------
+        text : str
+            The text of transform
+        start_symbol : str, optional
+            The start symbol, S by default
+
+        Returns
+        -------
+        cfg : :class:`~pyformlang.cfg.CFG`
+            A context free grammar.
+        """
         variables = set()
         productions = set()
         terminals = set()
-        for line in text.split("\n"):
+        for line in text.splitlines():
             line = line.strip()
             if not line:
                 continue
-            head_s, body_s = line.split("->")
-            head = Variable(head_s.strip())
-            variables.add(head)
-            for sub_body in body_s.split("|"):
-                body = []
-                for body_component in sub_body.split():
-                    if body_component[0] in string.ascii_uppercase:
-                        body_var = Variable(body_component)
-                        variables.add(body_var)
-                        body.append(body_var)
-                    elif body_component not in ["epsilon", "$"]:
-                        body_ter = Terminal(body_component)
-                        terminals.add(body_ter)
-                        body.append(body_ter)
-                productions.add(Production(head, body))
+            cls._read_line(line, productions, terminals, variables)
         return CFG(variables=variables, terminals=terminals,
                    productions=productions, start_symbol=start_symbol)
+
+    @classmethod
+    def _read_line(cls, line, productions, terminals, variables):
+        head_s, body_s = line.split("->")
+        head = Variable(head_s.strip())
+        variables.add(head)
+        for sub_body in body_s.split("|"):
+            body = []
+            for body_component in sub_body.split():
+                if body_component[0] in string.ascii_uppercase:
+                    body_var = Variable(body_component)
+                    variables.add(body_var)
+                    body.append(body_var)
+                elif body_component not in ["epsilon", "$"]:
+                    body_ter = Terminal(body_component)
+                    terminals.add(body_ter)
+                    body.append(body_ter)
+            productions.add(Production(head, body))
