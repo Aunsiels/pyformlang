@@ -30,11 +30,9 @@ def remove_nullable_production(production: Production,
     """ Get all combinations of productions rules after removing nullable """
     next_prod_l = remove_nullable_production_sub(production.body,
                                                  nullables)
-    res = []
-    for prod_l in next_prod_l:
-        if prod_l:
-            res.append(Production(production.head,
-                                  prod_l))
+    res = [Production(production.head, prod_l)
+           for prod_l in next_prod_l
+           if prod_l]
     return res
 
 

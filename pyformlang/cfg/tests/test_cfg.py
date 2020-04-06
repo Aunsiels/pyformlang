@@ -883,3 +883,128 @@ class TestCFG(unittest.TestCase):
                          {"$", Terminal("h"), Terminal("g"), Terminal("a")})
         self.assertEqual(follow_set["C"],
                          {"$", Terminal("h"), Terminal("g"), Terminal("b")})
+
+    def test_get_llone_table(self):
+        # Example from:
+        # https://www.geeksforgeeks.org/construction-of-ll1-parsing-table/
+        text = """
+            E  -> T E’
+            E’ -> + T E’ | Є
+            T  -> F T’
+            T’ -> * F T’ | Є
+            F  -> ( E ) | id
+        """
+        cfg = CFG.from_text(text, start_symbol="E")
+        parsing_table = cfg.get_llone_parsing_table()
+        self.assertEqual(
+            len(parsing_table.get(Variable("E"), dict())
+                .get(Terminal("id"), [])),
+            1)
+        self.assertEqual(
+            len(parsing_table.get(Variable("E"), dict())
+                .get(Terminal("+"), [])),
+            0)
+        self.assertEqual(
+            len(parsing_table.get(Variable("T’"), dict())
+                .get(Terminal(")"), [])),
+            1)
+        self.assertEqual(
+            len(parsing_table.get(Variable("F"), dict())
+                .get(Terminal("("), [])),
+            1)
+        self.assertEqual(
+            len(parsing_table.get(Variable("F"), dict())
+                .get(Terminal("id"), [])),
+            1)
+
+    def test_llone_table_non_llone(self):
+        text = """
+        S -> A | a
+        A -> a 
+        """
+        cfg = CFG.from_text(text, start_symbol="E")
+        parsing_table = cfg.get_llone_parsing_table()
+        self.assertEqual(
+            len(parsing_table.get(Variable("S"), dict())
+                .get(Terminal("a"), [])),
+            2)
+        self.assertEqual(
+            len(parsing_table.get(Variable("A"), dict())
+                .get(Terminal("a"), [])),
+            1)
+        self.assertEqual(
+            len(parsing_table.get(Variable("S"), dict())
+                .get(Terminal("$"), [])),
+            0)
+        self.assertEqual(
+            len(parsing_table.get(Variable("A"), dict())
+                .get(Terminal("$"), [])),
+            0)
+
+    def test_is_llone_parsable(self):
+        # Example from:
+        # https://www.geeksforgeeks.org/construction-of-ll1-parsing-table/
+        text = """
+            E  -> T E’
+            E’ -> + T E’ | Є
+            T  -> F T’
+            T’ -> * F T’ | Є
+            F  -> ( E ) | id
+        """
+        cfg = CFG.from_text(text, start_symbol="E")
+        self.assertTrue(cfg.is_llone_parsable())
+
+    def test_is_not_llone_parsable(self):
+        # Example from:
+        # https://www.geeksforgeeks.org/construction-of-ll1-parsing-table/
+        text = """
+                S -> A | a
+                A -> a 
+                """
+        cfg = CFG.from_text(text, start_symbol="E")
+        self.assertFalse(cfg.is_llone_parsable())
+
+    def test_get_llone_parse_tree(self):
+        text = """
+                    E  -> T E’
+                    E’ -> + T E’ | Є
+                    T  -> F T’
+                    T’ -> * F T’ | Є
+                    F  -> ( E ) | id
+                """
+        cfg = CFG.from_text(text, start_symbol="E")
+        parse_tree = cfg.get_llone_parse_tree(["id", "+", "id", "*", "id"])
+        self.assertEqual(parse_tree.value, Variable("E"))
+        self.assertEqual(len(parse_tree.sons), 2)
+
+    def test_get_llone_leftmost_derivation(self):
+        text = """
+                    E  -> T E’
+                    E’ -> + T E’ | Є
+                    T  -> F T’
+                    T’ -> * F T’ | Є
+                    F  -> ( E ) | id
+                """
+        cfg = CFG.from_text(text, start_symbol="E")
+        parse_tree = cfg.get_llone_parse_tree(["id", "+", "id", "*", "id"])
+        self.assertEqual(
+            parse_tree.get_left_most_derivation(),
+            [[Variable("E")],
+             [Variable("T"), Variable("E’")],
+             [Variable("F"), Variable("T’"), Variable("E’")],
+             [Terminal("id"), Variable("T’"), Variable("E’")],
+             [Terminal("id"), Variable("E’")],
+             [Terminal("id"), Terminal("+"), Variable("T"), Variable("E’")],
+             [Terminal("id"), Terminal("+"), Variable("F"), Variable("T’"),
+              Variable("E’")],
+             [Terminal("id"), Terminal("+"), Terminal("id"), Variable("T’"),
+              Variable("E’")],
+             [Terminal("id"), Terminal("+"), Terminal("id"), Terminal("*"),
+              Variable("F"), Variable("T’"), Variable("E’")],
+             [Terminal("id"), Terminal("+"), Terminal("id"), Terminal("*"),
+              Terminal("id"), Variable("T’"), Variable("E’")],
+             [Terminal("id"), Terminal("+"), Terminal("id"), Terminal("*"),
+              Terminal("id"), Variable("E’")],
+             [Terminal("id"), Terminal("+"), Terminal("id"), Terminal("*"),
+              Terminal("id")]
+             ])

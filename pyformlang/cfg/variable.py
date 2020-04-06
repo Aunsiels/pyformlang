@@ -20,8 +20,7 @@ class Variable(CFGObject):  # pylint: disable=too-few-public-methods
     def __eq__(self, other):
         if isinstance(other, CFGObject):
             return self._value == other.value
-        else:
-            return self._value == other
+        return self._value == other
 
     def __str__(self):
         return str(self.value)

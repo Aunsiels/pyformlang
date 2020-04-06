@@ -30,6 +30,10 @@ EPSILON_SYMBOLS = ["epsilon", "$", "ε", "ϵ", "Є"]
 SUBS_SUFFIX = "#SUBS#"
 
 
+class NotParsableException:
+    pass
+
+
 class CFG:
     """ A class representing a context free grammar
 
@@ -1074,27 +1078,32 @@ class CFG:
             for production in production_by_head[current]:
                 if not production.body:
                     continue
-                first_not_containing_epsilon = 0
-                first_set_temp = set()
-                for body_component in production.body:
-                    first_set_temp = first_set_temp.union(
-                        first_set.get(
-                            production.body[first_not_containing_epsilon],
-                            set()))
-                    if Epsilon() not in first_set.get(body_component, set()):
-                        break
-                    first_not_containing_epsilon += 1
-                if first_not_containing_epsilon != len(production.body):
-                    if Epsilon() in first_set_temp:
-                        first_set_temp.remove(Epsilon())
+                first_set_temp = self._get_first_set_production(production,
+                                                                first_set)
                 length_before = len(first_set.get(production.head, set()))
                 first_set[production.head] = first_set.get(
                     production.head, set()).union(
-                        first_set_temp)
+                    first_set_temp)
                 if len(first_set[production.head]) != length_before:
                     for triggered in triggers.get(production.head, []):
                         to_process.append(triggered)
         return first_set
+
+    def _get_first_set_production(self, production, first_set):
+        first_not_containing_epsilon = 0
+        first_set_temp = set()
+        for body_component in production.body:
+            first_set_temp = first_set_temp.union(
+                first_set.get(
+                    production.body[first_not_containing_epsilon],
+                    set()))
+            if Epsilon() not in first_set.get(body_component, set()):
+                break
+            first_not_containing_epsilon += 1
+        if first_not_containing_epsilon != len(production.body):
+            if Epsilon() in first_set_temp:
+                first_set_temp.remove(Epsilon())
+        return first_set_temp
 
     def _initialize_first_set(self, triggers):
         to_process = SetQueue()
@@ -1171,3 +1180,114 @@ class CFG:
                 if all_epsilon:
                     triggers[production.head].add(component)
         return triggers
+
+    def get_llone_parsing_table(self):
+        first_set = self.get_first_set()
+        follow_set = self.get_follow_set()
+        nullables = self.get_nullable_symbols()
+        nullable_productions = []
+        non_nullable_productions = []
+        for production in self._productions:
+            if all([x in nullables for x in production.body]):
+                nullable_productions.append(production)
+            else:
+                non_nullable_productions.append(production)
+        llone_parsing_table = dict()
+        for production in nullable_productions:
+            if production.head not in llone_parsing_table:
+                llone_parsing_table[production.head] = dict()
+            for first in follow_set.get(production.head, set()):
+                if first not in llone_parsing_table[production.head]:
+                    llone_parsing_table[production.head][first] = []
+                llone_parsing_table[production.head][first].append(
+                    production
+                )
+        for production in non_nullable_productions:
+            if production.head not in llone_parsing_table:
+                llone_parsing_table[production.head] = dict()
+            for first in self._get_first_set_production(production,
+                                                        first_set):
+                if first not in llone_parsing_table[production.head]:
+                    llone_parsing_table[production.head][first] = []
+                llone_parsing_table[production.head][first].append(
+                    production
+                )
+        return llone_parsing_table
+
+    def is_llone_parsable(self):
+        """
+        Checks whether the grammar can be parse with the LL(1) parser.
+
+        Returns
+        -------
+        is_parsable : bool
+        """
+        parsing_table = self.get_llone_parsing_table()
+        for variable in parsing_table:
+            for terminal in parsing_table[variable]:
+                if len(parsing_table[variable][terminal]) > 1:
+                    return False
+        return True
+
+    def get_llone_parse_tree(self, word):
+        word = [to_terminal(x) for x in word if x != Epsilon()]
+        word.append("$")
+        word = word[::-1]
+        parsing_table = self.get_llone_parsing_table()
+        parse_tree = ParseTreeNode(self.start_symbol)
+        stack = ["$", parse_tree]
+        while stack:
+            current = stack.pop()
+            if current == "$" and word[-1] == "$":
+                return parse_tree
+            if current.value == word[-1]:
+                word.pop()
+            else:
+                rule_applied = list(parsing_table.get(current.value, dict())
+                                    .get(word[-1], []))
+                if len(rule_applied) == 1:
+                    for component in rule_applied[0].body[::-1]:
+                        new_node = ParseTreeNode(component)
+                        current.sons.append(new_node)
+                        stack.append(new_node)
+                else:
+                    raise NotParsableException
+                current.sons = current.sons[::-1]
+        raise NotParsableException
+
+
+class ParseTreeNode:
+
+    def __init__(self, value):
+        self.value = value
+        self.sons = []
+
+    def __repr__(self):
+        return "ParseTree(" + str(self.value) + ", " + str(self.sons) + ")"
+
+    def get_left_most_derivation(self):
+        """
+        Get the leftmost derivation
+
+        Returns
+        -------
+        derivation : list of list of :class:`~pyformlang.cfg.CFGObject`
+            The derivation
+
+        """
+        if len(self.sons) == 0 and isinstance(self.value, Variable):
+            return [[]]
+        if len(self.sons) == 0:
+            return [[self.value]]
+        res = [[self.value]]
+        start = []
+        for i, son in enumerate(self.sons):
+            end = [x.value for x in self.sons[i + 1:]]
+            derivation = []
+            derivations = son.get_left_most_derivation()
+            if i != 0 and derivations and derivations[0]:
+                del derivations[0]
+            for derivation in derivations:
+                res.append(start + derivation + end)
+            start = start + derivation
+        return res
