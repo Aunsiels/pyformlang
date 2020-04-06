@@ -874,6 +874,7 @@ class TestCFG(unittest.TestCase):
         """
         cfg = CFG.from_text(text)
         follow_set = cfg.get_follow_set()
+        print(follow_set)
         self.assertEqual(follow_set["S"],
                          {"$"})
         self.assertEqual(follow_set["A"],

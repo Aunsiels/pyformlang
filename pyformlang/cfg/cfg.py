@@ -1122,22 +1122,26 @@ class CFG:
         return triggers
 
     def get_follow_set(self):
+        """ Get follow set """
         first_set = self.get_first_set()
-        triggers = dict()
-        for production in self._productions:
-            if production.head not in triggers:
-                triggers[production.head] = set()
-            for i, component in enumerate(production.body):
-                all_epsilon = True
-                for component_next in production.body[i+1:]:
-                    if Epsilon() not in first_set.get(component_next, set()):
-                        all_epsilon = False
-                        break
-                if all_epsilon:
-                    triggers[production.head].add(component)
+        triggers = self._get_triggers_follow_set(first_set)
+        follow_set, to_process = self._initialize_follow_set(first_set)
+        while to_process:
+            current = to_process.pop()
+            for triggered in triggers.get(current, set()):
+                length_before = len(follow_set.get(triggered, set()))
+                follow_set[triggered] = follow_set.get(
+                    triggered, set()
+                ).union(follow_set.get(current, set()))
+                if length_before != len(follow_set[triggered]):
+                    to_process.append(triggered)
+        return follow_set
+
+    def _initialize_follow_set(self, first_set):
         to_process = SetQueue()
         follow_set = dict()
         follow_set[self.start_symbol] = {"$"}
+        to_process.append(self.start_symbol)
         for production in self._productions:
             for i, component in enumerate(production.body):
                 for component_next in production.body[i + 1:]:
@@ -1151,13 +1155,19 @@ class CFG:
                     follow_set[component].remove(Epsilon())
                 if follow_set.get(component, set()):
                     to_process.append(component)
-        while to_process:
-            current = to_process.pop()
-            for triggered in triggers.get(current, set()):
-                length_before = len(follow_set.get(triggered, set()))
-                follow_set[triggered] = follow_set.get(
-                    triggered, set()
-                ).union(follow_set.get(current, set()))
-                if length_before != len(follow_set[triggered]):
-                    to_process.append(triggered)
-        return follow_set
+        return follow_set, to_process
+
+    def _get_triggers_follow_set(self, first_set):
+        triggers = dict()
+        for production in self._productions:
+            if production.head not in triggers:
+                triggers[production.head] = set()
+            for i, component in enumerate(production.body):
+                all_epsilon = True
+                for component_next in production.body[i + 1:]:
+                    if Epsilon() not in first_set.get(component_next, set()):
+                        all_epsilon = False
+                        break
+                if all_epsilon:
+                    triggers[production.head].add(component)
+        return triggers
