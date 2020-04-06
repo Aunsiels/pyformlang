@@ -24,6 +24,8 @@ from .cfg_object import CFGObject
 from .epsilon import Epsilon
 from .utils import to_variable, to_terminal
 
+EPSILON_SYMBOLS = ["epsilon", "$", "ε", "ϵ", "Є"]
+
 SUBS_SUFFIX = "#SUBS#"
 
 
@@ -1053,8 +1055,82 @@ class CFG:
                     body_var = Variable(body_component)
                     variables.add(body_var)
                     body.append(body_var)
-                elif body_component not in ["epsilon", "$"]:
+                elif body_component not in EPSILON_SYMBOLS:
                     body_ter = Terminal(body_component)
                     terminals.add(body_ter)
                     body.append(body_ter)
             productions.add(Production(head, body))
+
+    def get_first_set(self):
+        # Algorithm from:
+        # https://www.geeksforgeeks.org/first-set-in-syntax-analysis/
+        triggers = self._get_triggers()
+        to_process = SetQueue()
+        first_set = dict()
+        # Initialisation
+        for x in self._terminals:
+            first_set[x] = {x}
+            for triggered in triggers.get(x, []):
+                to_process.append(triggered)
+        # Generate only epsilon
+        for production in self._productions:
+            if not production.body:
+                first_set[production.head] = {Epsilon()}
+                for triggered in triggers.get(production.head, []):
+                    to_process.append(triggered)
+        production_by_head = get_productions_d(self._productions)
+        while to_process:
+            current = to_process.pop()
+            for production in production_by_head[current]:
+                if not production.body:
+                    continue
+                first_not_containing_epsilon = 0
+                first_set_temp = set()
+                for body_component in production.body:
+                    first_set_temp = first_set_temp.union(
+                        first_set.get(
+                            production.body[first_not_containing_epsilon],
+                            set()))
+                    if Epsilon() not in first_set.get(body_component, set()):
+                        break
+                    first_not_containing_epsilon += 1
+                if first_not_containing_epsilon != len(production.body):
+                    if Epsilon() in first_set_temp:
+                        first_set_temp.remove(Epsilon())
+                length_before = len(first_set.get(production.head, set()))
+                first_set[production.head] = first_set.get(
+                    production.head, set()).union(
+                    first_set_temp)
+                if len(first_set[production.head]) != length_before:
+                    for triggered in triggers.get(production.head, []):
+                        to_process.append(triggered)
+        return first_set
+
+    def _get_triggers(self):
+        triggers = dict()
+        for production in self._productions:
+            for body_component in production.body:
+                if body_component not in triggers:
+                    triggers[body_component] = []
+                triggers[body_component].append(production.head)
+        return triggers
+
+
+class SetQueue:
+
+    def __init__(self):
+        self._to_process = []
+        self._processing = set()
+
+    def append(self, value):
+        if value not in self._processing:
+            self._to_process.append(value)
+            self._processing.add(value)
+
+    def pop(self):
+        popped = self._to_process.pop()
+        self._processing.remove(popped)
+        return popped
+
+    def __bool__(self):
+        return bool(self._to_process)

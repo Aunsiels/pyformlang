@@ -794,3 +794,48 @@ class TestCFG(unittest.TestCase):
         text = """S1 -> a"""
         cfg = CFG.from_text(text, start_symbol="S1")
         self.assertEqual(Variable("S1"), cfg.start_symbol)
+
+    def test_get_first_set(self):
+        # Example from:
+        # https://www.geeksforgeeks.org/first-set-in-syntax-analysis/
+        text = """
+            E  -> T E’
+            E’ -> + T E’ | Є
+            T  -> F T’
+            T’ -> * F T’ | Є
+            F  -> ( E ) | id
+        """
+        cfg = CFG.from_text(text)
+        first_set = cfg.get_first_set()
+        self.assertEqual(first_set[Variable("E")],
+                         {Terminal("("), Terminal("id")})
+        self.assertEqual(first_set[Variable("E’")],
+                         {Terminal("+"), Epsilon()})
+        self.assertEqual(first_set[Variable("T")],
+                         {Terminal("("), Terminal("id")})
+        self.assertEqual(first_set[Variable("T’")],
+                         {Terminal("*"), Epsilon()})
+        self.assertEqual(first_set[Variable("F")],
+                         {Terminal("("), Terminal("id")})
+
+    def test_get_first_set2(self):
+        # Example from:
+        # https://www.geeksforgeeks.org/first-set-in-syntax-analysis/
+        text = """
+            S -> A C B | C b b | B a
+            A -> d a | B C
+            B -> g | Є
+            C -> h | Є
+        """
+        cfg = CFG.from_text(text)
+        first_set = cfg.get_first_set()
+        self.assertEqual(first_set[Variable("S")],
+                         {Terminal(x) for x in {"d", "g", "h", "b",
+                                                "a"}}.union({Epsilon()}))
+        self.assertEqual(first_set[Variable("A")],
+                         {Terminal(x) for x in {"d", "g",
+                                                "h"}}.union({Epsilon()}))
+        self.assertEqual(first_set[Variable("B")],
+                         {Terminal(x) for x in {"g"}}.union({Epsilon()}))
+        self.assertEqual(first_set[Variable("C")],
+                         {Terminal(x) for x in {"h"}}.union({Epsilon()}))
