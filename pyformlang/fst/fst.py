@@ -1,5 +1,5 @@
 """ Finite State Transducer """
-
+import json
 from typing import Any, Iterable
 
 import networkx as nx
@@ -489,7 +489,8 @@ class FST:
                 graph.add_edge(
                     s_from,
                     s_to,
-                    label=str(input_symbol) + "->" + "//".join(output_symbols))
+                    label=(json.dumps(input_symbol) + " -> " +
+                           json.dumps(output_symbols)))
         return graph
 
     @classmethod
@@ -511,7 +512,6 @@ class FST:
 
         TODO
         -------
-        * We lose the type of the node value if going through a dot file
         * Explain the format
         """
         fst = FST()
@@ -520,11 +520,13 @@ class FST:
                 for transition in graph[s_from][s_to].values():
                     if "label" in transition:
                         in_symbol, out_symbols = transition["label"].split(
-                            "->")
+                            " -> ")
+                        in_symbol = json.loads(in_symbol)
+                        out_symbols = json.loads(out_symbols)
                         fst.add_transition(s_from,
                                            in_symbol,
                                            s_to,
-                                           out_symbols.split("//"))
+                                           out_symbols)
         for node in graph.nodes:
             if graph.nodes[node].get("is_start", False):
                 fst.add_start_state(node)
