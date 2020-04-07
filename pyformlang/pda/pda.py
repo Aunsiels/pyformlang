@@ -1,9 +1,10 @@
 """ We represent here a push-down automaton """
-
+import json
 from typing import AbstractSet, List, Iterable, Any
 from itertools import product
 import numpy as np
-
+import networkx as nx
+from networkx.drawing.nx_pydot import write_dot
 
 from pyformlang.pda.cfg_variable_converter import CFGVariableConverter
 from pyformlang import finite_automaton
@@ -103,6 +104,31 @@ class PDA:
             self._states.add(state)
         self._cfg_variable_converter = None
 
+    def set_start_state(self, start_state: State):
+        """ Sets the start state to the automaton
+
+        Parameters
+        ----------
+        start_state : :class:`~pyformlang.pda.State`
+            The start state
+        """
+        start_state = self._pda_obj_creator.to_state(start_state)
+        self._states.add(start_state)
+        self._start_state = start_state
+
+    def set_start_stack_symbol(self, start_stack_symbol: StackSymbol):
+        """ Sets the start stack symbol to the automaton
+
+        Parameters
+        ----------
+        start_stack_symbol : :class:`~pyformlang.pda.StackSymbol`
+            The start stack symbol
+        """
+        start_stack_symbol = self._pda_obj_creator.to_stack_symbol(
+            start_stack_symbol)
+        self._stack_alphabet.add(start_stack_symbol)
+        self._start_stack_symbol = start_stack_symbol
+
     def add_final_state(self, state: State):
         """ Adds a final state to the automaton
 
@@ -113,6 +139,11 @@ class PDA:
         """
         state = self._pda_obj_creator.to_state(state)
         self._final_states.add(state)
+
+    @property
+    def start_state(self):
+        """ Get start state """
+        return self._start_state
 
     @property
     def states(self):
@@ -170,6 +201,19 @@ class PDA:
             The number of transitions
         """
         return self._transition_function.get_number_transitions()
+
+    def add_transitions(self, transitions):
+        """
+        Adds several transitions
+
+        Parameters
+        ----------
+        transitions :
+            Transitions as they would be given to add_transition
+        """
+        for s_from, input_symbol, stack_from, s_to, stack_to in transitions:
+            self.add_transition(s_from, input_symbol,stack_from,
+                                s_to, stack_to)
 
     def add_transition(self,
                        s_from: State,
@@ -509,6 +553,109 @@ class PDA:
             The transitions
         """
         return self._transition_function.to_dict()
+
+    def to_networkx(self) -> nx.MultiDiGraph:
+        """
+        Transform the current pda into a networkx graph
+
+        Returns
+        -------
+        graph :  networkx.MultiDiGraph
+            A networkx MultiDiGraph representing the pda
+
+        """
+        graph = nx.MultiDiGraph()
+        for state in self._states:
+            graph.add_node(state.value,
+                           is_start=state == self._start_state,
+                           is_final=state in self.final_states,
+                           peripheries=2 if state in self.final_states else 1,
+                           label=state.value)
+            if state == self._start_state:
+                graph.add_node(str(state.value) + "_starting",
+                               label="",
+                               shape=None,
+                               height=.0,
+                               width=.0)
+                graph.add_edge(str(state.value) + "_starting",
+                               state.value)
+        if self._start_stack_symbol is not None:
+            graph.add_node("INITIAL_STACK_HIDDEN",
+                           label=json.dumps(self._start_stack_symbol.value),
+                           shape=None,
+                           height=.0,
+                           width=.0)
+        for key, value in self._transition_function:
+            s_from, in_symbol, stack_from = key
+            s_to, stack_to = value
+            graph.add_edge(
+                s_from.value,
+                s_to.value,
+                label=(json.dumps(in_symbol.value) + " -> " +
+                       json.dumps(stack_from.value) + " / " +
+                       json.dumps([x.value for x in stack_to])))
+        return graph
+
+    @classmethod
+    def from_networkx(cls, graph):
+        """
+        Import a networkx graph into a PDA. \
+        The imported graph requires to have the good format, i.e. to come \
+        from the function to_networkx
+
+        Parameters
+        ----------
+        graph :
+            The graph representation of the PDA
+
+        Returns
+        -------
+        pda :
+            A PDA automaton read from the graph
+
+        TODO
+        -------
+        * Explain the format
+        """
+        pda = PDA()
+        for s_from in graph:
+            if type(s_from) == str and s_from.endswith("_starting"):
+                continue
+            for s_to in graph[s_from]:
+                for transition in graph[s_from][s_to].values():
+                    if "label" in transition:
+                        in_symbol, stack_info = transition["label"].split(
+                            " -> ")
+                        in_symbol = json.loads(in_symbol)
+                        stack_from, stack_to = stack_info.split(" / ")
+                        stack_from = json.loads(stack_from)
+                        stack_to = json.loads(stack_to)
+                        pda.add_transition(s_from,
+                                           in_symbol,
+                                           stack_from,
+                                           s_to,
+                                           stack_to)
+        for node in graph.nodes:
+            if graph.nodes[node].get("is_start", False):
+                pda.set_start_state(node)
+            if graph.nodes[node].get("is_final", False):
+                pda.add_final_state(node)
+        if "INITIAL_STACK_HIDDEN" in graph.nodes:
+            pda.set_start_stack_symbol(
+                json.loads(graph.nodes["INITIAL_STACK_HIDDEN"]["label"]))
+        return pda
+
+    def write_as_dot(self, filename):
+        """
+        Write the PDA in dot format into a file
+
+        Parameters
+        ----------
+        filename : str
+            The filename where to write the dot file
+
+        """
+        write_dot(self.to_networkx(), filename)
 
 
 def _prepend_input_symbol_to_the_bodies(bodies, transition):

@@ -1,6 +1,7 @@
 """ Tests the PDA """
 
 import unittest
+from os import path
 
 from pyformlang.pda import PDA, State, StackSymbol, Symbol, Epsilon
 from pyformlang.cfg import Terminal
@@ -331,3 +332,30 @@ class TestPDA(unittest.TestCase):
         """ Test creation objects """
         poc = PDAObjectCreator()
         self.assertEqual(poc.to_stack_symbol(Epsilon()), Epsilon())
+
+    def test_pda_paper(self):
+        """ Code in the paper """
+        pda = PDA()
+        pda.add_transitions(
+            [
+                ("q0", "0", "Z0", "q1", ("Z1", "Z0")),
+                ("q1", "1", "Z1", "q2", []),
+                ("q0", "epsilon", "Z1", "q2", [])
+            ]
+        )
+        pda.set_start_state("q0")
+        pda.set_start_stack_symbol("Z0")
+        pda.add_final_state("q2")
+        pda_final_state = pda.to_final_state()
+        cfg = pda.to_empty_stack().to_cfg()
+        self.assertTrue(cfg.contains(["0", "1"]))
+        pda_networkx = PDA.from_networkx(pda.to_networkx())
+        self.assertEqual(pda.states, pda_networkx.states)
+        self.assertEqual(pda.start_state, pda_networkx.start_state)
+        self.assertEqual(pda.final_states, pda_networkx.final_states)
+        self.assertEqual(pda.input_symbols, pda_networkx.input_symbols)
+        self.assertEqual(pda.stack_symbols, pda_networkx.stack_symbols)
+        cfg = pda_networkx.to_empty_stack().to_cfg()
+        pda_networkx.write_as_dot("pda.dot")
+        self.assertTrue(cfg.contains(["0", "1"]))
+        self.assertTrue(path.exists("pda.dot"))

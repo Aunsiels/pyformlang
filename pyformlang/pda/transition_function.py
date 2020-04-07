@@ -12,9 +12,9 @@ class TransitionFunction:
 
     def __init__(self):
         self._transitions = dict()
-        self._iterkey = None
+        self._iter_key = None
         self._current_key = None
-        self._iterinside = None
+        self._iter_inside = None
 
     def get_number_transitions(self):
         """ Gets the number of transitions
@@ -71,23 +71,23 @@ class TransitionFunction:
         return new_tf
 
     def __iter__(self):
-        self._iterkey = iter(self._transitions.keys())
+        self._iter_key = iter(self._transitions.keys())
         self._current_key = None
-        self._iterinside = None
+        self._iter_inside = None
         return self
 
     def __next__(self):
-        if self._iterinside is None:
-            next_key = next(self._iterkey)
+        if self._iter_inside is None:
+            next_key = next(self._iter_key)
             self._current_key = next_key
-            self._iterinside = iter(self._transitions[next_key])
+            self._iter_inside = iter(self._transitions[next_key])
         try:
-            next_value = next(self._iterinside)
-            return (self._current_key, next_value)
+            next_value = next(self._iter_inside)
+            return self._current_key, next_value
         except StopIteration:
-            next_key = next(self._iterkey)
+            next_key = next(self._iter_key)
             self._current_key = next_key
-            self._iterinside = iter(self._transitions[next_key])
+            self._iter_inside = iter(self._transitions[next_key])
             return next(self)
 
     def __call__(self, s_from: State,

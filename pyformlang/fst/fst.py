@@ -496,19 +496,19 @@ class FST:
     @classmethod
     def from_networkx(cls, graph):
         """
-        Import a networkx graph into an finite state automaton. \
+        Import a networkx graph into an finite state transducer. \
         The imported graph requires to have the good format, i.e. to come \
         from the function to_networkx
 
         Parameters
         ----------
         graph :
-            The graph representation of the automaton
+            The graph representation of the FST
 
         Returns
         -------
         enfa :
-            A epsilon nondeterministic finite automaton read from the graph
+            A FST read from the graph
 
         TODO
         -------
@@ -536,7 +536,7 @@ class FST:
 
     def write_as_dot(self, filename):
         """
-        Write the automaton in dot format into a file
+        Write the FST in dot format into a file
 
         Parameters
         ----------

@@ -9,13 +9,17 @@ class CFGVariableConverter:
     def __init__(self, states, stack_symbols):
         self._counter = 0
         self._inverse_states_d = dict()
-        for i, state in enumerate(states):
-            self._inverse_states_d[state] = i
-            state.index_cfg_converter = i
+        self._counter_state = 0
+        for self._counter_state, state in enumerate(states):
+            self._inverse_states_d[state] = self._counter_state
+            state.index_cfg_converter = self._counter_state
+        self._counter_state += 1
         self._inverse_stack_symbol_d = dict()
-        for i, symbol in enumerate(stack_symbols):
-            self._inverse_stack_symbol_d[symbol] = i
-            symbol.index_cfg_converter = i
+        self._counter_symbol = 0
+        for self._counter_symbol, symbol in enumerate(stack_symbols):
+            self._inverse_stack_symbol_d[symbol] = self._counter_symbol
+            symbol.index_cfg_converter = self._counter_symbol
+        self._counter_symbol += 1
         self._conversions = [[[(False, None) for _ in range(len(states))]
                               for _ in range(len(stack_symbols))] for _ in
                              range(len(states))]
@@ -28,13 +32,23 @@ class CFGVariableConverter:
 
     def _set_index_state(self, state):
         """Set the state index"""
+        if state not in self._inverse_states_d:
+            self._inverse_states_d[state] = self._counter_state
+            self._counter_state += 1
         state.index_cfg_converter = self._inverse_states_d[state]
 
     def _get_symbol_index(self, symbol):
         """Get the symbol index"""
         if symbol.index_cfg_converter is None:
-            symbol.index_cfg_converter = self._inverse_stack_symbol_d[symbol]
+            self._set_index_symbol(symbol)
         return symbol.index_cfg_converter
+
+    def _set_index_symbol(self, symbol):
+        """ Set the symbol index """
+        if symbol not in self._inverse_stack_symbol_d:
+            self._inverse_stack_symbol_d[symbol] = self._counter_symbol
+            self._counter_symbol += 1
+        symbol.index_cfg_converter = self._inverse_stack_symbol_d[symbol]
 
     def to_cfg_combined_variable(self, state0, stack_symbol, state1):
         """ Conversion used in the to_pda method """
@@ -69,9 +83,9 @@ class CFGVariableConverter:
 
     def is_valid_and_get(self, state0, stack_symbol, state1):
         """Check if valid and get"""
-        i_state0 = state0.index_cfg_converter
-        i_stack_symbol = stack_symbol.index_cfg_converter
-        i_state1 = state1.index_cfg_converter
+        i_state0 = self._get_state_index(state0)
+        i_stack_symbol = self._get_symbol_index(stack_symbol)
+        i_state1 = self._get_state_index(state1)
         current = self._conversions[i_state0][i_stack_symbol][i_state1]
         if not current[0]:
             return None
