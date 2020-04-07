@@ -2,6 +2,9 @@
 
 from typing import Any, Iterable
 
+import networkx as nx
+from networkx.drawing.nx_pydot import write_dot
+
 from pyformlang.indexed_grammar import DuplicationRule, ProductionRule, \
     EndRule, ConsumptionRule, IndexedGrammar, Rules
 
@@ -455,6 +458,91 @@ class FST:
                     []
                 )
         return fst_star
+
+    def to_networkx(self) -> nx.MultiDiGraph:
+        """
+        Transform the current fst into a networkx graph
+
+        Returns
+        -------
+        graph :  networkx.MultiDiGraph
+            A networkx MultiDiGraph representing the fst
+
+        """
+        graph = nx.MultiDiGraph()
+        for state in self._states:
+            graph.add_node(state,
+                           is_start=state in self.start_states,
+                           is_final=state in self.final_states,
+                           peripheries=2 if state in self.final_states else 1,
+                           label=state)
+            if state in self.start_states:
+                graph.add_node(str(state) + "_starting",
+                               label="",
+                               shape=None,
+                               height=.0,
+                               width=.0)
+                graph.add_edge(str(state) + "_starting",
+                               state)
+        for s_from, input_symbol in self._delta:
+            for s_to, output_symbols in self._delta[(s_from, input_symbol)]:
+                graph.add_edge(
+                    s_from,
+                    s_to,
+                    label=str(input_symbol) + "->" + "//".join(output_symbols))
+        return graph
+
+    @classmethod
+    def from_networkx(cls, graph):
+        """
+        Import a networkx graph into an finite state automaton. \
+        The imported graph requires to have the good format, i.e. to come \
+        from the function to_networkx
+
+        Parameters
+        ----------
+        graph :
+            The graph representation of the automaton
+
+        Returns
+        -------
+        enfa :
+            A epsilon nondeterministic finite automaton read from the graph
+
+        TODO
+        -------
+        * We lose the type of the node value if going through a dot file
+        * Explain the format
+        """
+        fst = FST()
+        for s_from in graph:
+            for s_to in graph[s_from]:
+                for transition in graph[s_from][s_to].values():
+                    if "label" in transition:
+                        in_symbol, out_symbols = transition["label"].split(
+                            "->")
+                        fst.add_transition(s_from,
+                                           in_symbol,
+                                           s_to,
+                                           out_symbols.split("//"))
+        for node in graph.nodes:
+            if graph.nodes[node].get("is_start", False):
+                fst.add_start_state(node)
+            if graph.nodes[node].get("is_final", False):
+                fst.add_final_state(node)
+        return fst
+
+    def write_as_dot(self, filename):
+        """
+        Write the automaton in dot format into a file
+
+        Parameters
+        ----------
+        filename : str
+            The filename where to write the dot file
+
+        """
+        write_dot(self.to_networkx(), filename)
 
 
 class FSTStateRemaining:

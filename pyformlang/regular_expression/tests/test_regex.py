@@ -11,7 +11,7 @@ from pyformlang import finite_automaton
 class TestRegex(unittest.TestCase):
     """ Tests for regex """
 
-    # pylint: disable=missing-function-docstring
+    # pylint: disable=missing-function-docstring,too-many-public-methods
 
     def test_creation(self):
         """ Try to create regex """

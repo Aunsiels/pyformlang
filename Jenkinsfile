@@ -43,7 +43,7 @@ pipeline {
       }
       steps {
         echo 'Code Coverage'
-        sh 'make test-coverage-xml'
+        sh 'make test-coverage-xml || true'
         echo 'Style Check'
         sh 'PYLINTHOME=. pylint pyformlang > pylint.report || true'
         sh 'pycodestyle pyformlang > pep8.report || true'

@@ -1,6 +1,7 @@
 """ Tests the FST """
 
 import unittest
+from os import path
 
 from pyformlang.fst import FST
 from pyformlang.indexed_grammar import (
@@ -191,3 +192,24 @@ class TestFST(unittest.TestCase):
         fst.add_final_state("q2")
         translation = list(fst.translate(["a"]))
         self.assertEqual(translation, [["b"]])
+
+    def test_paper(self):
+        """ Test for the paper """
+        fst = FST()
+        fst.add_transitions(
+            [(0, "I", 1, ["Je"]), (1, "am", 2, ["suis"]),
+             (2, "alone", 3, ["tout", "seul"]),
+             (2, "alone", 3, ["seul"])])
+        fst.add_start_state(0)
+        fst.add_final_state(3)
+        self.assertEqual(
+            list(fst.translate(["I", "am", "alone"])),
+            [['Je', 'suis', 'seul'],
+             ['Je', 'suis', 'tout', 'seul']])
+        fst = FST.from_networkx(fst.to_networkx())
+        self.assertEqual(
+            list(fst.translate(["I", "am", "alone"])),
+            [['Je', 'suis', 'seul'],
+             ['Je', 'suis', 'tout', 'seul']])
+        fst.write_as_dot("fst.dot")
+        self.assertTrue(path.exists("fst.dot"))

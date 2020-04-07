@@ -279,9 +279,9 @@ class TestLLOneParser(unittest.TestCase):
     def test_save_tree(self):
         text = """
                     E  -> T E’
-                    E’ -> + T E’ | Є
+                    E’ -> + T E’ | epsilon
                     T  -> F T’
-                    T’ -> * F T’ | Є
+                    T’ -> * F T’ | epsilon
                     F  -> ( E ) | id
                 """
         cfg = CFG.from_text(text, start_symbol="E")
