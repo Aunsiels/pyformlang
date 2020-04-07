@@ -51,6 +51,15 @@ class Production:
         return self.head == other.head and self.body == other.body
 
     def is_normal_form(self):
+        """
+        Tells is the production is in Chomsky Normal Form
+
+        Returns
+        -------
+        is_normal_form : bool
+            If the production is in CNF
+
+        """
         if len(self._body) == 2:
             return (isinstance(self._body[0], Variable) and
                     isinstance(self._body[1], Variable))

@@ -71,6 +71,15 @@ class ParseTree:
         return res
 
     def to_networkx(self):
+        """
+        Transforms the tree into a Networkx Directed Graph
+
+        Returns
+        -------
+        tree : networkx.Digraph
+            The tree in Networkx format.
+
+        """
         tree = nx.DiGraph()
         tree.add_node("ROOT", label=self.value.value)
         to_process = [("ROOT", son) for son in self.sons[::-1]]

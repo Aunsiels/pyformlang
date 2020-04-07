@@ -3,7 +3,7 @@ Test for LL(1) parser
 """
 
 import unittest
-
+from os import path
 
 from pyformlang.cfg import CFG, Variable, Terminal, Epsilon
 from pyformlang.cfg.llone_parser import LLOneParser
@@ -289,6 +289,7 @@ class TestLLOneParser(unittest.TestCase):
         parse_tree = llone_parser.get_llone_parse_tree(["id", "+", "id",
                                                         "*", "id"])
         parse_tree.write_as_dot("parse_tree.dot")
+        self.assertTrue(path.exists("parse_tree.dot"))
 
     def test_sentence_cfg(self):
         cfg = CFG.from_text("""

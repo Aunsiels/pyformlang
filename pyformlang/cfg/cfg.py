@@ -1043,5 +1043,13 @@ class CFG:
             productions.add(Production(head, body))
 
     def is_normal_form(self):
+        """
+        Tells is the current grammar is in Chomsky Normal Form or not
+
+        Returns
+        -------
+        is_normal_form : bool
+            If the current grammar is in CNF
+        """
         return all([production.is_normal_form()
                     for production in self._productions])
