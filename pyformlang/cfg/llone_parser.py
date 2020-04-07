@@ -139,7 +139,10 @@ class LLOneParser:
         return triggers
 
     def get_llone_parsing_table(self):
-        """ Get the LL(1) parsing table """
+        """ Get the LL(1) parsing table
+        From:
+        https://www.slideshare.net/MahbuburRahman273/ll1-parser-in-compilers
+        """
         first_set = self.get_first_set()
         follow_set = self.get_follow_set()
         nullables = self._cfg.get_nullable_symbols()
@@ -198,7 +201,7 @@ class LLOneParser:
 
         Returns
         -------
-        parse_tree : set of :class:`~pyformlang.cfg.ParseTree`
+        parse_tree : :class:`~pyformlang.cfg.CFGObject`
             The parse tree
         """
         word = [to_terminal(x) for x in word if x != Epsilon()]

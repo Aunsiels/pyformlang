@@ -700,7 +700,8 @@ class TestCFG(unittest.TestCase):
                        Production(var_b, [ter_b])
                        ]
         cfg = CFG(productions=productions, start_symbol=var_s)
-        derivation = cfg.get_cnf_leftmost_derivation([ter_a, ter_a, ter_b])
+        parse_tree = cfg.get_cnf_parse_tree([ter_a, ter_a, ter_b])
+        derivation = parse_tree.get_leftmost_derivation()
         self.assertEqual(derivation,
                          [[var_s],
                           [var_c, var_b],
@@ -722,7 +723,8 @@ class TestCFG(unittest.TestCase):
                        Production(var_b, [ter_b])
                        ]
         cfg = CFG(productions=productions, start_symbol=var_s)
-        derivation = cfg.get_cnf_rightmost_derivation([ter_a, ter_a, ter_b])
+        parse_tree = cfg.get_cnf_parse_tree([ter_a, ter_a, ter_b])
+        derivation = parse_tree.get_rightmost_derivation()
         self.assertEqual(derivation,
                          [[var_s],
                           [var_c, var_b],
@@ -737,14 +739,16 @@ class TestCFG(unittest.TestCase):
         ter_b = Terminal("b")
         cfg = CFG(productions=[], start_symbol=var_s)
         with self.assertRaises(DerivationDoesNotExist):
-            cfg.get_cnf_rightmost_derivation([ter_a, ter_b])
+            parse_tree = cfg.get_cnf_parse_tree([ter_a, ter_b])
+            parse_tree.get_rightmost_derivation()
 
     def test_derivation_empty(self):
         var_s = Variable("S")
         productions = [Production(var_s, [Epsilon()])]
         cfg = CFG(productions=productions, start_symbol=var_s)
-        derivation = cfg.get_cnf_rightmost_derivation([])
-        self.assertEqual([var_s], derivation)
+        parse_tree = cfg.get_cnf_parse_tree([])
+        derivation = parse_tree.get_rightmost_derivation()
+        self.assertEqual([[var_s], []], derivation)
 
     def test_from_text(self):
         text = """

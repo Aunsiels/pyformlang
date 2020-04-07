@@ -1,5 +1,8 @@
 """ A parse Tree """
 
+import networkx as nx
+from networkx.drawing.nx_pydot import write_dot
+
 from pyformlang.cfg import Variable
 
 
@@ -66,3 +69,29 @@ class ParseTree:
                 res.append(start + derivation + end)
             end = derivation + end
         return res
+
+    def to_networkx(self):
+        tree = nx.DiGraph()
+        tree.add_node("ROOT", label=self.value.value)
+        to_process = [("ROOT", son) for son in self.sons]
+        counter = 0
+        while to_process:
+            previous_node, current_node = to_process.pop()
+            new_node = str(counter)
+            tree.add_node(new_node, label=current_node.value.value)
+            counter += 1
+            tree.add_edge(previous_node, new_node)
+            to_process += [(new_node, son) for son in current_node.sons]
+        return tree
+
+    def write_as_dot(self, filename):
+        """
+        Write the parse tree in dot format into a file
+
+        Parameters
+        ----------
+        filename : str
+            The filename where to write the dot file
+
+        """
+        write_dot(self.to_networkx(), filename)

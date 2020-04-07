@@ -90,26 +90,23 @@ class CYKTable:
                 generate_all_terminals = False
         return generate_all_terminals
 
-    def get_rightmost_derivation(self):
-        """Get rightmost derivation"""
-        return self._get_side_derivation(False)
+    def get_parse_tree(self):
+        """
+        Give the parse tree associated with this CYK Table
 
-    def get_leftmost_derivation(self):
-        """Get leftmost derivation"""
-        return self._get_side_derivation(True)
-
-    def _get_side_derivation(self, is_left=True):
+        Returns
+        -------
+        parse_tree : :class:`~pyformlang.cfg.ParseTree`
+        """
         if self._word and not self.generate_word():
             raise DerivationDoesNotExist
         if not self._word:
-            return [self._cnf.start_symbol]
-        current = [
+            return CYKNode(self._cnf.start_symbol)
+        root = [
             x
             for x in self._cyk_table[(0, len(self._word))]
             if x == self._cnf.start_symbol][0]
-        if is_left:
-            return current.get_leftmost_derivation()
-        return current.get_rightmost_derivation()
+        return root
 
 
 class CYKNode(ParseTree):

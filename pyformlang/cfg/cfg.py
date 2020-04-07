@@ -460,7 +460,7 @@ class CFG:
         return self._start_symbol
 
     def substitute(self, substitution: Dict[Terminal, "CFG"]) -> "CFG":
-        """ Subsitutes CFG to terminals in the current CFG
+        """ Substitutes CFG to terminals in the current CFG
 
         Parameters
         -----------
@@ -710,47 +710,26 @@ class CFG:
         cyk_table = CYKTable(self, word)
         return cyk_table.generate_word()
 
-    def get_cnf_leftmost_derivation(self, word):
+    def get_cnf_parse_tree(self, word):
         """
-        Get the leftmost derivation of the CNF form of this grammar
+        Get a parse tree of the CNF of this grammar
 
         Parameters
         ----------
         word : iterable of :class:`~pyformlang.cfg.Terminal`
-            The word to check
+            The word to look for
 
         Returns
         -------
-        derivation : list of list of :class:`~pyformlang.cfg.CFGObject`
-            The derivation
+        derivation : :class:`~pyformlang.cfg.ParseTree`
+            The parse tree
 
         """
         word = [to_terminal(x) for x in word if x != Epsilon()]
         if not word and not self.generate_epsilon():
             raise DerivationDoesNotExist
         cyk_table = CYKTable(self, word)
-        return cyk_table.get_leftmost_derivation()
-
-    def get_cnf_rightmost_derivation(self, word):
-        """
-        Get the rightmost derivation of the CNF form of this grammar
-
-        Parameters
-        ----------
-        word : iterable of :class:`~pyformlang.cfg.Terminal`
-            The word to check
-
-        Returns
-        -------
-        derivation : list of list of :class:`~pyformlang.cfg.CFGObject`
-            The derivation
-
-        """
-        word = [to_terminal(x) for x in word if x != Epsilon()]
-        if not word and not self.generate_epsilon():
-            raise DerivationDoesNotExist
-        cyk_table = CYKTable(self, word)
-        return cyk_table.get_rightmost_derivation()
+        return cyk_table.get_parse_tree()
 
     def to_pda(self) -> "pda.PDA":
         """ Convert the CFG to a PDA equivalent on empty stack

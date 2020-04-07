@@ -274,6 +274,20 @@ class TestLLOneParser(unittest.TestCase):
               Terminal("*"), Terminal("id")],
              ])
 
+    def test_save_tree(self):
+        text = """
+                    E  -> T E’
+                    E’ -> + T E’ | Є
+                    T  -> F T’
+                    T’ -> * F T’ | Є
+                    F  -> ( E ) | id
+                """
+        cfg = CFG.from_text(text, start_symbol="E")
+        llone_parser = LLOneParser(cfg)
+        parse_tree = llone_parser.get_llone_parse_tree(["id", "+", "id",
+                                                        "*", "id"])
+        parse_tree.write_as_dot("parse_tree.dot")
+
 
 if __name__ == '__main__':
     unittest.main()
