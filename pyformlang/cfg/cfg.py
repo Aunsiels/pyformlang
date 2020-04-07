@@ -1041,3 +1041,7 @@ class CFG:
                     terminals.add(body_ter)
                     body.append(body_ter)
             productions.add(Production(head, body))
+
+    def is_normal_form(self):
+        return all([production.is_normal_form()
+                    for production in self._productions])

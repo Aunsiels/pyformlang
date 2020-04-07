@@ -73,7 +73,7 @@ class ParseTree:
     def to_networkx(self):
         tree = nx.DiGraph()
         tree.add_node("ROOT", label=self.value.value)
-        to_process = [("ROOT", son) for son in self.sons]
+        to_process = [("ROOT", son) for son in self.sons[::-1]]
         counter = 0
         while to_process:
             previous_node, current_node = to_process.pop()
@@ -81,7 +81,7 @@ class ParseTree:
             tree.add_node(new_node, label=current_node.value.value)
             counter += 1
             tree.add_edge(previous_node, new_node)
-            to_process += [(new_node, son) for son in current_node.sons]
+            to_process += [(new_node, son) for son in current_node.sons[::-1]]
         return tree
 
     def write_as_dot(self, filename):

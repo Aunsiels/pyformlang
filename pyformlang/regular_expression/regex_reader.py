@@ -122,7 +122,7 @@ class RegexReader:
             first_complete_closing = _find_first_complete_closing_if_possible(
                 parenthesis_depths, idx_from)
             if first_complete_closing > 0:
-                self._end_current_group = first_complete_closing + 1 + idx_from
+                self._end_current_group = first_complete_closing + 1
             else:
                 raise MisformedRegexError(WRONG_PARENTHESIS_MESSAGE,
                                           " ".join(self._components))

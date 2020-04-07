@@ -190,3 +190,66 @@ class TestRegex(unittest.TestCase):
     def test_space(self):
         regex = Regex("\\ ")
         self.assertTrue(regex.accepts([" "]))
+
+    def test_parenthesis_gorilla(self):
+        regex = Regex("george touches (a|an) (sky|gorilla) !")
+        self.assertTrue(regex.accepts(["george", "touches", "a", "sky", "!"]))
+
+    def test_regex_or(self):
+        regex = Regex("a|b")
+        self.assertTrue(regex.accepts(["a"]))
+
+    def test_regex_or_concat(self):
+        regex = Regex("c (a|b)")
+        self.assertTrue(regex.accepts(["c", "b"]))
+
+    def test_regex_two_or_concat(self):
+        regex = Regex("c (a|b) (d|e)")
+        self.assertTrue(regex.accepts(["c", "b", "e"]))
+
+    def test_regex_two_or_concat_parenthesis(self):
+        regex = Regex("c.(a|b)(d|e)")
+        self.assertTrue(regex.accepts(["c", "b", "e"]))
+
+    def test_regex_two_or_concat_parenthesis2(self):
+        regex = Regex("c (a|(b d)|e)")
+        self.assertTrue(regex.accepts(["c", "a"]))
+        self.assertTrue(regex.accepts(["c", "b", "d"]))
+        self.assertTrue(regex.accepts(["c", "e"]))
+
+    def test_regex_two_or_concat_parenthesis2_concat(self):
+        regex = Regex("c (a|(b d)|e) !")
+        self.assertTrue(regex.accepts(["c", "a", "!"]))
+        self.assertTrue(regex.accepts(["c", "b", "d", "!"]))
+        self.assertTrue(regex.accepts(["c", "e", "!"]))
+
+    def test_regex_or_two_concat(self):
+        regex = Regex("c d (a|b)")
+        self.assertTrue(regex.accepts(["c", "d", "b"]))
+
+    def test_after_union(self):
+        regex = Regex("(a|b) !")
+        self.assertTrue(regex.accepts(["a", "!"]))
+
+    def test_star_union(self):
+        regex = Regex("a*(b|c)")
+        self.assertTrue(regex.accepts(["a", "a", "c"]))
+
+    def test_misformed(self):
+        with self.assertRaises(MisformedRegexError):
+            Regex(")")
+
+    def test_misformed2(self):
+        with self.assertRaises(MisformedRegexError):
+            Regex("(")
+
+    def test_escaped_parenthesis(self):
+        regex = Regex("\\(")
+        self.assertTrue(regex.accepts(["("]))
+
+    def test_escaped_mid_bar(self):
+        regex = Regex('a(0|1|2|3|4|5|6|7|8|9|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q'
+                      '|r|s|t|u|v|w|x|y|z|A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|'
+                      'S|T|U|V|W|X|Y|Z|!|"|#|\\$|%|&|\'|\\(|\\)|\\*|\\+|,|-|'
+                      '\\.|/|:|;|<|=|>|?|@|[|\\|]|^|_|`|{|\\||}|~|\\ |	|)')
+        self.assertTrue(regex.accepts(["a", "|"]))

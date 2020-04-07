@@ -4,8 +4,10 @@ Test for LL(1) parser
 
 import unittest
 
+
 from pyformlang.cfg import CFG, Variable, Terminal, Epsilon
 from pyformlang.cfg.llone_parser import LLOneParser
+from pyformlang.regular_expression import Regex
 
 
 class TestLLOneParser(unittest.TestCase):
@@ -286,6 +288,50 @@ class TestLLOneParser(unittest.TestCase):
         llone_parser = LLOneParser(cfg)
         parse_tree = llone_parser.get_llone_parse_tree(["id", "+", "id",
                                                         "*", "id"])
+        parse_tree.write_as_dot("parse_tree.dot")
+
+    def test_sentence_cfg(self):
+        cfg = CFG.from_text("""
+            S -> NP VP PUNC
+            PUNC -> . | !
+            VP -> V NP
+            V -> buys | touches | sees
+            NP -> georges | jacques | léo | Det N
+            Det -> a | an | the
+            N -> gorilla | sky | carrots
+        """)
+        regex = Regex("georges touches (a|an) (sky|gorilla) !")
+        cfg_inter = cfg.intersection(regex)
+        self.assertFalse(cfg_inter.is_empty())
+        self.assertTrue(cfg_inter.is_finite())
+        self.assertFalse(
+            cfg_inter.contains(["georges", "sees", "a", "gorilla", "."]))
+        self.assertTrue(
+            cfg_inter.contains(["georges", "touches", "a", "gorilla", "!"]))
+        self.assertFalse(cfg_inter.is_normal_form())
+        cnf = cfg.to_normal_form()
+        self.assertTrue(cnf.is_normal_form())
+        llone_parser = LLOneParser(cfg)
+        parse_tree = llone_parser.get_llone_parse_tree(["georges", "sees",
+                                                        "a", "gorilla", "."])
+        self.assertEqual(
+            parse_tree.get_leftmost_derivation(),
+            [[Variable("S")],
+             [Variable("NP"), Variable("VP"), Variable("PUNC")],
+             [Terminal("georges"), Variable("VP"), Variable("PUNC")],
+             [Terminal("georges"), Variable("V"), Variable("NP"),
+              Variable("PUNC")],
+             [Terminal("georges"), Terminal("sees"),
+              Variable("NP"), Variable("PUNC")],
+             [Terminal("georges"), Terminal("sees"), Variable("Det"),
+              Variable("N"), Variable("PUNC")],
+             [Terminal("georges"), Terminal("sees"), Terminal("a"),
+              Variable("N"), Variable("PUNC")],
+             [Terminal("georges"), Terminal("sees"), Terminal("a"),
+              Terminal("gorilla"), Variable("PUNC")],
+             [Terminal("georges"), Terminal("sees"), Terminal("a"),
+              Terminal("gorilla"), Terminal(".")]]
+        )
         parse_tree.write_as_dot("parse_tree.dot")
 
 

@@ -2,6 +2,7 @@
 
 from typing import List
 
+from . import Terminal
 from .variable import Variable
 from .cfg_object import CFGObject
 from .epsilon import Epsilon
@@ -48,3 +49,11 @@ class Production:
 
     def __eq__(self, other):
         return self.head == other.head and self.body == other.body
+
+    def is_normal_form(self):
+        if len(self._body) == 2:
+            return (isinstance(self._body[0], Variable) and
+                    isinstance(self._body[1], Variable))
+        if len(self._body) == 1:
+            return isinstance(self._body[0], Terminal)
+        return False

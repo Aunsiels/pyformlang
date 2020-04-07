@@ -798,3 +798,25 @@ class TestCFG(unittest.TestCase):
         text = """S1 -> a"""
         cfg = CFG.from_text(text, start_symbol="S1")
         self.assertEqual(Variable("S1"), cfg.start_symbol)
+
+    def test_is_not_normal_form(self):
+        text = """
+                            E  -> T E’
+                            E’ -> + T E’ | Є
+                            T  -> F T’
+                            T’ -> * F T’ | Є
+                            F  -> ( E ) | id
+                        """
+        cfg = CFG.from_text(text, start_symbol="E")
+        self.assertFalse(cfg.is_normal_form())
+
+    def test_is_normal_form(self):
+        text = """
+                            E  -> T E’
+                            E’ -> T E’
+                            T  -> F T’
+                            T’ -> *
+                            F  -> ( | id
+                        """
+        cfg = CFG.from_text(text, start_symbol="E")
+        self.assertTrue(cfg.is_normal_form())
