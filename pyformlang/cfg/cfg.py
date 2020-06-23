@@ -989,6 +989,21 @@ class CFG:
             return True
         return False
 
+    def to_text(self):
+        """
+        Turns the grammar into its string representation. This might lose some\
+         type information and the start_symbol.
+        Returns
+        -------
+        text : str
+            The grammar as a string.
+        """
+        res = []
+        for production in self._productions:
+            res.append(str(production.head) + " -> " +
+                       " ".join([str(x.value) for x in production.body]))
+        return "\n".join(res) + "\n"
+
     @classmethod
     def from_text(cls, text, start_symbol=Variable("S")):
         """

@@ -820,3 +820,18 @@ class TestCFG(unittest.TestCase):
                         """
         cfg = CFG.from_text(text, start_symbol="E")
         self.assertTrue(cfg.is_normal_form())
+
+    def test_to_text(self):
+        text = """E  -> T E’
+            E’ -> T E’
+            T  -> F T’
+            T’ -> *
+            F  -> ( | id
+            """
+        text_result = CFG.from_text(text, start_symbol="E").to_text()
+        self.assertIn("E -> T E’", text_result)
+        self.assertIn("E’ -> T E’", text_result)
+        self.assertIn("T -> F T’", text_result)
+        self.assertIn("T’ -> *", text_result)
+        self.assertIn("F -> (", text_result)
+        self.assertIn("F -> id", text_result)
