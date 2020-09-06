@@ -57,6 +57,11 @@ class PythonRegex(regex.Regex):
         The regex represented as a string or a compiled regex (
         re.compile(...))
 
+    Raises
+    ------
+    MisformedRegexError
+        If the regular expression is misformed.
+
     Examples
     --------
     Python regular expressions wrapper
