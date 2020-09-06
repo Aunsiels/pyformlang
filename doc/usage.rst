@@ -5,19 +5,66 @@ Usage
 Regular expression
 ==================
 
-pyformlang contains a basic regex reader. The available operators are:
+Pyformlang's Regex class implements the operators of textbooks, which deviate
+slightly
+from the operators in Python. For a representation closer to Python one,
+please use the PythonRegex class.
 
-* The concatenation, the default operator, which can by represented either by a space or a dot (.)
-* The union, represented either by | or +
-* The kleene star, represented by *
+* The concatenation can be represented either by a space or a dot (.)
+* The union is represented either by | or +
+* The Kleene star is represented by *
+* The epsilon symbol can either be *epsilon* or $
 
-It is also possible to use parenthesis. Symbols different from the space, ., \|, +, \*, (, ) and $ can be part of the alphabet, consecutive characters being consider as a single symbol. The epsilon symbol can either be *epsilon* or *$*.
+It is also possible to use parentheses. All symbols except the space, .,
+\|, +, \*, (, ), epsilon and $ can be part of the alphabet.
+All other common regex operators (such as []) are syntactic sugar that can be
+reduced to the previous operators. The class PythonRegex implements some of
+them natively. Another main difference is that the alphabet is not reduced to
+single characters as it is the case in Python. For example, *python* is a
+single symbol in Pyformlang, whereas it is the concatenation of six symbols
+in regular Python.
+
+All special characters except epsilon can be escaped with a backslash (\
+double backslash \\\\ in strings).
 
 .. code-block:: python
 
     from pyformlang.regular_expression import Regex
 
-    regex = Regex("(a-|a a b)*")
+    regex = Regex("abc|d")
+    # Check if the symbol "abc" is accepted
+    regex.accepts(["abc"])  # True
+    # Check if the word composed of the symbols
+    # "a", "b" and "c" is accepted
+    regex.accepts(["a", "b", "c"])  # False
+    # Check if the symbol "d" is accepted
+    regex.accepts(["d"])  # True
+
+    regex1 = Regex("a b")
+    regex_concat = regex.concatenate(regex1)
+    regex_concat.accepts(["d", "a", "b"])  # True
+
+    print(regex_concat.get_tree_str())
+    # Operator(Concatenation)
+    #  Operator(Union)
+    #   Symbol(abc)
+    #   Symbol(d)
+    #  Operator(Concatenation)
+    #   Symbol(a)
+    #   Symbol(b)
+
+    # Give the equivalent finite-state automaton
+    regex_concat.to_epsilon_nfa()
+
+    # Python regular expressions wrapper
+    from pyformlang.regular_expression import PythonRegex
+
+    p_regex = PythonRegex("a+[cd]")
+    p_regex.accepts(["a", "a", "d"])  # True
+    # As the alphabet is composed of single characters, one
+    # could also write
+    p_regex.accepts("aad")  # True
+    p_regex.accepts(["d"])  # False
 
 Finite Automata
 ===============

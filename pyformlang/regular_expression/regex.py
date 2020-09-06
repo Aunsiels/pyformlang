@@ -27,7 +27,10 @@ class Regex(RegexReader):
     It is also possible to use parentheses. All symbols except the space, ., \
  |, +, *, (, ), epsilon and $ can be part of the alphabet. All \
  other common regex operators (such as []) are syntactic sugar that can be \
- reduced to the previous operators.
+ reduced to the previous operators. Another main difference is that the \
+ alphabet is not reduced to single characters as it is the case in Python. \
+ For example, "python" is a single symbol in Pyformlang, whereas it is the \
+ concatenation of six symbols in regular Python.
 
     All special characters except epsilon can be escaped with a backslash (\
     double backslash \\ in strings).
