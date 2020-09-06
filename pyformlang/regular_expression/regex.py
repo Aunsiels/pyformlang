@@ -444,7 +444,7 @@ class Regex(RegexReader):
         return regex
 
     def from_string(self, regex_str: str):
-        """ Construct a regex from a string
+        """ Construct a regex from a string. For internal usage.
 
         Equivalent to the constructor of Regex
 
