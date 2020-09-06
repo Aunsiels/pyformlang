@@ -333,11 +333,11 @@ class IndexedGrammar:
         return IndexedGrammar(rules)
 
     def intersection(self, other: Any) -> "IndexedGrammar":
-        """ Computes the intersection of the current indexed grammar with the
+        """ Computes the intersection of the current indexed grammar with the \
         other object
 
         Equivalent to
-        -------------
+        --------------
           >> indexed_grammar and regex
 
         Parameters

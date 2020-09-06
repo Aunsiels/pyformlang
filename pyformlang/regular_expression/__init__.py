@@ -10,9 +10,11 @@ expressions. Please read the documentation of Regex for more information.
 Available Classes
 -----------------
 
-Regex
+:class:`~pyformlang.regular_expression.Regex`
     A regular expression
-MisformedRegexError
+:class:`~pyformlang.regular_expression.PythonRegex`
+    A regular expression closer to Python format
+:class:`~pyformlang.regular_expression.MisformedRegexError`
     An error occurring when the input regex is incorrect
 
 """

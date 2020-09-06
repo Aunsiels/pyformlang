@@ -464,7 +464,7 @@ class CFG:
 
         Parameters
         -----------
-        substitution : dict of :class:`~pyformlang.cfg.Terminal` to
+        substitution : dict of :class:`~pyformlang.cfg.Terminal` to \
         :class:`~pyformlang.cfg.CFG`
             A substitution
 

@@ -15,13 +15,70 @@ from pyformlang import regular_expression
 class Regex(RegexReader):
     """ Represents a regular expression
 
-    Special Operators: |, +, *, ., $, epsilon
-    All except epsilon can be escaped with a backslash (\\ in strings).
+    Pyformlang implements the operators of textbooks, which deviate slightly \
+    from the operators in Python. For a representation closer to Python one, \
+    please use :class:`~pyformlang.regular_expression.PythonRegex`
+
+    * The concatenation can be represented either by a space or a dot (.)
+    * The union is represented either by | or +
+    * The Kleene star is represented by *
+    * The epsilon symbol can either be "epsilon" or $
+
+    It is also possible to use parentheses. All symbols except the space, ., \
+ |, +, *, (, ), epsilon and $ can be part of the alphabet. All \
+ other common regex operators (such as []) are syntactic sugar that can be \
+ reduced to the previous operators.
+
+    All special characters except epsilon can be escaped with a backslash (\
+    double backslash \\ in strings).
 
     Parameters
     ----------
     regex : str
         The regex represented as a string
+
+    Raises
+    ------
+    MisformedRegexError
+        If the regular expression is misformed.
+
+    Examples
+    --------
+
+    >>> regex = Regex("abc|d")
+
+    Check if the symbol "abc" is accepted
+
+    >>> regex.accepts(["abc"])
+    True
+
+    Check if the word composed of the symbols "a", "b" and "c" is accepted
+
+    >>> regex.accepts(["a", "b", "c"])
+    False
+
+    Check if the symbol "d" is accepted
+
+    >>> regex.accepts(["d"])  # True
+
+    >>> regex1 = Regex("a b")
+    >>> regex_concat = regex.concatenate(regex1)
+    >>> regex_concat.accepts(["d", "a", "b"])
+    True
+
+    >>> print(regex_concat.get_tree_str())
+    Operator(Concatenation)
+     Operator(Union)
+      Symbol(abc)
+      Symbol(d)
+     Operator(Concatenation)
+      Symbol(a)
+      Symbol(b)
+
+    Give the equivalent finite-state automaton
+
+    >>> regex_concat.to_epsilon_nfa()
+
     """
 
     def __init__(self, regex):
@@ -42,6 +99,15 @@ class Regex(RegexReader):
         ----------
         n_symbols : int
             The number of symbols in the regex
+
+        Examples
+        --------
+
+        >>> regex = Regex("a|b*")
+        >>> regex.get_number_symbols()
+        2
+
+        The two symbols are "a" and "b".
         """
         if self.sons:
             return sum([son.get_number_symbols() for son in self.sons])
@@ -54,6 +120,16 @@ class Regex(RegexReader):
         ----------
         n_operators : int
             The number of operators in the regex
+
+        Examples
+        --------
+
+        >>> regex = Regex("a|b*")
+        >>> regex.get_number_operators()
+        2
+
+        The two operators are "|" and "*".
+
         """
         if self.sons:
             return 1 + sum([son.get_number_operators() for son in self.sons])
@@ -66,6 +142,13 @@ class Regex(RegexReader):
         ----------
         enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
             An epsilon NFA equivalent to the regex
+
+        Examples
+        --------
+
+        >>> regex = Regex("abc|d")
+        >>> regex.to_epsilon_nfa()
+
         """
         self._initialize_enfa()
         s_initial = self._set_and_get_initial_state_in_enfa()
@@ -176,6 +259,17 @@ class Regex(RegexReader):
         -------
         representation: str
             The tree representation
+
+        Examples
+        --------
+
+        >>> regex = Regex("abc|d*")
+        >>> print(regex.get_tree_str())
+        Operator(Union)
+         Symbol(abc)
+         Operator(Kleene Star)
+          Symbol(d)
+
         """
         temp = " " * depth + str(self.head) + "\n"
         for son in self.sons:
@@ -189,7 +283,7 @@ class Regex(RegexReader):
         """ Makes the union with another regex
 
         Equivalent to:
-          >> regex0 or regex1
+          >>> regex0 or regex1
 
         Parameters
         ----------
@@ -200,6 +294,21 @@ class Regex(RegexReader):
         ----------
         regex : :class:`~pyformlang.regular_expression.Regex`
             The union of the two regex
+
+        Examples
+        --------
+
+        >>> regex0 = Regex("a b")
+        >>> regex1 = Regex("c")
+        >>> regex_union = regex0.union(regex1)
+        >>> regex_union.accepts(["a", "b"])
+        >>> regex_union.accepts(["c"])
+
+        Or equivalently:
+
+        >>> regex_union = regex0 or regex1
+        >>> regex_union.accepts(["a", "b"])
+
         """
         regex = Regex("")
         regex.head = pyformlang.regular_expression.regex_objects.Union()
@@ -218,6 +327,23 @@ class Regex(RegexReader):
         ----------
         regex : :class:`~pyformlang.regular_expression.Regex`
             The union of the two regex
+
+        Examples
+        --------
+
+        >>> regex0 = Regex("a b")
+        >>> regex1 = Regex("c")
+        >>> regex_union = regex0.union(regex1)
+        >>> regex_union.accepts(["a", "b"])
+        True
+        >>> regex_union.accepts(["c"])
+        True
+
+        Or equivalently:
+
+        >>> regex_union = regex0 or regex1
+        >>> regex_union.accepts(["a", "b"])
+        True
         """
         return self.union(other)
 
@@ -225,7 +351,7 @@ class Regex(RegexReader):
         """ Concatenates a regular expression with an other one
 
         Equivalent to:
-          >> regex0 + regex1
+          >>> regex0 + regex1
 
         Parameters
         ----------
@@ -236,6 +362,23 @@ class Regex(RegexReader):
         ----------
         regex : :class:`~pyformlang.regular_expression.Regex`
             The concatenation of the two regex
+
+        Examples
+        --------
+
+        >>> regex0 = Regex("a b")
+        >>> regex1 = Regex("c")
+        >>> regex_union = regex0.concatenate(regex1)
+        >>> regex_union.accepts(["a", "b"])
+        False
+        >>> regex_union.accepts(["a", "b", "c"])
+        True
+
+        Or equivalently:
+
+        >>> regex_union = regex0 + regex1
+        >>> regex_union.accepts(["a", "b", "c"])
+        True
         """
         regex = Regex("")
         regex.head = \
@@ -255,6 +398,24 @@ class Regex(RegexReader):
         ----------
         regex : :class:`~pyformlang.regular_expression.Regex`
             The concatenation of the two regex
+
+        Examples
+        --------
+
+        >>> regex0 = Regex("a b")
+        >>> regex1 = Regex("c")
+        >>> regex_union = regex0.concatenate(regex1)
+        >>> regex_union.accepts(["a", "b"])
+        False
+        >>> regex_union.accepts(["a", "b", "c"])
+        True
+
+        Or equivalently:
+
+        >>> regex_union = regex0 + regex1
+        >>> regex_union.accepts(["a", "b", "c"])
+        True
+
         """
         return self.concatenate(other)
 
@@ -265,14 +426,48 @@ class Regex(RegexReader):
         ----------
         regex : :class:`~pyformlang.regular_expression.Regex`
             The kleene star of the current regex
+
+        Examples
+        --------
+
+        >>> regex = Regex("a")
+        >>> regex_kleene = regex.kleene_star()
+        >>> regex_kleene.accepts([])
+        True
+        >>> regex_kleene.accepts(["a", "a", "a"])
+        True
+
         """
         regex = Regex("")
         regex.head = pyformlang.regular_expression.regex_objects.KleeneStar()
         regex.sons = [self]
         return regex
 
-    def from_string(self, regex):
-        return Regex(regex)
+    def from_string(self, regex_str: str):
+        """ Construct a regex from a string
+
+        Equivalent to the constructor of Regex
+
+        Parameters
+        ----------
+        regex_str : str
+            The string representation of the regex
+
+        Returns
+        -------
+        regex : :class:`~pyformlang.regular_expression.Regex`
+            The regex
+
+        Examples
+        --------
+        >>> regex.from_string("a b c")
+
+        , which is equivalent to:
+
+        >>> Regex("a b c")
+
+        """
+        return Regex(regex_str)
 
     def accepts(self, word: Iterable[str]) -> bool:
         """
@@ -288,6 +483,16 @@ class Regex(RegexReader):
         is_accepted : bool
             Whether the word is recognized or not
 
+        Examples
+        --------
+
+        >>> regex = Regex("abc|d")
+
+        Check if the symbol "abc" is accepted
+
+        >>> regex.accepts(["abc"])
+        True
+
         """
         if self._enfa is None:
             self._enfa = self.to_epsilon_nfa()
@@ -298,8 +503,11 @@ class Regex(RegexReader):
         """
         Creates a regex from a string using the python way to write it.
 
-        Careful: Not everything is implemented, check PythonRegex class
+        Careful:
+        Not everything is implemented, check PythonRegex class \
         documentation for more details.
+
+        It is equivalent to calling PythonRegex constructor directly.
 
         Parameters
         ----------
@@ -309,6 +517,11 @@ class Regex(RegexReader):
         Returns
         -------
         python_regex : :class:`~pyformlang.regular_expression.PythonRegex`
+            The regex
+
+        Examples
+        --------
+        >>> Regex.from_python_regex("a+[cd]")
 
         """
         return regular_expression.PythonRegex(regex)

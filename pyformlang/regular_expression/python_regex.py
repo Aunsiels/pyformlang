@@ -41,8 +41,9 @@ SHORTCUTS = {
 
 
 class PythonRegex(regex.Regex):
-    """ Represents a regular expression as used in Python. It adds the
-    following features to the basic regex:
+    """ Represents a regular expression as used in Python.
+
+    It adds the following features to the basic regex:
 
     * Set of characters with [] (no inverse with [^...])
     * positive closure +
@@ -50,11 +51,29 @@ class PythonRegex(regex.Regex):
     * ? for optional character/group
     * Shortcuts: \\d, \\s, \\w
 
-        Parameters
-        ----------
-        python_regex : str
-            The regex represented as a string or a compiled regex (
-            re.compile(...))
+    Parameters
+    ----------
+    python_regex : str
+        The regex represented as a string or a compiled regex (
+        re.compile(...))
+
+    Examples
+    --------
+    Python regular expressions wrapper
+
+    >>> from pyformlang.regular_expression import PythonRegex
+
+    >>> p_regex = PythonRegex("a+[cd]")
+    >>> p_regex.accepts(["a", "a", "d"])
+    True
+
+    As the alphabet is composed of single characters, one could also write
+
+    >>> p_regex.accepts("aad")
+    True
+    >>> p_regex.accepts(["d"])
+    False
+
     """
 
     def __init__(self, python_regex):
