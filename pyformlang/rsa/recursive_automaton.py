@@ -76,7 +76,6 @@ class RecursiveAutomaton:
         """
 
         if new_box.label() in self._labels:
-            # TODO: create test for this case
             self._boxes.discard(new_box)
         else:
             self._labels.add(new_box.label())
