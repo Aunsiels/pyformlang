@@ -27,7 +27,7 @@ pda
 Indexed Grammar
     Indexed Grammar
 rsa
-	Recursive automaton
+    Recursive automaton
 
 """
 
@@ -37,4 +37,4 @@ __all__ = ["finite_automaton",
            "fst",
            "indexed_grammar",
            "pda",
-		   "rsa"]
+           "rsa"]
