@@ -59,6 +59,7 @@ class TestRSA(unittest.TestCase):
         new_box = Box(Regex("a*").to_epsilon_nfa().minimize(), Symbol("S"))
         self.assertEqual(rsa_1.add_box(new_box), 1)
         self.assertEqual(new_box.dfa().is_equivalent_to(rsa_1.get_box(Symbol("S")).dfa()), True)
+        self.assertEqual(rsa_1.labels(), {Symbol("S")})
 
 
 if __name__ == '__main__':

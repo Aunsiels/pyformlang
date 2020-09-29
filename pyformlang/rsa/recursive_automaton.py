@@ -74,14 +74,15 @@ class RecursiveAutomaton:
         done : int
             1 is correctly added
         """
+        new_boxes = set()
 
-        if new_box.label() in self._labels:
-            # TODO: create test for this case
-            self._boxes.discard(new_box)
-        else:
-            self._labels.add(new_box.label())
+        for box in self._boxes:
+            if box.label() != new_box.label():
+                new_boxes.add(box)
+        self._labels.add(new_box.label())
+        new_boxes.add(new_box)
 
-        self._boxes.add(new_box)
+        self._boxes = new_boxes
 
         return 1
 
