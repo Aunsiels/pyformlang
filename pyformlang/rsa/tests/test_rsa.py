@@ -25,6 +25,15 @@ class TestRSA(unittest.TestCase):
 
         self.assertEqual(rsa_2.is_equivalent_to(rsa_1), True)
 
+        # Checking to add a start label
+        rsa_3 = RecursiveAutomaton(set(), Symbol("S"), {box})
+        self.assertEqual(rsa_3.labels(), {Symbol("S")})
+
+        try:
+            rsa_4 = RecursiveAutomaton({Symbol("S"), Symbol("v")}, Symbol("S"), {box})
+        except ValueError:
+            self.assertEqual(True, True)
+
     def test_from_regex(self):
         # S -> a*
         rsa_2 = RecursiveAutomaton.from_regex("a*", Symbol("S"))
@@ -44,6 +53,12 @@ class TestRSA(unittest.TestCase):
         rsa_2 = RecursiveAutomaton.from_regex("a a* b b*", Symbol("S"))
 
         self.assertEqual(rsa_1.is_equivalent_to(rsa_2), False)
+
+    def test_add_box(self):
+        rsa_1 = RecursiveAutomaton.from_regex("a* b*", Symbol("S"))
+        new_box = Box(Regex("a*").to_epsilon_nfa().minimize(), Symbol("S"))
+        self.assertEqual(rsa_1.add_box(new_box), 1)
+        self.assertEqual(new_box.dfa().is_equivalent_to(rsa_1.get_box(Symbol("S")).dfa()), True)
 
 
 if __name__ == '__main__':

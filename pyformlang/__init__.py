@@ -26,6 +26,8 @@ pda
     Push-Down Automata
 Indexed Grammar
     Indexed Grammar
+rsa
+	Recursive automaton
 
 """
 
@@ -34,4 +36,5 @@ __all__ = ["finite_automaton",
            "cfg",
            "fst",
            "indexed_grammar",
-           "pda"]
+           "pda",
+		   "rsa"]
