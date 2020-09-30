@@ -1,18 +1,13 @@
 """
 Pyformlang
 ==========
-
 Pyformlang is a python module to perform operation on formal languages.
-
 How to use the documentation
 ----------------------------
-
 Documentation is available in two formats: docstrings directly
 in the code and a readthedocs website: https://pyformlang.readthedocs.io.
-
 Available subpackages
 ---------------------
-
 regular_expression
     Regular Expressions
 finite_automaton
@@ -28,7 +23,6 @@ Indexed Grammar
     Indexed Grammar
 rsa
     Recursive automaton
-
 """
 
 __all__ = ["finite_automaton",
@@ -37,4 +31,4 @@ __all__ = ["finite_automaton",
            "fst",
            "indexed_grammar",
            "pda",
-	   "rsa"]
+           "rsa"]
