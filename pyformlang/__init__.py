@@ -23,6 +23,7 @@ Indexed Grammar
     Indexed Grammar
 rsa
     Recursive automaton
+    
 """
 
 __all__ = ["finite_automaton",
