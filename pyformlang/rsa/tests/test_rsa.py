@@ -16,8 +16,8 @@ class TestRSA(unittest.TestCase):
 
         self.assertEqual(rsa_1.get_number_of_boxes(), 1)
         self.assertEqual(box.is_equivalent_to(rsa_1.get_box(Symbol("S"))), True)
-        self.assertEqual(rsa_1.labels(), {Symbol("S")})
-        self.assertEqual(rsa_1.initial_label(), Symbol("S"))
+        self.assertEqual(rsa_1.labels, {Symbol("S")})
+        self.assertEqual(rsa_1.initial_label, Symbol("S"))
 
         rsa_2 = RecursiveAutomaton()
         rsa_2.add_box(box)
@@ -27,7 +27,7 @@ class TestRSA(unittest.TestCase):
 
         # Checking to add a start label
         rsa_3 = RecursiveAutomaton(set(), Symbol("S"), {box})
-        self.assertEqual(rsa_3.labels(), {Symbol("S")})
+        self.assertEqual(rsa_3.labels, {Symbol("S")})
 
         try:
             rsa_4 = RecursiveAutomaton({Symbol("S"), Symbol("v")}, Symbol("S"), {box})
@@ -57,8 +57,9 @@ class TestRSA(unittest.TestCase):
     def test_add_box(self):
         rsa_1 = RecursiveAutomaton.from_regex("a* b*", Symbol("S"))
         new_box = Box(Regex("a*").to_epsilon_nfa().minimize(), Symbol("S"))
-        self.assertEqual(rsa_1.add_box(new_box), 1)
-        self.assertEqual(new_box.dfa().is_equivalent_to(rsa_1.get_box(Symbol("S")).dfa()), True)
+        rsa_1.add_box(new_box)
+        self.assertEqual(new_box.dfa.is_equivalent_to(rsa_1.get_box(Symbol("S")).dfa), True)
+        self.assertEqual(rsa_1.labels, {Symbol("S")})
 
 
 if __name__ == '__main__':

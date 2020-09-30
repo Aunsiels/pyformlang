@@ -38,14 +38,8 @@ class Box:
         label : :class:`~pyformlang.finite_automaton.Symbol`
             The new label for automaton
 
-        Returns
-        -----------
-        done : int
-            1 is correctly added
         """
-        self._label = label
-
-        return 1
+        self._label = to_symbol(label)
 
     def change_dfa(self, enfa: EpsilonNFA):
         """ Set an epsilon finite automaton
@@ -55,28 +49,26 @@ class Box:
         enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
             The new epsilon finite automaton
 
-        Returns
-        -----------
-        done : int
-            1 is correctly added
         """
         enfa = enfa.minimize()
         self._dfa = enfa
 
-        return 1
-
+    @property
     def dfa(self):
         """ Box's dfa """
         return self._dfa
 
+    @property
     def label(self):
         """ Box's label """
         return self._label
 
+    @property
     def start_state(self):
         """ The start state """
         return self._dfa.start_states
 
+    @property
     def final_states(self):
         """ The final states """
         return self._dfa.final_states
@@ -98,7 +90,7 @@ class Box:
         if not isinstance(other, Box):
             return False
 
-        if self._dfa.is_equivalent_to(other.dfa()) and self._label == other.label():
+        if self._dfa.is_equivalent_to(other.dfa) and self._label == other.label:
             return True
 
         return False
