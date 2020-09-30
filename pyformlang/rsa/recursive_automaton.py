@@ -41,23 +41,23 @@ class RecursiveAutomaton:
                 self._labels.add(initial_label)
         self._initial_label = initial_label or Symbol("")
 
-        self._boxes = boxes or set()
+        self._boxes = dict()
+        if boxes is not None:
+            for box in boxes:
+                self._boxes.update({to_symbol(box.label): box})
+                self._labels.add(box.label)
 
         for label in self._labels:
             box = self.get_box(label)
             if box is None:
-                raise ValueError("RSA must have the same number of labels and NFAs")
-
-        for box in self._boxes:
-            if box.label() not in self._labels:
-                self._labels.add(box.label())
+                raise ValueError("RSA must have the same number of labels and DFAs")
 
     def get_box(self, label: Symbol):
         """ Box by label """
 
-        for box in self._boxes:
-            if box.label() == Symbol(label):
-                return box
+        label = to_symbol(label)
+        if label in self._boxes:
+            return self._boxes[label]
 
         return None
 
@@ -69,23 +69,10 @@ class RecursiveAutomaton:
         new_box : :class:`~pyformlang.rsa.Box`
             The new box
 
-        Returns
-        -----------
-        done : int
-            1 is correctly added
         """
 
-        new_boxes = set()
-
-        for box in self._boxes:
-            if box.label() != new_box.label():
-                new_boxes.add(box)
-        self._labels.add(new_box.label())
-        new_boxes.add(new_box)
-
-        self._boxes = new_boxes
-
-        return 1
+        self._boxes.update({new_box.label: new_box})
+        self._labels.add(to_symbol(new_box.label))
 
     def get_number_of_boxes(self):
         """ Size of set of boxes """
@@ -100,28 +87,25 @@ class RecursiveAutomaton:
         new_initial_label : :class:`~pyformlang.finite_automaton.Symbol`
             The new initial label
 
-        Returns
-        -----------
-        done : int
-            1 is correctly added
         """
 
-        new_initial_label = Symbol(new_initial_label)
+        new_initial_label = to_symbol(new_initial_label)
         if new_initial_label not in self._labels:
             raise ValueError("New initial label not in set of labels for boxes")
 
-        return 1
-
+    @property
     def labels(self) -> set:
         """ The set of labels """
 
         return self._labels
 
-    def boxes(self) -> set:
+    @property
+    def boxes(self) -> dict:
         """ The set of boxes """
 
         return self._boxes
 
+    @property
     def initial_label(self) -> Symbol:
         """ The initial label """
 
@@ -149,17 +133,17 @@ class RecursiveAutomaton:
         return RecursiveAutomaton({initial_label}, initial_label, {box})
 
     def is_equivalent_to(self, other):
-        """ Check whether two automata are equivalent
+        """ Check whether two recursive automata are equivalent
 
         Parameters
         ----------
         other : :class:`~pyformlang.rsa.RecursiveAutomaton`
-            A sequence of input symbols
+            The input recursive automaton
 
         Returns
         ----------
         are_equivalent : bool
-            Whether the two automata are equivalent or not
+            Whether the two recursive automata are equivalent or not
         """
 
         if not isinstance(other, RecursiveAutomaton):
