@@ -74,6 +74,7 @@ class RecursiveAutomaton:
         done : int
             1 is correctly added
         """
+
         new_boxes = set()
 
         for box in self._boxes:
