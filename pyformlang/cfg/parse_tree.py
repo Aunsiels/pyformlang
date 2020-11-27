@@ -40,7 +40,10 @@ class ParseTree:
                 del derivations[0]
             for derivation in derivations:
                 res.append(start + derivation + end)
-            start = start + derivation
+            if derivation:
+                start = start + derivation
+            else:
+                start.append(son.value)
         return res
 
     def get_rightmost_derivation(self):

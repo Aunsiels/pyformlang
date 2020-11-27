@@ -201,8 +201,14 @@ class LLOneParser:
 
         Returns
         -------
-        parse_tree : :class:`~pyformlang.cfg.CFGObject`
+        parse_tree : :class:`~pyformlang.cfg.ParseTree`
             The parse tree
+
+        Raises
+        --------
+        NotParsableException
+            When the word cannot be parsed
+
         """
         word = [to_terminal(x) for x in word if x != Epsilon()]
         word.append("$")
