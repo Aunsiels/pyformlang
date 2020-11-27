@@ -16,12 +16,13 @@ def _get_index_to_extend(current_expansion, left):
 
 class RecursiveDecentParser:
     """
-        A recursive bottom-up parser
+        A recursive Top-Down parser
 
         Parameters
         ----------
         cfg : :class:`~pyformlang.cfg.CFG`
             A context-free Grammar
+
     """
 
     def __init__(self, cfg):
