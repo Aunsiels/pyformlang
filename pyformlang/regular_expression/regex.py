@@ -6,6 +6,7 @@ from typing import Iterable
 from pyformlang import finite_automaton
 # pylint: disable=cyclic-import
 import pyformlang.regular_expression.regex_objects
+from pyformlang import cfg
 from pyformlang.finite_automaton import State
 # pylint: disable=cyclic-import
 from pyformlang.regular_expression.regex_reader import RegexReader
@@ -278,6 +279,47 @@ class Regex(RegexReader):
         for son in self.sons:
             temp += son.get_tree_str(depth + 1)
         return temp
+
+    def to_cfg(self, starting_symbol="S") -> "CFG":
+        """
+        Turns the regex into a context-free grammar
+
+        Parameters
+        ----------
+        starting_symbol : :class:`~pyformlang.cfg.Variable`, optional
+            The starting symbol
+
+        Returns
+        -------
+        cfg : :class:`~pyformlang.cfg.CFG`
+            An equivalent context-free grammar
+
+        Examples
+        --------
+
+        >>> regex = Regex("(a|b)* c")
+        >>> my_cfg = regex.to_cfg()
+        >>> my_cfg.contains(["c"])
+        True
+
+        """
+        productions, _ = self._get_production(starting_symbol)
+        cfg_res = cfg.CFG(start_symbol=cfg.utils.to_variable(starting_symbol),
+                          productions=set(productions))
+        return cfg_res
+
+    def _get_production(self, current_symbol, count=0):
+        next_symbols = []
+        next_productions = []
+        for son in self.sons:
+            next_symbol = "A" + str(count)
+            count += 1
+            new_prods, count = son._get_production(next_symbol, count)
+            next_symbols.append(next_symbol)
+            next_productions += new_prods
+        new_prods = self.head.get_cfg_rules(current_symbol, next_symbols)
+        next_productions += new_prods
+        return next_productions, count
 
     def __repr__(self):
         return self.head.get_str_repr([str(son) for son in self.sons])

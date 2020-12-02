@@ -1,6 +1,7 @@
 """
 Representation of some objects used in regex.
 """
+import pyformlang
 
 
 class Node:  # pylint: disable=too-few-public-methods
@@ -88,6 +89,9 @@ class Operator(Node):  # pylint: disable=too-few-public-methods
     def get_str_repr(self, sons_repr):
         raise NotImplementedError
 
+    def get_cfg_rules(self, current_symbol, sons):
+        raise NotImplementedError
+
     def __repr__(self):
         return "Operator(" + str(self._value) + ")"
 
@@ -104,6 +108,11 @@ class Symbol(Node):  # pylint: disable=too-few-public-methods
     def get_str_repr(self, sons_repr):
         return str(self.value)
 
+    def get_cfg_rules(self, current_symbol, sons):
+        return [pyformlang.cfg.Production(
+            pyformlang.cfg.utils.to_variable(current_symbol),
+            [pyformlang.cfg.utils.to_terminal(self.value)])]
+
     def __repr__(self):
         return "Symbol(" + str(self._value) + ")"
 
@@ -114,6 +123,11 @@ class Concatenation(Operator):  # pylint: disable=too-few-public-methods
 
     def get_str_repr(self, sons_repr):
         return "(" + ".".join(sons_repr) + ")"
+
+    def get_cfg_rules(self, current_symbol, sons):
+        return [pyformlang.cfg.Production(
+            pyformlang.cfg.utils.to_variable(current_symbol),
+            [pyformlang.cfg.utils.to_variable(son) for son in sons])]
 
     def __init__(self):
         super().__init__("Concatenation")
@@ -126,6 +140,12 @@ class Union(Operator):  # pylint: disable=too-few-public-methods
     def get_str_repr(self, sons_repr):
         return "(" + "|".join(sons_repr) + ")"
 
+    def get_cfg_rules(self, current_symbol, sons):
+        return [pyformlang.cfg.Production(
+            pyformlang.cfg.utils.to_variable(current_symbol),
+            [pyformlang.cfg.utils.to_variable(son)])
+                for son in sons]
+
     def __init__(self):
         super().__init__("Union")
 
@@ -136,6 +156,20 @@ class KleeneStar(Operator):  # pylint: disable=too-few-public-methods
 
     def get_str_repr(self, sons_repr):
         return "(" + ".".join(sons_repr) + ")*"
+
+    def get_cfg_rules(self, current_symbol, sons):
+        return [
+            pyformlang.cfg.Production(
+                pyformlang.cfg.utils.to_variable(current_symbol),
+                []),
+            pyformlang.cfg.Production(
+                pyformlang.cfg.utils.to_variable(current_symbol),
+                [pyformlang.cfg.utils.to_variable(current_symbol),
+                 pyformlang.cfg.utils.to_variable(current_symbol)]),
+            pyformlang.cfg.Production(
+                pyformlang.cfg.utils.to_variable(current_symbol),
+                [pyformlang.cfg.utils.to_variable(son) for son in sons])
+        ]
 
     def __init__(self):
         super().__init__("Kleene Star")
@@ -148,6 +182,11 @@ class Epsilon(Symbol):  # pylint: disable=too-few-public-methods
     def get_str_repr(self, sons_repr):
         return "$"
 
+    def get_cfg_rules(self, current_symbol, sons):
+        return [pyformlang.cfg.Production(
+            pyformlang.cfg.utils.to_variable(current_symbol),
+            [])]
+
     def __init__(self):
         super().__init__("Epsilon")
 
@@ -158,6 +197,9 @@ class Empty(Symbol):  # pylint: disable=too-few-public-methods
 
     def __init__(self):
         super().__init__("Empty")
+
+    def get_cfg_rules(self, current_symbol, sons):
+        return []
 
 
 class MisformedRegexError(Exception):

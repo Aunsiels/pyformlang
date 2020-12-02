@@ -10,7 +10,7 @@ from pyformlang import pda
 from pyformlang.finite_automaton import FiniteAutomaton
 # pylint: disable=cyclic-import
 from pyformlang.pda import cfg_variable_converter as cvc
-from pyformlang.regular_expression import Regex
+from pyformlang import regular_expression
 from .cfg_object import CFGObject
 # pylint: disable=cyclic-import
 from .cyk_table import CYKTable, DerivationDoesNotExist
@@ -799,7 +799,7 @@ class CFG:
             When trying to intersect with something else than a regex or a
             finite automaton
         """
-        if isinstance(other, Regex):
+        if isinstance(other, regular_expression.Regex):
             other = other.to_epsilon_nfa().to_deterministic()
         elif isinstance(other, FiniteAutomaton):
             if not other.is_deterministic():

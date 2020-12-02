@@ -8,7 +8,7 @@ from networkx.drawing.nx_pydot import write_dot
 
 from pyformlang.pda.cfg_variable_converter import CFGVariableConverter
 from pyformlang import finite_automaton
-from pyformlang.regular_expression import Regex
+from pyformlang import regular_expression
 from pyformlang import cfg
 
 
@@ -460,7 +460,7 @@ class PDA:
             When intersecting with something else than a regex or a finite
             automaton
         """
-        if isinstance(other, Regex):
+        if isinstance(other, regular_expression.Regex):
             other = other.to_epsilon_nfa().to_deterministic()
         elif isinstance(other, FiniteAutomaton):
             if not other.is_deterministic():
