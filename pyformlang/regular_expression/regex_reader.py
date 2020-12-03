@@ -103,7 +103,8 @@ class RegexReader:
             self._compute_precedent_when_not_kleene_nor_union()
 
     def _set_next_end_group_and_node(self):
-        if isinstance(self._current_node, Operator):
+        if isinstance(self._current_node, Operator) and not isinstance(
+                self._current_node, KleeneStar):
             self._end_current_group += 1
         self._set_end_first_group_in_components(self._end_current_group)
         if self._end_current_group < len(self._components):

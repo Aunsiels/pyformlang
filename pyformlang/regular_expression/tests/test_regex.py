@@ -280,3 +280,8 @@ class TestRegex(unittest.TestCase):
         self.assertTrue(cfg.contains(["c"]))
         self.assertTrue(cfg.contains(["a", "c"]))
         self.assertTrue(cfg.contains(["a", "b", "c"]))
+
+    def test_priority(self):
+        self.assertTrue(Regex('b a* | a').accepts('a'))
+        self.assertTrue(Regex('b a* | a').accepts('b'))
+        self.assertTrue(Regex('(b a*) | a').accepts('a'))
