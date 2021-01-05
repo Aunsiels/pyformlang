@@ -347,6 +347,7 @@ class TestPDA(unittest.TestCase):
         pda.set_start_stack_symbol("Z0")
         pda.add_final_state("q2")
         pda_final_state = pda.to_final_state()
+        self.assertIsNotNone(pda_final_state)
         cfg = pda.to_empty_stack().to_cfg()
         self.assertTrue(cfg.contains(["0", "1"]))
         pda_networkx = PDA.from_networkx(pda.to_networkx())

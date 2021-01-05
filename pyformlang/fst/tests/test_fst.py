@@ -1,4 +1,6 @@
 """ Tests the FST """
+# pylint: disable=duplicate-code
+
 
 import unittest
 from os import path

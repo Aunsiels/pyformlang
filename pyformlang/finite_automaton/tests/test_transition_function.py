@@ -2,7 +2,6 @@
 Test the transition functions
 """
 
-
 import unittest
 
 from pyformlang.finite_automaton import State, Symbol, TransitionFunction, \

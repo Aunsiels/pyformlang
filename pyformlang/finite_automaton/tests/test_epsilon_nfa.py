@@ -103,7 +103,7 @@ class TestEpsilonNFA(unittest.TestCase):
         enfa.add_transition(state0, symb02, state2)
         enfa.add_transition(state1, symb11, state1)
         enfa.add_transition(state1, symb12, state2)
-        enfa.remove_all_basic_states()
+        enfa._remove_all_basic_states()
         self.assertEqual(enfa.get_number_transitions(), 1)
         self.assertEqual(len(enfa.states), 2)
 
@@ -130,7 +130,7 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertFalse(enfa2.accepts([symb_f]))
         enfa.add_final_state(state0)
         with self.assertRaises(ValueError) as _:
-            enfa.get_regex_simple()
+            enfa._get_regex_simple()
         regex = enfa.to_regex()
         enfa3 = regex.to_epsilon_nfa()
         self.assertTrue(enfa3.accepts([symb_e, symb_f]))

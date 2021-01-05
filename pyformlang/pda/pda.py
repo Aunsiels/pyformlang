@@ -212,7 +212,7 @@ class PDA:
             Transitions as they would be given to add_transition
         """
         for s_from, input_symbol, stack_from, s_to, stack_to in transitions:
-            self.add_transition(s_from, input_symbol,stack_from,
+            self.add_transition(s_from, input_symbol, stack_from,
                                 s_to, stack_to)
 
     def add_transition(self,
@@ -228,7 +228,7 @@ class PDA:
         s_from : :class:`~pyformlang.pda.State`
             The starting symbol
         input_symbol : :class:`~pyformlang.pda.Symbol`
-            The input symbol
+            The input symbol for the transition
         stack_from : :class:`~pyformlang.pda.StackSymbol`
             The stack symbol of the transition
         s_to : :class:`~pyformlang.pda.State`
@@ -461,9 +461,11 @@ class PDA:
             automaton
         """
         if isinstance(other, regular_expression.Regex):
-            other = other.to_epsilon_nfa().to_deterministic()
+            enfa = other.to_epsilon_nfa()
+            other = enfa.to_deterministic()
         elif isinstance(other, FiniteAutomaton):
-            if not other.is_deterministic():
+            is_deterministic = other.is_deterministic()
+            if not is_deterministic:
                 other = other.to_deterministic()
         else:
             raise NotImplementedError
@@ -572,13 +574,13 @@ class PDA:
                            peripheries=2 if state in self.final_states else 1,
                            label=state.value)
             if state == self._start_state:
+                graph.add_edge(str(state.value) + "_starting",
+                               state.value)
                 graph.add_node(str(state.value) + "_starting",
                                label="",
                                shape=None,
                                height=.0,
                                width=.0)
-                graph.add_edge(str(state.value) + "_starting",
-                               state.value)
         if self._start_stack_symbol is not None:
             graph.add_node("INITIAL_STACK_HIDDEN",
                            label=json.dumps(self._start_stack_symbol.value),
@@ -619,7 +621,7 @@ class PDA:
         """
         pda = PDA()
         for s_from in graph:
-            if type(s_from) == str and s_from.endswith("_starting"):
+            if isinstance(s_from, str) and s_from.endswith("_starting"):
                 continue
             for s_to in graph[s_from]:
                 for transition in graph[s_from][s_to].values():

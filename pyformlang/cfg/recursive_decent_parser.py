@@ -1,3 +1,7 @@
+"""
+A recursive decent parser.
+"""
+
 from pyformlang.cfg import Variable, Epsilon
 from pyformlang.cfg.cfg import NotParsableException
 from pyformlang.cfg.parse_tree import ParseTree

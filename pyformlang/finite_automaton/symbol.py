@@ -14,17 +14,11 @@ class Symbol(FiniteAutomatonObject):  # pylint: disable=too-few-public-methods
     value : any
         The value of the symbol
 
-    Attributes
-    ----------
-
     Examples
     ----------
     >>> from pyformlang.finite_automaton import Symbol
     >>> Symbol("A")
     A
-
-    See also
-    ----------
     """
 
     def __eq__(self, other: Any) -> bool:

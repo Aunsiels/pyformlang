@@ -13,6 +13,15 @@ class NondeterministicTransitionFunction:
 
     The difference with a deterministic transition is that the return value is
     a set of States
+
+    Examples
+    --------
+
+    >>> transition = NondeterministicTransitionFunction()
+    >>> transition.add_transition(State(0), Symbol("a"), State(1))
+
+    Creates a transition function and adds a transition.
+
     """
 
     def __init__(self):
@@ -36,6 +45,12 @@ class NondeterministicTransitionFunction:
         --------
         done : int
             Always 1
+
+        Examples
+        --------
+
+        >>> transition = NondeterministicTransitionFunction()
+        >>> transition.add_transition(State(0), Symbol("a"), State(1))
 
         """
         if s_from in self._transitions:
@@ -67,6 +82,13 @@ class NondeterministicTransitionFunction:
         done : int
             1 is the transition was found, 0 otherwise
 
+        Examples
+        --------
+
+        >>> transition = NondeterministicTransitionFunction()
+        >>> transition.add_transition(State(0), Symbol("a"), State(1))
+        >>> transition.remove_transition(State(0), Symbol("a"), State(1))
+
         """
         if s_from in self._transitions and \
                 symb_by in self._transitions[s_from] and \
@@ -82,6 +104,14 @@ class NondeterministicTransitionFunction:
         ----------
         n_transitions : int
             The number of transitions
+
+        Examples
+        --------
+
+        >>> transition = NondeterministicTransitionFunction()
+        >>> transition.add_transition(State(0), Symbol("a"), State(1))
+        >>> transition.get_number_transitions()
+        1
 
         """
         counter = 0
@@ -124,6 +154,14 @@ class NondeterministicTransitionFunction:
         ----------
         is_deterministic : bool
             Whether the function is deterministic
+
+        Examples
+        --------
+
+        >>> transition = NondeterministicTransitionFunction()
+        >>> transition.add_transition(State(0), Symbol("a"), State(1))
+        >>> transition.is_deterministic()
+        True
 
         """
         for s_from in self._transitions:

@@ -39,6 +39,30 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
     final_states : set of :class:`~pyformlang.finite_automaton.State`, optional
         A set of final or accepting states. It is a subset of states.
 
+    Examples
+    --------
+
+    >>> enfa = EpsilonNFA()
+
+    Creates an empty epsilon non-deterministic automaton.
+
+    >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), (0, "epsilon", 2)])
+
+    Adds three transition, one of them being an epsilon transition.
+
+    >>> enfa.add_start_state(0)
+
+    Adds a start state.
+
+    >>> enfa.add_final_state(1)
+
+    Adds a final state.
+
+    >>> enfa.is_deterministic()
+    False
+
+    Checks if the automaton is deterministic.
+
     """
 
     # pylint: disable=too-many-arguments
@@ -109,6 +133,21 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         ----------
         is_accepted : bool
             Whether the word is accepted or not
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa.accepts(["abc", "epsilon"])
+        True
+
+        >>> enfa.accepts(["epsilon"])
+        False
+
         """
         word = [to_symbol(x) for x in word]
         current_states = self.eclose_iterable(self._start_state)
@@ -132,6 +171,17 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         ---------
         states : set of :class:`~pyformlang.finite_automaton.State`
             The epsilon closure of the source state
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa.eclose_iterable([0])
+        {2}
         """
         states = [to_state(x) for x in states]
         res = set()
@@ -151,6 +201,18 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         ---------
         states : set of :class:`~pyformlang.finite_automaton.State`
             The epsilon closure of the source state
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa.eclose(0)
+        {2}
+
         """
         state = to_state(state)
         to_process = [state]
@@ -171,6 +233,21 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         ----------
         is_deterministic : bool
            Whether the automaton is deterministic
+
+        Examples
+        --------
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa.is_deterministic()
+        False
+
         """
         return len(self._start_state) <= 1 \
             and self._transition_function.is_deterministic()\
@@ -234,6 +311,22 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         dfa :  :class:`~pyformlang.deterministic_finite_automaton\
         .DeterministicFiniteAutomaton`
             A dfa equivalent to the current nfa
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> dfa = enfa.to_deterministic()
+        >>> dfa.is_deterministic()
+        True
+
+        >>> enfa.is_equivalent_to(dfa)
+        True
+
         """
         return self._to_deterministic_internal(True)
 
@@ -244,6 +337,19 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         ----------
         enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
             A copy of the current Epsilon NFA
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa_copy = enfa.copy()
+        >>> enfa.is_equivalent_to(enfa_copy)
+        True
+
         """
         enfa = EpsilonNFA()
         for start in self._start_state:
@@ -270,6 +376,19 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         ----------
         regex : :class:`~pyformlang.regular_expression.Regex`
             A regular expression equivalent to the current Epsilon NFA
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> regex = enfa.to_regex()
+        >>> regex.accepts(["abc"])
+        True
+
         """
         enfas = [self.copy() for _ in self._final_states]
         final_states = list(self._final_states)
@@ -279,14 +398,16 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                     enfas[j].remove_final_state(final_states[i])
         regex_l = []
         for enfa in enfas:
-            enfa.remove_all_basic_states()
-            regex_sub = enfa.get_regex_simple()
+            # pylint: disable=protected-access
+            enfa._remove_all_basic_states()
+            # pylint: disable=protected-access
+            regex_sub = enfa._get_regex_simple()
             if regex_sub:
                 regex_l.append(regex_sub)
         res = "+".join(regex_l)
         return pyformlang.regular_expression.Regex(res)
 
-    def get_regex_simple(self) -> str:
+    def _get_regex_simple(self) -> str:
         """ Get the regex of an automaton when it only composed of a start and
         a final state
 
@@ -357,12 +478,29 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         """ Get the complement of the current Epsilon NFA
 
         Equivalent to:
-          >> -automaton
+
+          >>> -automaton
 
         Returns
         ----------
         enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
             A complement automaton
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa_complement = enfa.get_complement()
+        >>> enfa_complement.accepts(["epsilon"])
+        True
+
+        >>> enfa_complement.accepts(["abc"])
+        False
+
         """
         enfa = self.copy()
         trash = State("TrashNode")
@@ -398,7 +536,8 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         """ Computes the intersection of two Epsilon NFAs
 
         Equivalent to:
-          >> automaton0 and automaton1
+
+          >>> automaton0 and automaton1
 
         Parameters
         ----------
@@ -409,6 +548,26 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         ---------
         enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
             The intersection of the two Epsilon NFAs
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa2 = EpsilonNFA()
+        >>> enfa2.add_transition(0, "d", 1)
+        >>> enfa2.add_final_state(1)
+        >>> enfa2.add_start_state(0)
+        >>> enfa_inter = enfa.get_intersection(enfa2)
+        >>> enfa_inter.accepts(["abc"])
+        False
+
+        >>> enfa_inter.accepts(["d"])
+        True
+
         """
         enfa = EpsilonNFA()
         symbols = list(self.symbols.intersection(other.symbols))
@@ -454,6 +613,10 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             -> "EpsilonNFA":
         """ Compute the difference with another Epsilon NFA
 
+        Equivalent to:
+
+          >>> automaton0 - automaton1
+
         Parameters
         ----------
         other : :class:`~pyformlang.finite_automaton.EpsilonNFA`
@@ -463,6 +626,26 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         ---------
         enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
             The difference with the other epsilon NFA
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa2 = EpsilonNFA()
+        >>> enfa2.add_transition(0, "d", 1)
+        >>> enfa2.add_final_state(1)
+        >>> enfa2.add_start_state(0)
+        >>> enfa_diff = enfa.get_difference(enfa2)
+        >>> enfa_diff.accepts(["d"])
+        False
+
+        >>> enfa_diff.accepts(["abc"])
+        True
+
         """
         other = other.copy()
         for symbol in self._input_symbols:
@@ -496,7 +679,19 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         Returns
         ---------
         enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
-            The difference with the other epsilon NFA
+            The reversed automaton
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (1, "d", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(2)
+        >>> enfa_reverse = enfa.reverse()
+        >>> enfa_reverse.accepts(["d", "abc"])
+        True
+
         """
         enfa = EpsilonNFA()
         for state0 in self._states:
@@ -517,7 +712,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         Returns
         ---------
         enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
-            The difference with the other epsilon NFA
+            The reversed automaton
         """
         return self.reverse()
 
@@ -528,6 +723,18 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         ----------
         is_empty : bool
             Whether the language is empty or not
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa.is_empty()
+        False
+
         """
         to_process = []
         processed = set()
@@ -549,7 +756,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                     processed.add(state)
         return True
 
-    def remove_all_basic_states(self):
+    def _remove_all_basic_states(self):
         """ Remove all states which are not the start state or a final state
 
 
@@ -620,6 +827,19 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         dfa : :class:`~pyformlang.deterministic_finite_automaton\
         .DeterministicFiniteAutomaton`
             The minimal DFA
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> dfa_minimal = enfa.minimize()
+        >>> dfa_minimal.is_equivalent(enfa)
+        True
+
         """
         return self.to_deterministic().minimize()
 

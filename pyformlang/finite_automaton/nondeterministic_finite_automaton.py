@@ -17,7 +17,8 @@ from .transition_function import InvalidEpsilonTransition
 class NondeterministicFiniteAutomaton(EpsilonNFA):
     """ Represents a nondeterministic finite automaton
 
-    This class represents a nondeterministic finite automaton.
+    This class represents a nondeterministic finite automaton, where epsilon \
+    transition are forbidden.
 
     Parameters
     ----------
@@ -34,6 +35,32 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         A start state, element of states
     final_states : set of :class:`~pyformlang.finite_automaton.State`, optional
         A set of final or accepting states. It is a subset of states.
+
+    Examples
+    --------
+
+    >>> nfa = NondeterministicFiniteAutomaton()
+
+    Creates the NFA.
+
+    >>> nfa.add_transitions([(0, "a", 1), (0, "a", 2)])
+
+    Adds two transitions.
+
+    >>> nfa.add_start_state(0)
+
+    Adds a start state.
+
+    >>> nfa.add_final_state(1)
+
+    Adds a final state.
+
+    >>> nfa.accepts(["a"])
+    True
+
+    >>> nfa.is_deterministic()
+    False
+
     """
 
     def accepts(self, word: Iterable[Symbol]) -> bool:
@@ -48,6 +75,17 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         ----------
         is_accepted : bool
             Whether the word is accepted or not
+
+        Examples
+        --------
+
+        >>> nfa = NondeterministicFiniteAutomaton()
+        >>> nfa.add_transitions([(0, "a", 1), (0, "a", 2)])
+        >>> nfa.add_start_state(0)
+        >>> nfa.add_final_state(1)
+        >>> nfa.accepts(["a"])
+        True
+
         """
         word = [to_symbol(x) for x in word]
         current_states = self._start_state
@@ -63,6 +101,17 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         ----------
         is_deterministic : bool
            Whether the automaton is deterministic
+
+        Examples
+        --------
+
+        >>> nfa = NondeterministicFiniteAutomaton()
+        >>> nfa.add_transitions([(0, "a", 1), (0, "a", 2)])
+        >>> nfa.add_start_state(0)
+        >>> nfa.add_final_state(1)
+        >>> nfa.is_deterministic()
+        False
+
         """
         return len(self._start_state) <= 1 and \
             self._transition_function.is_deterministic()
@@ -75,6 +124,18 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         dfa :  :class:`~pyformlang.deterministic_finite_automaton\
         .DeterministicFiniteAutomaton`
             A dfa equivalent to the current nfa
+
+        Examples
+        --------
+
+        >>> nfa = NondeterministicFiniteAutomaton()
+        >>> nfa.add_transitions([(0, "a", 1), (0, "a", 2)])
+        >>> nfa.add_start_state(0)
+        >>> nfa.add_final_state(1)
+        >>> dfa = nfa.to_deterministic()
+        >>> nfa.is_equivalent_to(dfa)
+        True
+
         """
         return self._to_deterministic_internal(False)
 

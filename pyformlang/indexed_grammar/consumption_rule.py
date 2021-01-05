@@ -24,10 +24,6 @@ class ConsumptionRule(ReducedRule):
     """
 
     @property
-    def production(self):
-        raise NotImplementedError
-
-    @property
     def right_term(self):
         raise NotImplementedError
 
@@ -60,6 +56,10 @@ class ConsumptionRule(ReducedRule):
             The symbol being consumed by the rule
         """
         return self._f
+
+    @property
+    def production(self):
+        raise NotImplementedError
 
     @property
     def right(self) -> Any:

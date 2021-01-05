@@ -2,6 +2,7 @@
 Testing of indexed grammar, with manual rules
 """
 
+
 import unittest
 
 from pyformlang.indexed_grammar import Rules
@@ -348,9 +349,9 @@ class TestIndexedGrammar(unittest.TestCase):
         l_rules = []
 
         l_rules.append(ProductionRule("S", "D", "f"))
+        l_rules.append(ConsumptionRule("f", "B", "Bfinal"))
         l_rules.append(DuplicationRule("D", "A", "B"))
         l_rules.append(ConsumptionRule("f", "A", "Afinal"))
-        l_rules.append(ConsumptionRule("f", "B", "Bfinal"))
         l_rules.append(EndRule("Afinal", "a"))
         l_rules.append(EndRule("Bfinal", "b"))
         l_rules.append(ConsumptionRule("f", "A", "Q"))

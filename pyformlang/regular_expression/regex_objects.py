@@ -44,6 +44,11 @@ class Node:  # pylint: disable=too-few-public-methods
         """
         raise NotImplementedError
 
+    def get_cfg_rules(self, current_symbol, sons):
+        """ Gets the rules for a context-free grammar to represent the \
+        operator"""
+        raise NotImplementedError
+
 
 CONCATENATION_SYMBOLS = ["."]
 UNION_SYMBOLS = ["|", "+"]
@@ -86,14 +91,17 @@ class Operator(Node):  # pylint: disable=too-few-public-methods
         The value of the operator
     """
 
+    def __repr__(self):
+        return "Operator(" + str(self._value) + ")"
+
     def get_str_repr(self, sons_repr):
+        """ Get the string representation """
         raise NotImplementedError
 
     def get_cfg_rules(self, current_symbol, sons):
+        """ Gets the rules for a context-free grammar to represent the \
+        operator"""
         raise NotImplementedError
-
-    def __repr__(self):
-        return "Operator(" + str(self._value) + ")"
 
 
 class Symbol(Node):  # pylint: disable=too-few-public-methods
@@ -109,6 +117,8 @@ class Symbol(Node):  # pylint: disable=too-few-public-methods
         return str(self.value)
 
     def get_cfg_rules(self, current_symbol, sons):
+        """ Gets the rules for a context-free grammar to represent the \
+        operator"""
         return [pyformlang.cfg.Production(
             pyformlang.cfg.utils.to_variable(current_symbol),
             [pyformlang.cfg.utils.to_terminal(self.value)])]

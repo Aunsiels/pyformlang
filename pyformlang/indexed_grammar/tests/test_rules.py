@@ -4,11 +4,12 @@ Testing the rules
 
 import unittest
 
+
+from pyformlang.indexed_grammar import ProductionRule
+from pyformlang.indexed_grammar import DuplicationRule
 from pyformlang.indexed_grammar import Rules
 from pyformlang.indexed_grammar import ConsumptionRule
 from pyformlang.indexed_grammar import EndRule
-from pyformlang.indexed_grammar import ProductionRule
-from pyformlang.indexed_grammar import DuplicationRule
 
 
 class TestIndexedGrammar(unittest.TestCase):

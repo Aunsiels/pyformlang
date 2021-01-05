@@ -66,6 +66,13 @@ class FiniteAutomaton:
         --------
         DuplicateTransitionError
             If the transition already exists
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transition(0, "abc", 1)
+
         """
         s_from = to_state(s_from)
         symb_by = to_symbol(symb_by)
@@ -96,6 +103,15 @@ class FiniteAutomaton:
         --------
         DuplicateTransitionError
             If the transition already exists
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+
+
         """
         temp = 0
         for s_from, symb_by, s_to in transitions_list:
@@ -120,6 +136,14 @@ class FiniteAutomaton:
         --------
         done : int
             1 if the transition existed, 0 otherwise
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transition(0, "abc", 1)
+        >>> enfa.remove_transition(0, "abc", 1)
+
         """
         s_from = to_state(s_from)
         symb_by = to_symbol(symb_by)
@@ -147,6 +171,15 @@ class FiniteAutomaton:
         n_transitions : int
             The number of deterministic transitions
 
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.get_number_transitions()
+        3
+
         """
         return self._transition_function.get_number_transitions()
 
@@ -172,6 +205,15 @@ class FiniteAutomaton:
         ----------
         done : int
             1 is correctly added
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+
         """
         state = to_state(state)
         self._start_state.add(state)
@@ -190,6 +232,16 @@ class FiniteAutomaton:
         ----------
         done : int
             1 is correctly added
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.remove_start_state(0)
+
         """
         state = to_state(state)
         if state in self._start_state:
@@ -209,6 +261,16 @@ class FiniteAutomaton:
         ----------
         done : int
             1 is correctly added
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+
         """
         state = to_state(state)
         self._final_states.add(state)
@@ -227,6 +289,16 @@ class FiniteAutomaton:
         ----------
         done : int
             0 if it was not a final state, 1 otherwise
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa.remove_final_state(1)
         """
         state = to_state(state)
         if self.is_final_state(state):
@@ -249,6 +321,16 @@ class FiniteAutomaton:
         ----------
         states : list of :class:`~pyformlang.finite_automaton.State`
             The next states
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa(0, "abc")
+        [1]
+
         """
         # pylint: disable=not-callable
         state = to_state(state)
@@ -268,6 +350,18 @@ class FiniteAutomaton:
         ----------
         is_final : bool
             Whether the state is final or not
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa.is_final_state(1)
+        True
+
         """
         state = to_state(state)
         return state in self._final_states
@@ -284,6 +378,13 @@ class FiniteAutomaton:
         -----------
         symbol : :class:`~pyformlang.finite_automaton.Symbol`
             The symbol
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_symbol("a")
+
         """
         symbol = to_symbol(symbol)
         self._input_symbols.add(symbol)
@@ -298,6 +399,15 @@ class FiniteAutomaton:
         ----------
         fst : :class:`~pyformlang.fst.FST`
             The equivalent FST
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> fst = enfa.to_fst()
+        >>> fst.states
+        {}
+
         """
         fst = FST()
         for start_state in self._start_state:
@@ -319,6 +429,17 @@ class FiniteAutomaton:
         -------
         is_acyclic : bool
             Whether the automaton is acyclic or not
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa.is_acyclic()
+        True
 
         """
         to_process = []
@@ -345,6 +466,16 @@ class FiniteAutomaton:
         -------
         graph :  networkx.MultiDiGraph
             A networkx MultiDiGraph representing the automaton
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> graph = enfa.to_networkx()
 
         """
         graph = nx.MultiDiGraph()
@@ -387,6 +518,18 @@ class FiniteAutomaton:
         -------
         * We lose the type of the node value if going through a dot file
         * Explain the format
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> graph = enfa.to_networkx()
+        >>> enfa_from_nx = EpsilonNFA.from_networkx(graph)
+
         """
         enfa = finite_automaton.EpsilonNFA()
         for s_from in graph:
@@ -412,6 +555,15 @@ class FiniteAutomaton:
         filename : str
             The filename where to write the dot file
 
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa.write_as_dot("enfa.dot")
         """
         write_dot(self.to_networkx(), filename)
 
@@ -428,6 +580,18 @@ class FiniteAutomaton:
         -------
         is_equivalent : bool
             Whether the two automata are equivalent or not
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> dfa = enfa.to_deterministic()
+        >>> dfa.is_deterministic()
+        True
 
         """
         self_dfa = self.to_deterministic()
@@ -462,6 +626,17 @@ class FiniteAutomaton:
         -------
         transition_dict : dict
             The transitions as a dictionary.
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> enfa_dict = enfa.to_dict()
+
         """
         return self._transition_function.to_dict()
 

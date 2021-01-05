@@ -7,6 +7,12 @@ from .symbol import Symbol
 
 class Epsilon(Symbol):  # pylint: disable=too-few-public-methods
     """ An epsilon transition
+
+    Examples
+    --------
+
+    >>> epsilon = Epsilon()
+
     """
 
     def __init__(self):

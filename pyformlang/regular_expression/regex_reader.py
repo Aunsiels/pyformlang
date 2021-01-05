@@ -177,12 +177,12 @@ class RegexReader:
         self.sons = []
 
     @classmethod
-    def from_string(cls, regex):
+    def from_string(cls, regex_str: str):
         """
         Read a regex from a string
         Parameters
         ----------
-        regex : str
+        regex_str : str
             A regular expression
 
         Returns
@@ -190,7 +190,7 @@ class RegexReader:
         parsed_regex : :class:`~pyformlang.regular_expression.RegexReader`
             The parsed regex
         """
-        return RegexReader(regex)
+        return RegexReader(regex_str)
 
 
 def _find_first_complete_closing_if_possible(parenthesis_depths, index_from=0):

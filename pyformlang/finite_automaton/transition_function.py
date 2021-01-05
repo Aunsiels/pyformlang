@@ -20,14 +20,18 @@ class TransitionFunction:
 
     This is a deterministic transition function.
 
-    Parameters
-    ----------
-
     Attributes
     ----------
     _transitions : dict
         A dictionary which contains the transitions of a finite automaton
 
+    Examples
+    --------
+
+    >>> transition = TransitionFunction()
+    >>> transition.add_transition(State(0), Symbol("a"), State(1))
+
+    Creates a transition function and adds a transition.
 
     """
 
@@ -57,6 +61,13 @@ class TransitionFunction:
         --------
         DuplicateTransitionError
             If the transition already exists
+
+        Examples
+        --------
+
+        >>> transition = TransitionFunction()
+        >>> transition.add_transition(State(0), Symbol("a"), State(1))
+
         """
         if symb_by == Epsilon():
             raise InvalidEpsilonTransition()
@@ -75,6 +86,7 @@ class TransitionFunction:
             self._transitions[s_from][symb_by] = s_to
         return 1
 
+    # pylint: disable=duplicate-code
     def remove_transition(self, s_from: State, symb_by: Symbol,
                           s_to: State) -> int:
         """ Removes a transition to the function
@@ -93,6 +105,13 @@ class TransitionFunction:
         --------
         done : int
             1 is the transition was found, 0 otherwise
+
+        Examples
+        --------
+
+        >>> transition = TransitionFunction()
+        >>> transition.add_transition(State(0), Symbol("a"), State(1))
+        >>> transition.remove_transition(State(0), Symbol("a"), State(1))
 
         """
         if s_from in self._transitions and \
@@ -134,6 +153,14 @@ class TransitionFunction:
         ----------
         n_transitions : int
             The number of deterministic transitions
+
+        Examples
+        --------
+
+        >>> transition = TransitionFunction()
+        >>> transition.add_transition(State(0), Symbol("a"), State(1))
+        >>> transition.get_number_transitions()
+        1
 
         """
         return sum([len(x) for x in self._transitions.values()])

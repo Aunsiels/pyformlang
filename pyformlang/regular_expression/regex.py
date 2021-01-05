@@ -314,6 +314,7 @@ class Regex(RegexReader):
         for son in self.sons:
             next_symbol = "A" + str(count)
             count += 1
+            # pylint: disable=protected-access
             new_prods, count = son._get_production(next_symbol, count)
             next_symbols.append(next_symbol)
             next_productions += new_prods

@@ -16,11 +16,6 @@ class StackSymbol:
         self._hash = None
         self.index_cfg_converter = None
 
-    def __hash__(self):
-        if self._hash is None:
-            self._hash = hash(self._value)
-        return self._hash
-
     @property
     def value(self):
         """ Returns the value of the stack symbol
@@ -31,6 +26,11 @@ class StackSymbol:
             any
         """
         return self._value
+
+    def __hash__(self):
+        if self._hash is None:
+            self._hash = hash(self._value)
+        return self._hash
 
     def __eq__(self, other):
         return self._value == other.value

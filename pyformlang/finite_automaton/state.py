@@ -14,17 +14,12 @@ class State(FiniteAutomatonObject):  # pylint: disable=too-few-public-methods
     value : any
         The value of the state
 
-    Attributes
-    ----------
-
     Examples
     ----------
     >>> from pyformlang.finite_automaton import State
     >>> State("A")
     A
 
-    See also
-    ----------
     """
 
     def __init__(self, value):
@@ -32,12 +27,12 @@ class State(FiniteAutomatonObject):  # pylint: disable=too-few-public-methods
         self.index = None
         self.index_cfg_converter = None
 
-    def __eq__(self, other: Any) -> bool:
-        if isinstance(other, State):
-            return self._value == other._value
-        return self._value == other
-
     def __hash__(self) -> int:
         if self._hash is None:
             self._hash = hash(self._value)
         return self._hash
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, State):
+            return self._value == other._value
+        return self._value == other

@@ -27,9 +27,6 @@ class EndRule(ReducedRule):
     def right_terms(self):
         raise NotImplementedError
 
-    @property
-    def f_parameter(self):
-        raise NotImplementedError
 
     def __init__(self, left, right):
         self._left_term = left
@@ -47,17 +44,6 @@ class EndRule(ReducedRule):
         return True
 
     @property
-    def left_term(self) -> Any:
-        """Gets the non-terminal on the left of the rule
-
-        Returns
-        ---------
-        left_term : any
-            The left non-terminal of the rule
-        """
-        return self._left_term
-
-    @property
     def right_term(self) -> Any:
         """Gets the terminal on the right of the rule
 
@@ -67,6 +53,17 @@ class EndRule(ReducedRule):
             The right terminal of the rule
         """
         return self._right_term
+
+    @property
+    def left_term(self) -> Any:
+        """Gets the non-terminal on the left of the rule
+
+        Returns
+        ---------
+        left_term : any
+            The left non-terminal of the rule
+        """
+        return self._left_term
 
     @property
     def non_terminals(self) -> Iterable[Any]:
@@ -97,3 +94,7 @@ class EndRule(ReducedRule):
     def __eq__(self, other):
         return other.is_end_rule() and other.left_term == self.left_term\
             and other.right_term == self.right_term
+
+    @property
+    def f_parameter(self):
+        raise NotImplementedError
