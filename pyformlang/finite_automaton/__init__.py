@@ -7,29 +7,29 @@ This module deals with finite state automata.
 Available Classes
 -----------------
 
-FiniteAutomaton
+:class:`~pyformlang.finite_automaton.FiniteAutomaton`
     A general representation of automata. Cannot be used directly.
-DeterministicFiniteAutomaton
+:class:`~pyformlang.finite_automaton.DeterministicFiniteAutomaton`
     A deterministic finite automaton
-NondeterministicFiniteAutomaton
+:class:`~pyformlang.finite_automaton.NondeterministicFiniteAutomaton`
     A non-deterministic finite automaton, without epsilon transitions
-EpsilonNFA
+:class:`~pyformlang.finite_automaton.EpsilonNFA`
     A non-deterministic finite automaton, with epsilon transitions
-TransitionFunction
+:class:`~pyformlang.finite_automaton.TransitionFunction`
     A deterministic transition function
-NondeterministicTransitionFunction
+:class:`~pyformlang.finite_automaton.NondeterministicTransitionFunction`
     A non-deterministic transition function
-State
+:class:`~pyformlang.finite_automaton.State`
     A state (or node) in an automaton
-Symbol
+:class:`~pyformlang.finite_automaton.Symbol`
     A symbol (part of the alphabet) in an automaton
-Epsilon
+:class:`~pyformlang.finite_automaton.Epsilon`
     The epsilon (or empty) symbol
-DuplicateTransitionError
-    An error that occurs when trying to add a non-deterministic edge to a
+:class:`~pyformlang.finite_automaton.DuplicateTransitionError`
+    An error that occurs when trying to add a non-deterministic edge to a \
     deterministic automaton
-InvalidEpsilonTransition
-    An exception that occurs when adding an epsilon transition to a
+:class:`~pyformlang.finite_automaton.InvalidEpsilonTransition`
+    An exception that occurs when adding an epsilon transition to a \
     non-epsilon NFA.
 
 """
