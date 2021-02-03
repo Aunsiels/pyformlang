@@ -6,6 +6,18 @@
 
 A python library to manipulate formal grammar. In general, it can be used to better understand algorithms in a formal way.
 
+If you use Pyformlang in your project, please cite our paper:
+
+```
+@InProceedings{pyformlang,
+author="Romero, Julien",
+title="Pyformlang: An Educational Library for Formal Language Manipulation",
+booktitle="SIGCSE",
+year="2021"
+doi = {https://doi.org/10.1145/3408877.3432464}
+}
+```
+
 ## Installation
 
 ```bash
