@@ -69,12 +69,24 @@ double backslash \\\\ in strings).
 Finite Automata
 ===============
 
-pyformlang contains several finite automata, all of them being equivalent in the languages they can describe. In general, the states have to be represented by a *pyformlang.finite_automaton.State* object and the symbols by a *pyformlang.finite_automaton.Symbol*. When the class is not ambiguous, raw values can also be used. In addition, epsilon transitions are elements of the class: *pyformlang.finite_automaton.Epsilon*.
+Pyformlang contains several finite automata, all of them being equivalent in
+the languages they can describe. In general, the states have to be represented
+by a *pyformlang.finite_automaton.State* object and the symbols by a
+*pyformlang.finite_automaton.Symbol*. When the class is not ambiguous, raw
+values can also be used. In addition, epsilon transitions are elements of
+the class: *pyformlang.finite_automaton.Epsilon*.
+
+The finite-state automata are compatible with NetworkX. The function
+*to\_networkx* gives a MultiDiGraph representing the automaton. Besides, the
+function *write\_as\_dot* allows to save the automaton into a dot file, from
+which one can get a visual representation.
 
 Deterministic Automata
 ----------------------
 
-These represent deterministic automata, i.e. with only one possible next state possible at each stage and no epsilon transitions.
+These represent deterministic automata, i.e. with only one possible next state
+possible at each stage and no epsilon transitions. Here, we give an example
+with explicit States and Symbols.
 
 .. code-block:: python
 
@@ -116,7 +128,9 @@ These represent deterministic automata, i.e. with only one possible next state p
 Non Deterministic Automata
 --------------------------
 
-The representation of non deterministic automata, i.e. automata with possibly several next states at each stage but no epsilon transitions.
+The representation of non deterministic automata, i.e. automata with
+possibly several next states at each stage but no epsilon transitions. Here,
+we give an example with explicit States and Symbols.
 
 .. code-block:: python
 
@@ -165,7 +179,8 @@ The representation of non deterministic automata, i.e. automata with possibly se
 Epsilon Non Deterministic Automata
 ----------------------------------
 
-It represents a non deterministic automaton where epsilon transitions are allowed.
+It represents a non deterministic automaton where epsilon transitions are
+allowed. First, we give an example with explicit States and Symbols.
 
 .. code-block:: python
 
@@ -179,7 +194,7 @@ It represents a non deterministic automaton where epsilon transitions are allowe
     digits = [Symbol(x) for x in range(10)]
     states = [State("q" + str(x)) for x in range(6)]
 
-    # Creattion of the Epsilon NFA
+    # Creation of the Epsilon NFA
     enfa = EpsilonNFA()
     enfa.add_start_state(states[0])
     enfa.add_final_state(states[5])
@@ -197,6 +212,58 @@ It represents a non deterministic automaton where epsilon transitions are allowe
 
     # Checks if a word is accepted
     enfa.accepts([plus, digits[1], point, digits[9]])
+
+Here, we present an example where the State and Symbols are implicit. The
+construction becomes much simpler.
+
+.. code-block:: python
+
+    from pyformlang.finite_automaton import EpsilonNFA
+
+    # Initialize the automaton
+    enfa = EpsilonNFA()
+
+    # We can add multiple transitions at once
+    enfa.add_transitions(
+       [(0, "abc", 1), (0, "d", 1), (0, "epsilon", 2)])
+
+    # We add start and final states
+    enfa.add_start_state(0)
+    enfa.add_final_state(1)
+
+    # We check if the automaton is deterministic
+    enfa.is_deterministic()  # False
+
+    # We make the automaton deterministic
+    dfa = enfa.to_deterministic()
+
+    # We can check that the new automaton is deterministic and equivalent to
+    # the original one
+    dfa.is_deterministic()  # True
+    dfa.is_equivalent_to(enfa)  # True
+
+    # We check if the automaton is acyclic
+    enfa.is_acyclic()  # True
+
+    # We check if the automaton generates the empty language
+    enfa.is_empty()  # False
+
+    # We check if some words are accepted. A word must be an iterable of
+    # symbols.
+    enfa.accepts(["abc", "epsilon"])  # True
+    enfa.accepts(["epsilon"])  # False
+
+    # We create a new automaton
+    enfa2 = EpsilonNFA()
+    enfa2.add_transition(0, "d", 1)
+    enfa2.add_final_state(1)
+    enfa2.add_start_state(0)
+
+    # We take the intersection of the two automata
+    enfa_inter = enfa.get_intersection(enfa2)
+    enfa_inter.accepts(["abc"])  # False
+    enfa_inter.accepts(["d"])  # True
+
 
 Regex and Finite Automaton
 ==========================
@@ -223,10 +290,50 @@ As regex and finite automaton are equivalent, one can turn one into the other.
     # And turn it back into an epsilon non deterministic automaton
     enfa2 = regex.to_epsilon_nfa()
 
+
+Finite State Transducer
+=======================
+
+Finite-state transducers look like finite-state automata. The main difference
+is that they take as input a word and translate it into another word.
+Finite-state transducers are more rarely introduced in the first class on
+formal languages, but rather in more advanced lectures such as natural
+language processing. Pyformlang implements non-weighted finite-state
+transducers and operators on them: the concatenation, the union and the
+Kleene star. Besides, we offer an intersection function to intersect a
+finite-state transducer with an indexed grammar.
+
+Just like finite-state automata, it is possible to turn a finite-state
+transducer into a NetworkX graph and to save it into a dot file.
+
+.. code-block:: python
+
+    from pyformlang.fst import FST
+
+    fst = FST()
+    fst.add_transitions(
+        [(0, "I", 1, ["Je"]), (1, "am", 2, ["suis"]),
+        (2, "happy", 3, ["content"]),
+        (2, "happy", 3, ["bien", "content"]),
+        (0, "you", 4, ["tu"]), (4, "are", 2, ["es"]),
+        (0, "you", 5, ["vous"]), (5, "are", 2, ["etes"])])
+    fst.add_start_state(0)
+    fst.add_final_state(3)
+    list(fst.translate(["you", "are", "happy"]))
+    # [['vous', 'etes', 'bien', 'content'],
+    #  ['vous', 'etes', 'content'],
+    #  ['tu', 'es', 'bien', 'content'],
+    #  ['tu', 'es', 'content']]
+
 Context-Free Grammar
 ====================
 
-We represent here context-free grammars. Like finite automata, one needs to use the classes *pyformlang.cfg.Variable* and *pyformlang.cfg.Terminal* to represent variables and terminals. The productions need to be represented as *pyformlang.cfg.Production*. In addition, epsilon terminals are members of *pyformlang.cfg.Epsilon*.
+We represent here context-free grammars. Like finite automata, one needs to use
+the classes *pyformlang.cfg.Variable* and *pyformlang.cfg.Terminal* to
+represent variables and terminals. The productions need to be represented
+as *pyformlang.cfg.Production*. In addition, epsilon terminals are members
+of *pyformlang.cfg.Epsilon*. This representation removes ambiguities, but is
+quite verbose.
 
 .. code-block:: python
 
@@ -256,12 +363,58 @@ We represent here context-free grammars. Like finite automata, one needs to use 
     cfg.contains([Epsilon()])
     cfg.contains([ter_a, ter_b])
 
+Pyformlang also includes an easier-to-use representation, similar to what is
+done in other libraries such as NLTK. The variables are represented by a
+string starting with a capital letter. All other strings are terminals. Note
+also that the variables and the terminals cannot contain spaces.
+
+.. code-block:: python
+
+    from pyformlang.cfg import CFG
+    from pyformlang.cfg.llone_parser import LLOneParser
+    from pyformlang.regular_expression import Regex
+
+    cfg = CFG.from_text("""
+        S -> NP VP PUNC
+        PUNC -> . | !
+        VP -> V NP
+        V -> buys | touches | sees
+        NP -> georges | jacques | leo | Det N
+        Det -> a | an | the
+        N -> gorilla | dog | carrots""")
+    regex = Regex("georges touches (a|an) (dog|gorilla) !")
+
+    cfg_inter = cfg.intersection(regex)
+    cfg_inter.is_empty()  # False
+    cfg_inter.is_finite()  # True
+    cfg_inter.contains(["georges", "sees",
+                        "a", "gorilla", "."])  # False
+    cfg_inter.contains(["georges", "touches",
+                        "a", "gorilla", "!"])  # True
+
+    cfg_inter.is_normal_form()  # False
+    cnf = cfg.to_normal_form()
+    cnf.is_normal_form()  # True
+
+    llone_parser = LLOneParser(cfg)
+    parse_tree = llone_parser.get_llone_parse_tree(
+        ["georges", "sees", "a", "gorilla", "."])
+    parse_tree.get_leftmost_derivation()
+    # [[Variable("S")],
+    #  [Variable("NP"), Variable("VP"), Variable("PUNC")],
+    #  ...,
+    #  [Terminal("georges"), Terminal("sees"),
+    #   Terminal("a"), Terminal("gorilla"), Terminal(".")]]
+
 Push-Down Automata
 ==================
 
-For a Push-Down Automata, there are there objects: *pyformlang.pda.State* which represents a state, *pyformlang.pda.Symbol* which represents a symbol and *pyformlang.pda.StackSymbol* which represents a stack symbol.
+For a Push-Down Automata, there are there objects: *pyformlang.pda.State* which
+represents a state, *pyformlang.pda.Symbol* which represents a symbol and
+*pyformlang.pda.StackSymbol* which represents a stack symbol.
 
-PDA can either accept by final state or by empty stack. Function are provided to transform one kind into the other.
+PDA can either accept by final state or by empty stack. Function are provided
+to transform one kind into the other.
 
 .. code-block:: python
 
@@ -297,6 +450,32 @@ PDA can either accept by final state or by empty stack. Function are provided to
     pda_empty_stack = pda.to_empty_stack()
     # Transformation to a PDA accepting by final state
     pda_final_state = pda_empty_stack.to_final_state()
+
+As for finite automata, push-down automata can be constructed with implicit
+stack symbols and states:
+
+.. code-block:: python
+
+    from pyformlang.pda import PDA
+
+    pda = PDA()
+
+    # This function allows to add multiple transitions
+    pda.add_transitions(
+        [
+            ("q0", "0", "Z0", "q1", ("Z1", "Z0")),
+            ("q1", "1", "Z1", "q2", []),
+            ("q0", "epsilon", "Z1", "q2", [])
+        ]
+    )
+    pda.set_start_state("q0")
+    pda.set_start_stack_symbol("Z0")
+    pda.add_final_state("q2")
+
+    pda_final_state = pda.to_final_state()
+    cfg = pda.to_empty_stack().to_cfg()
+    cfg.contains(["0", "1"])  # True
+
 
 CFG and PDA
 ===========
