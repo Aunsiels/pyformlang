@@ -22,3 +22,6 @@ class CFGObject:  # pylint: disable=too-few-public-methods
     def value(self) -> Any:
         """Gets the value of the object"""
         return self._value
+
+    def to_text(self) -> str:
+        raise NotImplementedError

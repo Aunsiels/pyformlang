@@ -835,3 +835,16 @@ class TestCFG(unittest.TestCase):
         self.assertIn("T’ -> *", text_result)
         self.assertIn("F -> (", text_result)
         self.assertIn("F -> id", text_result)
+
+    def test_to_text_cnf(self):
+        cfg = CFG.from_text("S -> a S b | a b")
+        cnf = cfg.to_normal_form()
+        self.assertTrue(cnf.contains(["a", "b"]))
+        new_text = cnf.to_text()
+        print(new_text)
+        new_cfg = CFG.from_text(new_text)
+        self.assertTrue(new_cfg.contains(["a", "b"]))
+
+    def test_to_text_epsilon(self):
+        cfg = CFG.from_text("S -> a S b | a b epsilon")
+        self.assertTrue(cfg.contains(["a", "b"]))

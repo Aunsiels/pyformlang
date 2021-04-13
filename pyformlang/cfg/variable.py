@@ -1,4 +1,5 @@
 """ A variable in a CFG """
+import string
 
 from .cfg_object import CFGObject
 
@@ -35,3 +36,9 @@ class Variable(CFGObject):  # pylint: disable=too-few-public-methods
 
     def _compute_new_hash(self):
         return hash(self._value)
+
+    def to_text(self) -> str:
+        text = str(self._value)
+        if text and text[0] not in string.ascii_uppercase:
+            return '"VAR:' + text + '"'
+        return text

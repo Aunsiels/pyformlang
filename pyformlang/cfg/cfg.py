@@ -31,6 +31,12 @@ class NotParsableException(Exception):
     """When the grammar cannot be parsed (parser not powerful enough)"""
 
 
+def is_special_text(text):
+    return len(text) > 5 and \
+           (text[0:5] == '"VAR:' or text[0:5] == '"TER:') and \
+           text[-1] == '"'
+
+
 class CFG:
     """ A class representing a context free grammar
 
@@ -1010,7 +1016,7 @@ class CFG:
         res = []
         for production in self._productions:
             res.append(str(production.head) + " -> " +
-                       " ".join([str(x.value) for x in production.body]))
+                       " ".join([x.to_text() for x in production.body]))
         return "\n".join(res) + "\n"
 
     @classmethod
@@ -1024,6 +1030,12 @@ class CFG:
         A variable (or non terminal) begins by a capital letter.
         A terminal begins by a non-capital character
         Terminals and Variables are separated by spaces.
+        An epsilon symbol can be represented by epsilon, $, ε, ϵ or Є.
+        If you want to have a variable name starting with a non-capital \
+        letter or a terminal starting with a capital letter, you can \
+        explicitly give the type of your symbol with "VAR:yourVariableName" \
+        or "TER:yourTerminalName" (with the quotation marks). For example:
+        S -> "TER:John" "VAR:d" a b
 
         Parameters
         ----------
@@ -1051,16 +1063,26 @@ class CFG:
     @classmethod
     def _read_line(cls, line, productions, terminals, variables):
         head_s, body_s = line.split("->")
-        head = Variable(head_s.strip())
+        head_text = head_s.strip()
+        if is_special_text(head_text):
+            head_text = head_text[5:-1]
+        head = Variable(head_text)
         variables.add(head)
         for sub_body in body_s.split("|"):
             body = []
             for body_component in sub_body.split():
-                if body_component[0] in string.ascii_uppercase:
+                if is_special_text(body_component):
+                    type_component = body_component[1:4]
+                    body_component = body_component[5:-1]
+                else:
+                    type_component = ""
+                if body_component[0] in string.ascii_uppercase or \
+                        type_component == "VAR":
                     body_var = Variable(body_component)
                     variables.add(body_var)
                     body.append(body_var)
-                elif body_component not in EPSILON_SYMBOLS:
+                elif body_component not in EPSILON_SYMBOLS or type_component\
+                        == "TER":
                     body_ter = Terminal(body_component)
                     terminals.add(body_ter)
                     body.append(body_ter)
