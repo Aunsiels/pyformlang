@@ -747,12 +747,13 @@ class CFG:
         return cyk_table.get_parse_tree()
 
     def to_pda(self) -> "pda.PDA":
-        """ Convert the CFG to a PDA equivalent on empty stack
+        """ Converts the CFG to a PDA that generates on empty stack an \
+        equivalent language
 
         Returns
         ----------
         new_pda : :class:`~pyformlang.pda.PDA`
-            The equivalent PDA
+            The equivalent PDA when accepting on empty stack
         """
         state = pda.State("q")
         pda_object_creator = PDAObjectCreator(self._terminals, self._variables)
