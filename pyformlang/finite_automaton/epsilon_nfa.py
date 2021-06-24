@@ -370,6 +370,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         return self.copy()
 
     def to_regex(self) -> "Regex":
+        from pyformlang import regular_expression
         """ Transforms the EpsilonNFA to a regular expression
 
         Returns
@@ -405,7 +406,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             if regex_sub:
                 regex_l.append(regex_sub)
         res = "+".join(regex_l)
-        return pyformlang.regular_expression.Regex(res)
+        return regular_expression.Regex(res)
 
     def _get_regex_simple(self) -> str:
         """ Get the regex of an automaton when it only composed of a start and
