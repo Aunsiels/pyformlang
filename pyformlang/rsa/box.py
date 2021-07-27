@@ -94,3 +94,9 @@ class Box:
             return True
 
         return False
+
+    def __eq__(self, other):
+        return self.is_equivalent_to(other)
+
+    def __hash__(self):
+        return self._label.__hash__()

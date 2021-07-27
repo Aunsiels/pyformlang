@@ -6,8 +6,34 @@ from typing import AbstractSet
 
 from pyformlang.finite_automaton.finite_automaton import to_symbol
 from pyformlang.finite_automaton.symbol import Symbol
+from pyformlang.regular_expression import Regex
+from pyformlang.cfg import CFG, Epsilon
+
 from pyformlang.rsa.box import Box
-from pyformlang.regular_expression.regex import Regex
+
+
+def remove_repetition_of_nonterminals_from_productions(grammar_in_text: str):
+    """ Remove nonterminal repeats on the left side of the rule
+    For example:
+    grammar: S -> a S b
+             S -> a b
+    grammar after function execution: S -> a S b | a b
+    """
+    productions = dict()
+    for production in grammar_in_text.splitlines():
+        if "->" not in production:
+            continue
+
+        head, body = production.split(" -> ")
+        if head in productions:
+            productions[head] += " | " + body
+        else:
+            productions[head] = body
+
+    grammar_new = str()
+    for nonterminal in productions:
+        grammar_new += f'{nonterminal} -> {productions[nonterminal]}\n'
+    return grammar_new[:-1]
 
 
 class RecursiveAutomaton:
@@ -112,25 +138,57 @@ class RecursiveAutomaton:
         return self._initial_label
 
     @classmethod
-    def from_regex(cls, regex: str, initial_label: Symbol):
+    def from_regex(cls, regex: Regex, initial_label: Symbol):
         """ Create a recursive automaton from regular expression
 
         Parameters
         -----------
-        regex : str
+        regex : :class:`~pyformlang.regular_expression.Regex`
             The regular expression
         initial_label : :class:`~pyformlang.finite_automaton.Symbol`
-            A initial label for the recursive automaton
+            The initial label for the recursive automaton
 
         Returns
         -----------
         rsa : :class:`~pyformlang.rsa.RecursiveAutomaton`
-            The new recursive automaton
+            The new recursive automaton built from regular expression
         """
 
-        initial_label = Symbol(initial_label)
-        box = Box(Regex(regex).to_epsilon_nfa(), initial_label)
+        initial_label = to_symbol(initial_label)
+        box = Box(regex.to_epsilon_nfa().minimize(), initial_label)
         return RecursiveAutomaton({initial_label}, initial_label, {box})
+
+    @classmethod
+    def from_cfg(cls, cfg: CFG):
+        """ Create a recursive automaton from context-free grammar
+
+        Parameters
+        -----------
+        cfg : :class:`~pyformlang.cfg.CFG`
+            The context-free grammar
+
+        Returns
+        -----------
+        rsa : :class:`~pyformlang.rsa.RecursiveAutomaton`
+            The new recursive automaton built from context-free grammar
+        """
+
+        initial_label = to_symbol(cfg.start_symbol)
+        grammar_in_true_format = remove_repetition_of_nonterminals_from_productions(cfg.to_text())
+
+        boxes = set()
+        labels = set()
+        notation_for_epsilon = Epsilon().to_text()
+        for production in grammar_in_true_format.splitlines():
+            head, body = production.split(" -> ")
+            labels.add(to_symbol(head))
+
+            if body == "":
+                body = notation_for_epsilon
+
+            boxes.add(Box(Regex(body).to_epsilon_nfa().minimize(), to_symbol(head)))
+
+        return RecursiveAutomaton(labels, initial_label, boxes)
 
     def is_equivalent_to(self, other):
         """ Check whether two recursive automata are equivalent
@@ -156,7 +214,10 @@ class RecursiveAutomaton:
             box_1 = self.get_box(label)
             box_2 = other.get_box(label)
 
-            if not box_1.is_equivalent_to(box_2):
+            if not box_1 == box_2:
                 return False
 
         return True
+
+    def __eq__(self, other):
+        return self.is_equivalent_to(other)
