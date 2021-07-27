@@ -54,7 +54,7 @@ class TestRSA(unittest.TestCase):
         # S -> a+ b+
         rsa_2 = RecursiveAutomaton.from_regex(Regex("a a* b b*"), Symbol("S"))
 
-        self.assertEqual(rsa_1 == rsa_2, False)
+        self.assertNotEqual(rsa_1, rsa_2)
 
     def test_add_box(self):
         rsa_1 = RecursiveAutomaton.from_regex(Regex("a* b*"), Symbol("S"))
@@ -81,7 +81,3 @@ class TestRSA(unittest.TestCase):
 
         dfa_V = Regex("c S d | c d").to_epsilon_nfa().minimize()
         self.assertEqual(rsa1_g2.get_box(Symbol("V")), Box(dfa_V, Symbol("V")))
-
-
-if __name__ == '__main__':
-    unittest.main()
