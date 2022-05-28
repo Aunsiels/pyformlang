@@ -12,30 +12,6 @@ from pyformlang.cfg import CFG, Epsilon
 from pyformlang.rsa.box import Box
 
 
-def remove_repetition_of_nonterminals_from_productions(grammar_in_text: str):
-    """ Remove nonterminal repeats on the left side of the rule
-    For example:
-    grammar: S -> a S b
-             S -> a b
-    grammar after function execution: S -> a S b | a b
-    """
-    productions = dict()
-    for production in grammar_in_text.splitlines():
-        if "->" not in production:
-            continue
-
-        head, body = production.split(" -> ")
-        if head in productions:
-            productions[head] += " | " + body
-        else:
-            productions[head] = body
-
-    grammar_new = str()
-    for nonterminal in productions:
-        grammar_new += f'{nonterminal} -> {productions[nonterminal]}\n'
-    return grammar_new[:-1]
-
-
 class RecursiveAutomaton:
     """ Represents a recursive automaton
 
@@ -159,13 +135,15 @@ class RecursiveAutomaton:
         return RecursiveAutomaton({initial_label}, initial_label, {box})
 
     @classmethod
-    def from_cfg(cls, cfg: CFG):
-        """ Create a recursive automaton from context-free grammar
+    def from_text(cls, text, start_symbol: Symbol = Symbol("S")):
+        """ Create a recursive automaton from text
 
         Parameters
         -----------
-        cfg : :class:`~pyformlang.cfg.CFG`
-            The context-free grammar
+        text : str
+            The text of transform
+        start_symbol : str, optional
+            The start symbol, S by default
 
         Returns
         -----------
@@ -173,22 +151,28 @@ class RecursiveAutomaton:
             The new recursive automaton built from context-free grammar
         """
 
-        initial_label = to_symbol(cfg.start_symbol)
-        grammar_in_true_format = remove_repetition_of_nonterminals_from_productions(cfg.to_text())
-
+        productions = dict()
         boxes = set()
         labels = set()
-        notation_for_epsilon = Epsilon().to_text()
-        for production in grammar_in_true_format.splitlines():
+        for production in text.splitlines():
+            if " -> " not in production:
+                continue
+
             head, body = production.split(" -> ")
             labels.add(to_symbol(head))
 
             if body == "":
-                body = notation_for_epsilon
+                body = Epsilon().to_text()
 
+            if head in productions:
+                productions[head] += " | " + body
+            else:
+                productions[head] = body
+
+        for head, body in productions.items():
             boxes.add(Box(Regex(body).to_epsilon_nfa().minimize(), to_symbol(head)))
 
-        return RecursiveAutomaton(labels, initial_label, boxes)
+        return RecursiveAutomaton(labels, start_symbol, boxes)
 
     def is_equivalent_to(self, other):
         """ Check whether two recursive automata are equivalent
