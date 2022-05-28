@@ -494,7 +494,10 @@ class FiniteAutomaton:
                 graph.add_edge(str(state.value) + "_starting",
                                state.value)
         for s_from, symbol, s_to in self._transition_function.get_edges():
-            graph.add_edge(s_from.value, s_to.value, label=symbol.value)
+            label_ = symbol.value
+            if label_ == 'epsilon':
+                label_ = 'ɛ'
+            graph.add_edge(s_from.value, s_to.value, label=label_)
         return graph
 
     @classmethod
