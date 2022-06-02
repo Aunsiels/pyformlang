@@ -467,14 +467,16 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                 return False
             if len(next_self) == 0:
                 continue
-            next_symbol_self, next_state_self = list(next_self)[0]
-            next_symbol_other, next_state_other = list(next_other)[0]
-            if next_symbol_other != next_symbol_self:
-                return False
-            if next_state_self in matches:
-                if matches[next_state_self] != next_state_other:
+            for next_temp, other_temp in zip(sorted(list(next_self), key=lambda x: x[0].value),
+                                             sorted(list(next_other), key=lambda x: x[0].value)):
+                next_symbol_self, next_state_self = next_temp
+                next_symbol_other, next_state_other = other_temp
+                if next_symbol_other != next_symbol_self:
                     return False
-            else:
-                matches[next_state_self] = next_state_other
-                to_process.append((next_state_self, next_state_other))
+                if next_state_self in matches:
+                    if matches[next_state_self] != next_state_other:
+                        return False
+                else:
+                    matches[next_state_self] = next_state_other
+                    to_process.append((next_state_self, next_state_other))
         return True

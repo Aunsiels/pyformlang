@@ -603,6 +603,24 @@ class TestEpsilonNFA(unittest.TestCase):
         # And turn it back into an epsilon non deterministic automaton
         enfa2 = regex.to_epsilon_nfa()
 
+    def test_remove_epsilon_transitions(self):
+        enfa = EpsilonNFA()
+        enfa.add_transitions([
+            ("a", "epsilon", "b"),
+            ("b", "t", "c"),
+            ("a", "u", "c"),
+            ("b", "epsilon", "d")
+        ])
+        self.assertEqual(enfa.get_number_transitions(), 4)
+        enfa.add_start_state("a")
+        enfa.add_final_state("b")
+        self.assertEqual(len(enfa.start_states), 1)
+        nfa = enfa.remove_epsilon_transitions()
+        self.assertEqual(len(nfa.start_states), 3)
+        self.assertEqual(len(nfa.final_states), 2)
+        self.assertEqual(nfa.get_number_transitions(), 3)
+        self.assertTrue(nfa.is_equivalent_to(enfa))
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """
