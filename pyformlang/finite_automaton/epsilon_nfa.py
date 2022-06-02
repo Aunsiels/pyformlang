@@ -253,6 +253,33 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             and self._transition_function.is_deterministic()\
             and all([{x} == self.eclose(x) for x in self._states])
 
+    def remove_epsilon_transitions(self) -> "NondeterministicFiniteAutomaton":
+        """ Removes the epsilon transitions from the automaton
+
+        Returns
+        ----------
+        dfa :  :class:`~pyformlang.finite_automaton.NondeterministicFiniteAutomaton`
+            A non-deterministic finite automaton equivalent to the current nfa, with no epsilon transition
+        """
+        from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
+        nfa = NondeterministicFiniteAutomaton()
+        for state in self._start_state:
+            nfa.add_start_state(state)
+        for state in self._final_states:
+            nfa.add_final_state(state)
+        start_eclose = self.eclose_iterable(self._start_state)
+        for state in start_eclose:
+            nfa.add_start_state(state)
+        for state in self._states:
+            eclose = self.eclose(state)
+            for e_state in eclose:
+                if e_state in self._final_states:
+                    nfa.add_final_state(state)
+                for symb in self._input_symbols:
+                    for next_state in self._transition_function(e_state, symb):
+                        nfa.add_transition(state, symb, next_state)
+        return nfa
+
     def _to_deterministic_internal(self,
                                    eclose: bool) \
             -> "DeterministicFiniteAutomaton":
@@ -265,7 +292,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
 
         Returns
         ----------
-        dfa :  :class:`~pyformlang.deterministic_finite_automaton\
+        dfa :  :class:`~pyformlang.finite_automaton\
         .DeterministicFiniteAutomaton`
             A dfa equivalent to the current nfa
         """
@@ -308,7 +335,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
 
         Returns
         ----------
-        dfa :  :class:`~pyformlang.deterministic_finite_automaton\
+        dfa :  :class:`~pyformlang.finite_automaton\
         .DeterministicFiniteAutomaton`
             A dfa equivalent to the current nfa
 
