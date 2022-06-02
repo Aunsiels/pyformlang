@@ -63,9 +63,9 @@ class TestRSA(unittest.TestCase):
         self.assertEqual(new_box.dfa, rsa_1.get_box(Symbol("S")).dfa)
         self.assertEqual(rsa_1.labels, {Symbol("S")})
 
-    def test_from_cfg(self):
+    def test_from_text(self):
         # g1: S -> a S b | a b
-        rsa1_g1 = RecursiveAutomaton.from_cfg(CFG.from_text("S -> a S b | a b"))
+        rsa1_g1 = RecursiveAutomaton.from_text("S -> a S b | a b")
         rsa2_g1 = RecursiveAutomaton.from_regex(Regex("a S b | a b"), Symbol("S"))
 
         self.assertEqual(rsa1_g1, rsa2_g1)
