@@ -265,6 +265,25 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa.add_transition(state1, symb_a, state0)
         self.assertFalse(dfa.is_acyclic())
 
+    def test_equivalent(self):
+        dfa1 = DeterministicFiniteAutomaton()
+        dfa1.add_transitions(
+            [("A", "c", "B"),
+             ("C", "d", "D"),
+             ("B", "S", "C"),
+             ("B", "d", "D")])
+        dfa1.add_start_state(State("A"))
+        dfa1.add_final_state(State("D"))
+        dfa2 = DeterministicFiniteAutomaton()
+        dfa2.add_transitions(
+            [("A", "c", "B"),
+             ("C", "d", "D"),
+             ("B", "S", "C"),
+             ("B", "c", "D")])
+        dfa2.add_start_state(State("A"))
+        dfa2.add_final_state(State("D"))
+        self.assertNotEqual(dfa2, dfa1)
+
 
 def get_example0():
     """ Gives a dfa """

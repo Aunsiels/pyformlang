@@ -214,7 +214,7 @@ class RecursiveAutomaton:
             box_1 = self.get_box(label)
             box_2 = other.get_box(label)
 
-            if not box_1 == box_2:
+            if box_1 != box_2:
                 return False
 
         return True
