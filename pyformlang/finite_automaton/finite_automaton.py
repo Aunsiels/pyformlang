@@ -669,6 +669,6 @@ def to_symbol(given: Any) -> Symbol:
     """
     if isinstance(given, Symbol):
         return given
-    if given == "epsilon":
+    if given == "epsilon" or given == "ɛ":
         return Epsilon()
     return Symbol(given)
