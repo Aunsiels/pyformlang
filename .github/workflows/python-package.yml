@@ -31,10 +31,10 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with pylint
       run: |
-        pylint pyformlang
+        pylint pyformlang || true
     - name: Lint with pycodestyle
       run: |
-        pycodestyle pyformlang
+        pycodestyle pyformlang || true
     - name: Test with pytest
       run: |
         pytest
