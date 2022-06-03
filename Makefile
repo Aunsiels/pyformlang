@@ -31,7 +31,7 @@ doc:
 	$(MAKE) -C doc html
 
 build:
-	rm dist/*
+	rm -f dist/*
 	$(PYTHON) setup.py sdist bdist_wheel
 	$(TWINE) upload dist/*
 

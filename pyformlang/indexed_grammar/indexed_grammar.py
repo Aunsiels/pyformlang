@@ -43,7 +43,7 @@ class IndexedGrammar:
         for non_terminal_a in self.non_terminals:
             if exists(self.rules.rules,
                       lambda x: x.is_end_rule()
-                          and x.left_term == non_terminal_a):
+                      and x.left_term == non_terminal_a):
                 self.marked[non_terminal_a].add(frozenset())
 
     @property
@@ -310,13 +310,13 @@ class IndexedGrammar:
                 right0 = rule.right_terms[0]
                 right1 = rule.right_terms[1]
                 if all(x in generating and x in reachables for x in
-                        [left, right0, right1]):
+                       [left, right0, right1]):
                     l_rules.append(rule)
             if rule.is_production():
                 left = rule.left_term
                 right = rule.right_term
                 if all(x in generating and x in reachables for x in
-                        [left, right]):
+                       [left, right]):
                     l_rules.append(rule)
             if rule.is_end_rule():
                 left = rule.left_term
@@ -327,7 +327,7 @@ class IndexedGrammar:
                 left = rule.left_term
                 right = rule.right
                 if all(x in generating and x in reachables for x in
-                        [left, right]):
+                       [left, right]):
                     l_rules.append(rule)
         rules = Rules(l_rules, self.rules.optim)
         return IndexedGrammar(rules)

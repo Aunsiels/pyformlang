@@ -1,6 +1,6 @@
 # pyformlang
 
-[![Build Status](https://jenkins.r2.enst.fr/job/pyformlang/job/master/badge/icon)](https://jenkins.r2.enst.fr/job/pyformlang/job/master/)
+[![Python package](https://github.com/Aunsiels/pyformlang/actions/workflows/python-package.yml/badge.svg)](https://github.com/Aunsiels/pyformlang/actions/workflows/python-package.yml)
 [![pypi](https://img.shields.io/pypi/v/pyformlang.svg)](https://pypi.org/project/pyformlang/)
 [![Documentation](https://readthedocs.org/projects/pyformlang/badge/?version=latest)](https://pyformlang.readthedocs.io/en/latest/)
 

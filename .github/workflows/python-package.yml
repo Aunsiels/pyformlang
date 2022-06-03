@@ -37,4 +37,13 @@ jobs:
         pycodestyle pyformlang || true
     - name: Test with pytest
       run: |
-        pytest
+        pytest --showlocals -v pyformlang
+    - name: Build coverage file
+      run: |
+        pytest pyformlang --junitxml=pytest.xml --cov=pyformlang | tee ./pytest-coverage.txt
+    - name: Pytest coverage comment
+      uses: MishaKav/pytest-coverage-comment@main
+      with:
+        pytest-coverage-path: ./pytest-coverage.txt
+        junitxml-path: ./pytest.xml
+        default-branch: master

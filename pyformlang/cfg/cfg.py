@@ -34,8 +34,8 @@ class NotParsableException(Exception):
 def is_special_text(text):
     """ Check if the input is given an explicit type """
     return len(text) > 5 and \
-           (text[0:5] == '"VAR:' or text[0:5] == '"TER:') and \
-           text[-1] == '"'
+        (text[0:5] == '"VAR:' or text[0:5] == '"TER:') and \
+        text[-1] == '"'
 
 
 class CFG:
@@ -1083,7 +1083,7 @@ class CFG:
                     body_var = Variable(body_component)
                     variables.add(body_var)
                     body.append(body_var)
-                elif body_component not in EPSILON_SYMBOLS or type_component\
+                elif body_component not in EPSILON_SYMBOLS or type_component \
                         == "TER":
                     body_ter = Terminal(body_component)
                     terminals.add(body_ter)
@@ -1099,5 +1099,5 @@ class CFG:
         is_normal_form : bool
             If the current grammar is in CNF
         """
-        return all(production.is_normal_form()
-                    for production in self._productions)
+        return all(
+            production.is_normal_form() for production in self._productions)
