@@ -39,18 +39,18 @@ jobs:
       run: |
         pytest --showlocals -v pyformlang
     - name: Build coverage file
-      if: ${{ matrix.python-version == "3.8"}}
+      if: ${{ matrix.python-version == '3.8'}}
       run: |
         pytest pyformlang --junitxml=pytest.xml --cov=pyformlang | tee ./pytest-coverage.txt
     - name: Pytest coverage comment
-      if: ${{ matrix.python-version == "3.8"}}
+      if: ${{ matrix.python-version == '3.8'}}
       uses: MishaKav/pytest-coverage-comment@main
       with:
         pytest-coverage-path: ./pytest-coverage.txt
         junitxml-path: ./pytest.xml
         default-branch: master
     - name: Create coverga Badge
-      if: ${{ matrix.python-version == "3.8"}}
+      if: ${{ matrix.python-version == '3.8'}}
       uses: schneegans/dynamic-badges-action@v1.0.0
       with:
         auth: ${{ secrets.GIST_SECRET }}
