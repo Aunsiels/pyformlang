@@ -72,10 +72,9 @@ class TestRSA(unittest.TestCase):
 
         # g2: S -> a V b
         #     V -> c S d | c d
-        rsa1_g2 = RecursiveAutomaton.from_cfg(
-            CFG.from_text("""
-                S -> a V b
-                V -> c S d | c d"""))
+        rsa1_g2 = RecursiveAutomaton.from_text("""
+            S -> a V b
+            V -> c S d | c d""")
         self.assertEqual(rsa1_g2.get_number_of_boxes(), 2)
         self.assertEqual(rsa1_g2.labels, {Symbol("S"), Symbol("V")})
 

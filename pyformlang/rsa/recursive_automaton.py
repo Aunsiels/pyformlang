@@ -155,10 +155,13 @@ class RecursiveAutomaton:
         boxes = set()
         labels = set()
         for production in text.splitlines():
-            if " -> " not in production:
+            production = production.strip()
+            if "->" not in production:
                 continue
 
-            head, body = production.split(" -> ")
+            head, body = production.split("->")
+            head = head.strip()
+            body = body.strip()
             labels.add(to_symbol(head))
 
             if body == "":
