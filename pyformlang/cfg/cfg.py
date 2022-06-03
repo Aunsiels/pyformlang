@@ -32,6 +32,7 @@ class NotParsableException(Exception):
 
 
 def is_special_text(text):
+    """ Check if the input is given an explicit type """
     return len(text) > 5 and \
            (text[0:5] == '"VAR:' or text[0:5] == '"TER:') and \
            text[-1] == '"'
@@ -142,8 +143,8 @@ class CFG:
         if self._impacts is not None:
             return
         self._added_impacts = set()
-        self._remaining_lists = dict()
-        self._impacts = dict()
+        self._remaining_lists = {}
+        self._impacts = {}
         for production in self._productions:
             head = production.head  # Should check if head is not Epsilon?
             body = production.body
@@ -203,7 +204,7 @@ class CFG:
         """
         r_symbols = set()
         r_symbols.add(self._start_symbol)
-        reachable_transition_d = dict()
+        reachable_transition_d = {}
         for production in self._productions:
             temp = reachable_transition_d.setdefault(production.head, [])
             for symbol in production.body:
@@ -229,7 +230,7 @@ class CFG:
         generating = self.get_generating_symbols()
         productions = [x for x in self._productions
                        if x.head in generating and
-                       all([y in generating for y in x.body])]
+                       all(y in generating for y in x.body)]
         new_var = self._variables.intersection(generating)
         new_ter = self._terminals.intersection(generating)
         cfg_temp = CFG(new_var, new_ter, self._start_symbol, productions)
@@ -320,7 +321,7 @@ class CFG:
 
     def _get_productions_with_only_single_terminals(self):
         """ Remove the terminals involved in a body of length more than 1 """
-        term_to_var = dict()
+        term_to_var = {}
         new_productions = []
         for terminal in self._terminals:
             var = Variable(str(terminal.value) + "#CNF#")
@@ -357,7 +358,7 @@ class CFG:
         """ Decompose productions """
         idx = 0
         new_productions = []
-        done = dict()
+        done = {}
         for production in productions:
             body = production.body
             if len(body) <= 2:
@@ -489,7 +490,7 @@ class CFG:
             A new CFG recognizing the substitution
         """
         idx = 0
-        new_variables_d = dict()
+        new_variables_d = {}
         new_vars = set()
         for variable in self._variables:
             temp = Variable(variable.value + SUBS_SUFFIX + str(idx))
@@ -498,9 +499,9 @@ class CFG:
             idx += 1
         productions = []
         terminals = self._terminals.copy()
-        final_replacement = dict()
+        final_replacement = {}
         for ter, cfg in substitution.items():
-            new_variables_d_local = dict()
+            new_variables_d_local = {}
             for variable in cfg.variables:
                 temp = Variable(variable.value + SUBS_SUFFIX + str(idx))
                 new_variables_d_local[variable] = temp
@@ -933,7 +934,7 @@ class CFG:
             return
         cfg = self.to_normal_form()
         productions = cfg.productions
-        gen_d = dict()
+        gen_d = {}
         # Look for Epsilon Transitions
         for production in productions:
             if production.head not in gen_d:
@@ -957,9 +958,9 @@ class CFG:
         total_no_modification = 0
         while current_length <= max_length or max_length == -1:
             was_modified = False
-            for key in gen_d:
-                if len(gen_d[key]) != current_length:
-                    gen_d[key].append([])
+            for gen in gen_d.values():
+                if len(gen) != current_length:
+                    gen.append([])
             for production in productions:
                 body = production.body
                 if len(gen_d[production.head]) != current_length + 1:
@@ -1098,5 +1099,5 @@ class CFG:
         is_normal_form : bool
             If the current grammar is in CNF
         """
-        return all([production.is_normal_form()
-                    for production in self._productions])
+        return all(production.is_normal_form()
+                    for production in self._productions)

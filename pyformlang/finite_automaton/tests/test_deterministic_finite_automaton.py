@@ -318,6 +318,7 @@ def get_example0_bis():
 
 
 def get_dfa_example():
+    """ An example of DFA """
     dfa1 = DeterministicFiniteAutomaton()
     dfa1.add_transitions(
         [("A", "c", "B"),

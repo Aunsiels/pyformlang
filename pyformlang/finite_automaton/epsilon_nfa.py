@@ -4,8 +4,6 @@ Nondeterministic Automaton with epsilon transitions
 
 from typing import Set, Iterable, AbstractSet
 
-import pyformlang
-
 # pylint: disable=cyclic-import
 from pyformlang import finite_automaton
 
@@ -157,7 +155,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             next_states = self._get_next_states_iterable(current_states,
                                                          symbol)
             current_states = self.eclose_iterable(next_states)
-        return any([self.is_final_state(x) for x in current_states])
+        return any(self.is_final_state(x) for x in current_states)
 
     def eclose_iterable(self, states: Iterable[State]) -> Set[State]:
         """ Compute the epsilon closure of a collection of states
@@ -251,15 +249,17 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         """
         return len(self._start_state) <= 1 \
             and self._transition_function.is_deterministic()\
-            and all([{x} == self.eclose(x) for x in self._states])
+            and all({x} == self.eclose(x) for x in self._states)
 
     def remove_epsilon_transitions(self) -> "NondeterministicFiniteAutomaton":
         """ Removes the epsilon transitions from the automaton
 
         Returns
         ----------
-        dfa :  :class:`~pyformlang.finite_automaton.NondeterministicFiniteAutomaton`
-            A non-deterministic finite automaton equivalent to the current nfa, with no epsilon transition
+        dfa :  :class:`~pyformlang.finite_automaton.\
+NondeterministicFiniteAutomaton`
+            A non-deterministic finite automaton equivalent to the current \
+nfa, with no epsilon transition
         """
         from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
         nfa = NondeterministicFiniteAutomaton()
@@ -817,7 +817,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
 
         """
         # First compute all endings
-        out_transitions = dict()
+        out_transitions = {}
         for symbol in self._input_symbols.union({Epsilon()}):
             out_states = self._transition_function(state, symbol).copy()
             for out_state in out_states:
@@ -826,7 +826,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         if state in out_transitions:
             to_itself = "(" + out_transitions[state] + ")*"
             del out_transitions[state]
-            for out_state in out_transitions:
+            for out_state in list(out_transitions.keys()):
                 out_transitions[out_state] = to_itself + "." + \
                                              out_transitions[out_state]
         input_symbols = self._input_symbols.copy().union({Epsilon()})
@@ -839,9 +839,8 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                     continue
                 symbol_str = "(" + str(symbol.value) + ")"
                 self.remove_transition(in_state, symbol, state)
-                for out_state in out_transitions:
-                    new_symbol = Symbol(symbol_str + "." +
-                                        out_transitions[out_state])
+                for out_state, next_symb in out_transitions.items():
+                    new_symbol = Symbol(symbol_str + "." + next_symb)
                     self.add_transition(in_state, new_symbol, out_state)
         self._states.remove(state)
         # We make sure the automaton has the good structure
@@ -878,7 +877,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         internal use only!
         """
         for state in self._states:
-            new_transitions = dict()
+            new_transitions = {}
             input_symbols = self._input_symbols.copy().union({Epsilon()})
             for symbol in input_symbols:
                 out_states = self._transition_function(state, symbol)
@@ -890,12 +889,13 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                     if "+" in symbol_str:
                         symbol_str = "(" + symbol_str + ")"
                     if base:
-                        new_transitions[out_state] = "((" + base + ")+(" + symbol_str + "))"
+                        new_transitions[out_state] = "((" + base + ")+(" + \
+                                                     symbol_str + "))"
                     else:
                         new_transitions[out_state] = symbol_str
-            for out_state in new_transitions:
+            for out_state, next_symb in new_transitions.items():
                 self.add_transition(state,
-                                    Symbol(new_transitions[out_state]),
+                                    next_symb,
                                     out_state)
 
     def __bool__(self):

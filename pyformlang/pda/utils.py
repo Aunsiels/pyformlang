@@ -12,9 +12,9 @@ class PDAObjectCreator:
     """
 
     def __init__(self):
-        self._state_creator = dict()
-        self._symbol_creator = dict()
-        self._stack_symbol_creator = dict()
+        self._state_creator = {}
+        self._symbol_creator = {}
+        self._stack_symbol_creator = {}
 
     def to_state(self, given):
         """ Convert to a state """

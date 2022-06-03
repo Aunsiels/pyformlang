@@ -400,7 +400,7 @@ class TestEpsilonNFA(unittest.TestCase):
         enfa = EpsilonNFA()
         enfa = enfa.minimize()
         self.assertTrue(enfa.is_deterministic())
-        self.assertEqual(len(enfa.states), 0)
+        self.assertEqual(len(enfa.states), 1)
         self.assertFalse(enfa.accepts([]))
 
     def test_to_fst(self):
@@ -602,6 +602,7 @@ class TestEpsilonNFA(unittest.TestCase):
         regex = enfa.to_regex()
         # And turn it back into an epsilon non deterministic automaton
         enfa2 = regex.to_epsilon_nfa()
+        self.assertEqual(enfa, enfa2)
 
     def test_remove_epsilon_transitions(self):
         enfa = EpsilonNFA()

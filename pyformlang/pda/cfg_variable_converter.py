@@ -8,13 +8,13 @@ class CFGVariableConverter:
 
     def __init__(self, states, stack_symbols):
         self._counter = 0
-        self._inverse_states_d = dict()
+        self._inverse_states_d = {}
         self._counter_state = 0
         for self._counter_state, state in enumerate(states):
             self._inverse_states_d[state] = self._counter_state
             state.index_cfg_converter = self._counter_state
         self._counter_state += 1
-        self._inverse_stack_symbol_d = dict()
+        self._inverse_stack_symbol_d = {}
         self._counter_symbol = 0
         for self._counter_symbol, symbol in enumerate(stack_symbols):
             self._inverse_stack_symbol_d[symbol] = self._counter_symbol

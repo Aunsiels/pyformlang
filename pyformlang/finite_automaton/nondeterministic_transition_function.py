@@ -25,7 +25,7 @@ class NondeterministicTransitionFunction:
     """
 
     def __init__(self):
-        self._transitions = dict()
+        self._transitions = {}
 
     def add_transition(self, s_from: State, symb_by: Symbol,
                        s_to: State) -> int:
@@ -59,7 +59,7 @@ class NondeterministicTransitionFunction:
             else:
                 self._transitions[s_from][symb_by] = {s_to}
         else:
-            self._transitions[s_from] = dict()
+            self._transitions[s_from] = {}
             self._transitions[s_from][symb_by] = {s_to}
         return 1
 
@@ -115,9 +115,9 @@ class NondeterministicTransitionFunction:
 
         """
         counter = 0
-        for s_from in self._transitions:
-            for symb_by in self._transitions[s_from]:
-                counter += len(self._transitions[s_from][symb_by])
+        for transitions in self._transitions.values():
+            for s_to in transitions.values():
+                counter += len(s_to)
         return counter
 
     def __len__(self):
@@ -164,9 +164,9 @@ class NondeterministicTransitionFunction:
         True
 
         """
-        for s_from in self._transitions:
-            for symb in self._transitions[s_from]:
-                if len(self._transitions[s_from][symb]) > 1:
+        for transitions in self._transitions.values():
+            for s_to in transitions.values():
+                if len(s_to) > 1:
                     return False
         return True
 
@@ -180,9 +180,9 @@ class NondeterministicTransitionFunction:
             :class:`~pyformlang.finite_automaton.State`)
             A generator of edges
         """
-        for state in self._transitions:
-            for symbol in self._transitions[state]:
-                for next_state in self._transitions[state][symbol]:
+        for state, transitions in self._transitions.items():
+            for symbol, next_states in transitions.items():
+                for next_state in next_states:
                     yield state, symbol, next_state
 
     def __iter__(self):

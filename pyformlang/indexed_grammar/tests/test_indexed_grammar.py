@@ -2,7 +2,6 @@
 Testing of indexed grammar, with manual rules
 """
 
-
 import unittest
 
 from pyformlang.indexed_grammar import Rules
@@ -21,22 +20,8 @@ class TestIndexedGrammar(unittest.TestCase):
 
     def test_simple_ig_0(self):
         """Test"""
-        # Write rules
 
-        l_rules = []
-
-        # Initialization rules
-
-        l_rules.append(ProductionRule("S", "Cinit", "end"))
-        l_rules.append(ProductionRule("Cinit", "C", "b"))
-        l_rules.append(ConsumptionRule("end", "C", "T"))
-        l_rules.append(EndRule("T", "epsilon"))
-
-        # C[cm sigma] -> cm C[sigma]
-
-        l_rules.append(ConsumptionRule("b", "C", "B0"))
-        l_rules.append(DuplicationRule("B0", "A0", "C"))
-        l_rules.append(EndRule("A0", "b"))
+        l_rules = get_example_rules()
 
         for i in range(9):
             rules = Rules(l_rules, i)
@@ -47,38 +32,32 @@ class TestIndexedGrammar(unittest.TestCase):
     def test_simple_ig_1(self):
         # Write rules
 
-        l_rules = []
-
-        # Initialization rules
-
-        l_rules.append(ProductionRule("S", "Cinit", "end"))
-        l_rules.append(ProductionRule("Cinit", "C", "b"))
-        l_rules.append(ConsumptionRule("end", "C", "T"))
-        l_rules.append(EndRule("T", "epsilon"))
-
-        # C[cm sigma] -> cm C[sigma]
-
-        l_rules.append(ConsumptionRule("cm", "C", "B0"))
-        l_rules.append(DuplicationRule("B0", "A0", "C"))
-        l_rules.append(EndRule("A0", "cm"))
-
-        # C[b sigma] -> C[cm sigma] c b C[sigma]
-
-        l_rules.append(ConsumptionRule("b", "C", "B"))
-        l_rules.append(DuplicationRule("B", "A1", "D"))
-        l_rules.append(ConsumptionRule("b", "A1", "A1"))
-        l_rules.append(ConsumptionRule("bm", "A1", "A1"))
-        l_rules.append(ConsumptionRule("c", "A1", "A1"))
-        l_rules.append(ConsumptionRule("cm", "A1", "A1"))
-        l_rules.append(ConsumptionRule("end", "A1", "Abackm2"))
-        l_rules.append(ProductionRule("Abackm2", "Abackm1", "end"))
-        l_rules.append(ProductionRule("Abackm1", "C", "cm"))
-        l_rules.append(DuplicationRule("D", "E0", "C"))
-        l_rules.append(DuplicationRule("E0", "F0", "E1"))
-        l_rules.append(DuplicationRule("E1", "F1", "E2"))
-        l_rules.append(EndRule("E2", "epsilon"))
-        l_rules.append(EndRule("F0", "c"))
-        l_rules.append(EndRule("F1", "b"))
+        l_rules = [
+            # Initialization rules
+            ProductionRule("S", "Cinit", "end"),
+            ProductionRule("Cinit", "C", "b"),
+            ConsumptionRule("end", "C", "T"),
+            EndRule("T", "epsilon"),
+            # C[cm sigma] -> cm C[sigma]
+            ConsumptionRule("cm", "C", "B0"),
+            DuplicationRule("B0", "A0", "C"),
+            EndRule("A0", "cm"),
+            # C[b sigma] -> C[cm sigma] c b C[sigma]
+            ConsumptionRule("b", "C", "B"),
+            DuplicationRule("B", "A1", "D"),
+            ConsumptionRule("b", "A1", "A1"),
+            ConsumptionRule("bm", "A1", "A1"),
+            ConsumptionRule("c", "A1", "A1"),
+            ConsumptionRule("cm", "A1", "A1"),
+            ConsumptionRule("end", "A1", "Abackm2"),
+            ProductionRule("Abackm2", "Abackm1", "end"),
+            ProductionRule("Abackm1", "C", "cm"),
+            DuplicationRule("D", "E0", "C"),
+            DuplicationRule("E0", "F0", "E1"),
+            DuplicationRule("E1", "F1", "E2"),
+            EndRule("E2", "epsilon"),
+            EndRule("F0", "c"),
+            EndRule("F1", "b")]
 
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
@@ -87,32 +66,28 @@ class TestIndexedGrammar(unittest.TestCase):
     def test_simple_ig_2(self):
         # Write rules
 
-        l_rules = []
-
-        # Initialization rules
-
-        l_rules.append(ProductionRule("S", "Cinit", "end"))
-        l_rules.append(ProductionRule("Cinit", "C", "b"))
-        l_rules.append(ConsumptionRule("end", "C", "T"))
-        l_rules.append(EndRule("T", "epsilon"))
-
-        # C[b sigma] -> C[cm sigma] c b C[sigma]
-
-        l_rules.append(ConsumptionRule("b", "C", "B"))
-        l_rules.append(DuplicationRule("B", "A1", "D"))
-        l_rules.append(ConsumptionRule("b", "A1", "A1"))
-        l_rules.append(ConsumptionRule("bm", "A1", "A1"))
-        l_rules.append(ConsumptionRule("c", "A1", "A1"))
-        l_rules.append(ConsumptionRule("cm", "A1", "A1"))
-        l_rules.append(ConsumptionRule("end", "A1", "Abackm2"))
-        l_rules.append(ProductionRule("Abackm2", "Abackm1", "end"))
-        l_rules.append(ProductionRule("Abackm1", "C", "cm"))
-        l_rules.append(DuplicationRule("D", "E0", "C"))
-        l_rules.append(DuplicationRule("E0", "F0", "E1"))
-        l_rules.append(DuplicationRule("E1", "F1", "E2"))
-        l_rules.append(EndRule("E2", "epsilon"))
-        l_rules.append(EndRule("F0", "c"))
-        l_rules.append(EndRule("F1", "b"))
+        l_rules = [
+            # Initialization rules
+            ProductionRule("S", "Cinit", "end"),
+            ProductionRule("Cinit", "C", "b"),
+            ConsumptionRule("end", "C", "T"),
+            EndRule("T", "epsilon"),
+            # C[b sigma] -> C[cm sigma] c b C[sigma]
+            ConsumptionRule("b", "C", "B"),
+            DuplicationRule("B", "A1", "D"),
+            ConsumptionRule("b", "A1", "A1"),
+            ConsumptionRule("bm", "A1", "A1"),
+            ConsumptionRule("c", "A1", "A1"),
+            ConsumptionRule("cm", "A1", "A1"),
+            ConsumptionRule("end", "A1", "Abackm2"),
+            ProductionRule("Abackm2", "Abackm1", "end"),
+            ProductionRule("Abackm1", "C", "cm"),
+            DuplicationRule("D", "E0", "C"),
+            DuplicationRule("E0", "F0", "E1"),
+            DuplicationRule("E1", "F1", "E2"),
+            EndRule("E2", "epsilon"),
+            EndRule("F0", "c"),
+            EndRule("F1", "b")]
 
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
@@ -379,3 +354,18 @@ class TestIndexedGrammar(unittest.TestCase):
         indexed_grammar = IndexedGrammar(rules)
         i_inter = indexed_grammar.intersection(Regex("a.b"))
         self.assertTrue(i_inter)
+
+
+def get_example_rules():
+    """ Duplicate example of rules """
+    l_rules = [  # Initialization rules
+        ProductionRule("S", "Cinit", "end"),
+        ProductionRule("Cinit", "C", "b"),
+        ConsumptionRule("end", "C", "T"),
+        EndRule("T", "epsilon"),
+        # C[cm sigma] -> cm C[sigma]
+        ConsumptionRule("b", "C", "B0"),
+        DuplicationRule("B0", "A0", "C"),
+        EndRule("A0", "b")]
+
+    return l_rules

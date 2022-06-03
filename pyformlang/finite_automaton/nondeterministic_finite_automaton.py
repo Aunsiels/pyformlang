@@ -92,7 +92,7 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         for symbol in word:
             current_states = self._get_next_states_iterable(current_states,
                                                             symbol)
-        return any([self.is_final_state(x) for x in current_states])
+        return any(self.is_final_state(x) for x in current_states)
 
     def is_deterministic(self) -> bool:
         """ Checks whether an automaton is deterministic

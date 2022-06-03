@@ -27,13 +27,11 @@ class EndRule(ReducedRule):
     def right_terms(self):
         raise NotImplementedError
 
-
     def __init__(self, left, right):
         self._left_term = left
         self._right_term = right
 
-    @staticmethod
-    def is_end_rule() -> bool:
+    def is_end_rule(self) -> bool:
         """Whether the rule is an end rule or not
 
         Returns

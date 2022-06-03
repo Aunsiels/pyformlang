@@ -3,7 +3,7 @@
 import networkx as nx
 from networkx.drawing.nx_pydot import write_dot
 
-from pyformlang.cfg import Variable
+from pyformlang.cfg.variable import Variable
 
 
 class ParseTree:

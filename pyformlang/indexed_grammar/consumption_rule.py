@@ -31,8 +31,8 @@ class ConsumptionRule(ReducedRule):
     def right_terms(self):
         raise NotImplementedError
 
-    def __init__(self, f: Any, left: Any, right: Any):
-        self._f = f
+    def __init__(self, f_param: Any, left: Any, right: Any):
+        self._f = f_param
         self._right = right
         self._left_term = left
 

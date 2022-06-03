@@ -8,8 +8,8 @@ class PDAObjectCreator:
     """Creates Objects for a PDA"""
 
     def __init__(self, terminals, variables):
-        self._inverse_symbol = dict()
-        self._inverse_stack_symbol = dict()
+        self._inverse_symbol = {}
+        self._inverse_stack_symbol = {}
         for terminal in terminals:
             self._inverse_symbol[terminal] = None
             self._inverse_stack_symbol[terminal] = None

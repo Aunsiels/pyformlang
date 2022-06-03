@@ -36,7 +36,7 @@ class TransitionFunction:
     """
 
     def __init__(self):
-        self._transitions = dict()
+        self._transitions = {}
 
     def add_transition(self, s_from: State, symb_by: Symbol,
                        s_to: State) -> int:
@@ -82,7 +82,7 @@ class TransitionFunction:
             else:
                 self._transitions[s_from][symb_by] = s_to
         else:
-            self._transitions[s_from] = dict()
+            self._transitions[s_from] = {}
             self._transitions[s_from][symb_by] = s_to
         return 1
 
@@ -163,7 +163,7 @@ class TransitionFunction:
         1
 
         """
-        return sum([len(x) for x in self._transitions.values()])
+        return sum(len(x) for x in self._transitions.values())
 
     def get_edges(self):
         """ Gets the edges
@@ -175,9 +175,9 @@ class TransitionFunction:
             :class:`~pyformlang.finite_automaton.State`)
             A generator of edges
         """
-        for state in self._transitions:
-            for symbol in self._transitions[state]:
-                yield state, symbol, self._transitions[state][symbol]
+        for state, transitions in self._transitions.items():
+            for symbol, next_states in transitions.items():
+                yield state, symbol, next_states
 
     def __len__(self):
         return self.get_number_transitions()

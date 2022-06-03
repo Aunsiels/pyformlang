@@ -65,8 +65,8 @@ class TestNondeterministicTransitionFunction(unittest.TestCase):
         self.assertEqual(transition_function.remove_transition(s_from,
                                                                symb_by,
                                                                s_to), 1)
-        self.assertEqual(transition_function.get_number_transitions(), 0)
         self.assertEqual(len(transition_function(s_to, symb_by)), 0)
+        self.assertEqual(transition_function.get_number_transitions(), 0)
         self.assertEqual(len(transition_function(s_from, symb_by)), 0)
         self.assertEqual(transition_function.remove_transition(s_from,
                                                                symb_by,

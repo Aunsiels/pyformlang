@@ -9,10 +9,10 @@ class Partition:
     """Class to manage partitions used in Hopcroft minimization algorithm"""
 
     def __init__(self, n_states):
-        self._class_names = dict()  # States to class index
+        self._class_names = {}  # States to class index
         # Class idx to states
         self.part = [DoublyLinkedList() for _ in range(n_states)]
-        self._place = dict()  # state to position in list
+        self._place = {}  # state to position in list
         self._counter = 0  # Number of classes
 
     def add_class(self, new_class):

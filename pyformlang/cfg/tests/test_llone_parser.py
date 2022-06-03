@@ -7,6 +7,7 @@ from os import path
 
 from pyformlang.cfg import CFG, Variable, Terminal, Epsilon
 from pyformlang.cfg.llone_parser import LLOneParser
+from pyformlang.cfg.tests.test_cfg import get_example_text_duplicate
 from pyformlang.regular_expression import Regex
 
 
@@ -18,13 +19,7 @@ class TestLLOneParser(unittest.TestCase):
     def test_get_first_set(self):
         # Example from:
         # https://www.geeksforgeeks.org/first-set-in-syntax-analysis/
-        text = """
-            E  -> T E’
-            E’ -> + T E’ | Є
-            T  -> F T’
-            T’ -> * F T’ | Є
-            F  -> ( E ) | id
-        """
+        text = get_example_text_duplicate()
         cfg = CFG.from_text(text)
         llone_parser = LLOneParser(cfg)
         first_set = llone_parser.get_first_set()
@@ -52,26 +47,20 @@ class TestLLOneParser(unittest.TestCase):
         llone_parser = LLOneParser(cfg)
         first_set = llone_parser.get_first_set()
         self.assertEqual(first_set[Variable("S")],
-                         {Terminal(x) for x in {"d", "g", "h", "b",
-                                                "a"}}.union({Epsilon()}))
+                         {Terminal(x) for x in ("d", "g", "h", "b",
+                                                "a")}.union({Epsilon()}))
         self.assertEqual(first_set[Variable("A")],
-                         {Terminal(x) for x in {"d", "g",
-                                                "h"}}.union({Epsilon()}))
+                         {Terminal(x) for x in ("d", "g",
+                                                "h")}.union({Epsilon()}))
         self.assertEqual(first_set[Variable("B")],
-                         {Terminal(x) for x in {"g"}}.union({Epsilon()}))
+                         {Terminal(x) for x in ["g"]}.union({Epsilon()}))
         self.assertEqual(first_set[Variable("C")],
-                         {Terminal(x) for x in {"h"}}.union({Epsilon()}))
+                         {Terminal(x) for x in ["h"]}.union({Epsilon()}))
 
     def test_get_follow_set(self):
         # Example from:
         # https://www.geeksforgeeks.org/follow-set-in-syntax-analysis/
-        text = """
-            E  -> T E’
-            E’ -> + T E’ | Є
-            T  -> F T’
-            T’ -> * F T’ | Є
-            F  -> ( E ) | id
-        """
+        text = get_example_text_duplicate()
         cfg = CFG.from_text(text, start_symbol="E")
         llone_parser = LLOneParser(cfg)
         follow_set = llone_parser.get_follow_set()
@@ -111,34 +100,28 @@ class TestLLOneParser(unittest.TestCase):
     def test_get_llone_table(self):
         # Example from:
         # https://www.geeksforgeeks.org/construction-of-ll1-parsing-table/
-        text = """
-            E  -> T E’
-            E’ -> + T E’ | Є
-            T  -> F T’
-            T’ -> * F T’ | Є
-            F  -> ( E ) | id
-        """
+        text = get_example_text_duplicate()
         cfg = CFG.from_text(text, start_symbol="E")
         llone_parser = LLOneParser(cfg)
         parsing_table = llone_parser.get_llone_parsing_table()
         self.assertEqual(
-            len(parsing_table.get(Variable("E"), dict())
+            len(parsing_table.get(Variable("E"), {})
                 .get(Terminal("id"), [])),
             1)
         self.assertEqual(
-            len(parsing_table.get(Variable("E"), dict())
+            len(parsing_table.get(Variable("E"), {})
                 .get(Terminal("+"), [])),
             0)
         self.assertEqual(
-            len(parsing_table.get(Variable("T’"), dict())
+            len(parsing_table.get(Variable("T’"), {})
                 .get(Terminal(")"), [])),
             1)
         self.assertEqual(
-            len(parsing_table.get(Variable("F"), dict())
+            len(parsing_table.get(Variable("F"), {})
                 .get(Terminal("("), [])),
             1)
         self.assertEqual(
-            len(parsing_table.get(Variable("F"), dict())
+            len(parsing_table.get(Variable("F"), {})
                 .get(Terminal("id"), [])),
             1)
 
@@ -151,32 +134,26 @@ class TestLLOneParser(unittest.TestCase):
         llone_parser = LLOneParser(cfg)
         parsing_table = llone_parser.get_llone_parsing_table()
         self.assertEqual(
-            len(parsing_table.get(Variable("S"), dict())
+            len(parsing_table.get(Variable("S"), {})
                 .get(Terminal("a"), [])),
             2)
         self.assertEqual(
-            len(parsing_table.get(Variable("A"), dict())
+            len(parsing_table.get(Variable("A"), {})
                 .get(Terminal("a"), [])),
             1)
         self.assertEqual(
-            len(parsing_table.get(Variable("S"), dict())
+            len(parsing_table.get(Variable("S"), {})
                 .get(Terminal("$"), [])),
             0)
         self.assertEqual(
-            len(parsing_table.get(Variable("A"), dict())
+            len(parsing_table.get(Variable("A"), {})
                 .get(Terminal("$"), [])),
             0)
 
     def test_is_llone_parsable(self):
         # Example from:
         # https://www.geeksforgeeks.org/construction-of-ll1-parsing-table/
-        text = """
-            E  -> T E’
-            E’ -> + T E’ | Є
-            T  -> F T’
-            T’ -> * F T’ | Є
-            F  -> ( E ) | id
-        """
+        text = get_example_text_duplicate()
         cfg = CFG.from_text(text, start_symbol="E")
         llone_parser = LLOneParser(cfg)
         self.assertTrue(llone_parser.is_llone_parsable())
@@ -193,13 +170,7 @@ class TestLLOneParser(unittest.TestCase):
         self.assertFalse(llone_parser.is_llone_parsable())
 
     def test_get_llone_parse_tree(self):
-        text = """
-                    E  -> T E’
-                    E’ -> + T E’ | Є
-                    T  -> F T’
-                    T’ -> * F T’ | Є
-                    F  -> ( E ) | id
-                """
+        text = get_example_text_duplicate()
         cfg = CFG.from_text(text, start_symbol="E")
         llone_parser = LLOneParser(cfg)
         parse_tree = llone_parser.get_llone_parse_tree(["id", "+", "id",
@@ -208,13 +179,7 @@ class TestLLOneParser(unittest.TestCase):
         self.assertEqual(len(parse_tree.sons), 2)
 
     def test_get_llone_leftmost_derivation(self):
-        text = """
-                    E  -> T E’
-                    E’ -> + T E’ | Є
-                    T  -> F T’
-                    T’ -> * F T’ | Є
-                    F  -> ( E ) | id
-                """
+        text = get_example_text_duplicate()
         cfg = CFG.from_text(text, start_symbol="E")
         llone_parser = LLOneParser(cfg)
         parse_tree = llone_parser.get_llone_parse_tree(["id", "+", "id",
@@ -242,13 +207,7 @@ class TestLLOneParser(unittest.TestCase):
              ])
 
     def test_get_llone_rightmost_derivation(self):
-        text = """
-                    E  -> T E’
-                    E’ -> + T E’ | Є
-                    T  -> F T’
-                    T’ -> * F T’ | Є
-                    F  -> ( E ) | id
-                """
+        text = get_example_text_duplicate()
         cfg = CFG.from_text(text, start_symbol="E")
         llone_parser = LLOneParser(cfg)
         parse_tree = llone_parser.get_llone_parse_tree(["id", "+", "id",

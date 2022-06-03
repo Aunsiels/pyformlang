@@ -1,7 +1,7 @@
 """ LL(1) Parser """
 
 
-from pyformlang.cfg import Epsilon
+from pyformlang.cfg.epsilon import Epsilon
 from pyformlang.cfg.cfg import NotParsableException
 from pyformlang.cfg.parse_tree import ParseTree
 from pyformlang.cfg.set_queue import SetQueue
@@ -64,7 +64,7 @@ class LLOneParser:
 
     def _initialize_first_set(self, triggers):
         to_process = SetQueue()
-        first_set = dict()
+        first_set = {}
         # Initialisation
         for terminal in self._cfg.terminals:
             first_set[terminal] = {terminal}
@@ -79,7 +79,7 @@ class LLOneParser:
         return first_set, to_process
 
     def _get_triggers(self):
-        triggers = dict()
+        triggers = {}
         for production in self._cfg.productions:
             for body_component in production.body:
                 if body_component not in triggers:
@@ -105,7 +105,7 @@ class LLOneParser:
 
     def _initialize_follow_set(self, first_set):
         to_process = SetQueue()
-        follow_set = dict()
+        follow_set = {}
         follow_set[self._cfg.start_symbol] = {"$"}
         to_process.append(self._cfg.start_symbol)
         for production in self._cfg.productions:
@@ -124,7 +124,7 @@ class LLOneParser:
         return follow_set, to_process
 
     def _get_triggers_follow_set(self, first_set):
-        triggers = dict()
+        triggers = {}
         for production in self._cfg.productions:
             if production.head not in triggers:
                 triggers[production.head] = set()
@@ -149,14 +149,14 @@ class LLOneParser:
         nullable_productions = []
         non_nullable_productions = []
         for production in self._cfg.productions:
-            if all([x in nullables for x in production.body]):
+            if all(x in nullables for x in production.body):
                 nullable_productions.append(production)
             else:
                 non_nullable_productions.append(production)
-        llone_parsing_table = dict()
+        llone_parsing_table = {}
         for production in nullable_productions:
             if production.head not in llone_parsing_table:
-                llone_parsing_table[production.head] = dict()
+                llone_parsing_table[production.head] = {}
             for first in follow_set.get(production.head, set()):
                 if first not in llone_parsing_table[production.head]:
                     llone_parsing_table[production.head][first] = []
@@ -165,7 +165,7 @@ class LLOneParser:
                 )
         for production in non_nullable_productions:
             if production.head not in llone_parsing_table:
-                llone_parsing_table[production.head] = dict()
+                llone_parsing_table[production.head] = {}
             for first in self._get_first_set_production(production,
                                                         first_set):
                 if first not in llone_parsing_table[production.head]:
@@ -184,9 +184,9 @@ class LLOneParser:
         is_parsable : bool
         """
         parsing_table = self.get_llone_parsing_table()
-        for variable in parsing_table:
-            for terminal in parsing_table[variable]:
-                if len(parsing_table[variable][terminal]) > 1:
+        for variable in parsing_table.values():
+            for terminal in variable.values():
+                if len(terminal) > 1:
                     return False
         return True
 
@@ -223,7 +223,7 @@ class LLOneParser:
             if current.value == word[-1]:
                 word.pop()
             else:
-                rule_applied = list(parsing_table.get(current.value, dict())
+                rule_applied = list(parsing_table.get(current.value, {})
                                     .get(word[-1], []))
                 if len(rule_applied) == 1:
                     for component in rule_applied[0].body[::-1]:

@@ -38,7 +38,7 @@ def remove_nullable_production(production: Production,
 
 def get_productions_d(productions):
     """ Get productions as a dictionary """
-    productions_d = dict()
+    productions_d = {}
     for production in productions:
         production_head = productions_d.setdefault(production.head, [])
         production_head.append(production)

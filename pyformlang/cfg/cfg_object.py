@@ -24,4 +24,5 @@ class CFGObject:  # pylint: disable=too-few-public-methods
         return self._value
 
     def to_text(self) -> str:
+        """ Turns the object into a text format """
         raise NotImplementedError

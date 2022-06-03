@@ -18,7 +18,7 @@ class FST:
         self._output_symbols = set()  # Set of output symbols
         # Dict from _states x _input_symbols U {epsilon} into a subset of
         # _states X _output_symbols*
-        self._delta = dict()
+        self._delta = {}
         self._start_states = set()
         self._final_states = set()  # _final_states is final states
 
@@ -90,7 +90,7 @@ class FST:
         n_transitions : int
             The number of transitions
         """
-        return sum([len(x) for x in self._delta.values()])
+        return sum(len(x) for x in self._delta.values())
 
     def add_transition(self, s_from: Any,
                        input_symbol: Any,
@@ -239,10 +239,10 @@ class FST:
                 "epsilon"))
 
     def _extract_fst_delta_intersection(self, new_rules):
-        for key in self._delta:
+        for key, pair in self._delta.items():
             state_p = key[0]
             terminal = key[1]
-            for transition in self._delta[key]:
+            for transition in pair:
                 state_q = transition[0]
                 symbol = transition[1]
                 new_rules.append(EndRule(str((state_p, terminal, state_q)),
@@ -353,9 +353,9 @@ class FST:
         self._add_transitions_to(union_fst, state_renaming, idx)
 
     def _add_transitions_to(self, union_fst, state_renaming, idx):
-        for head in self.transitions:
+        for head, transition in self.transitions.items():
             s_from, input_symbol = head
-            for s_to, output_symbols in self.transitions[head]:
+            for s_to, output_symbols in transition:
                 union_fst.add_transition(
                     state_renaming.get_name(s_from, idx),
                     input_symbol,
@@ -551,7 +551,7 @@ class FSTStateRemaining:
     """Class for remaining the states in FST"""
 
     def __init__(self):
-        self._state_renaming = dict()
+        self._state_renaming = {}
         self._seen_states = set()
 
     def add_state(self, state, idx):

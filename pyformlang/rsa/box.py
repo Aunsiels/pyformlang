@@ -90,7 +90,8 @@ class Box:
         if not isinstance(other, Box):
             return False
 
-        if self._dfa.is_equivalent_to(other.dfa) and self._label == other.label:
+        if self._dfa.is_equivalent_to(other.dfa) and \
+                self._label == other.label:
             return True
 
         return False

@@ -10,6 +10,8 @@ from pyformlang.indexed_grammar import DuplicationRule
 from pyformlang.indexed_grammar import Rules
 from pyformlang.indexed_grammar import ConsumptionRule
 from pyformlang.indexed_grammar import EndRule
+from pyformlang.indexed_grammar.tests.test_indexed_grammar \
+    import get_example_rules
 
 
 class TestIndexedGrammar(unittest.TestCase):
@@ -47,14 +49,7 @@ class TestIndexedGrammar(unittest.TestCase):
 
     def test_rules(self):
         """ Tests the rules """
-        l_rules = []
-        l_rules.append(ProductionRule("S", "Cinit", "end"))
-        l_rules.append(ProductionRule("Cinit", "C", "b"))
-        l_rules.append(ConsumptionRule("end", "C", "T"))
-        l_rules.append(EndRule("T", "epsilon"))
-        l_rules.append(ConsumptionRule("b", "C", "B0"))
-        l_rules.append(DuplicationRule("B0", "A0", "C"))
-        l_rules.append(EndRule("A0", "b"))
+        l_rules = get_example_rules()
         rules = Rules(l_rules)
         self.assertEqual(rules.terminals, {"b", "end", "epsilon"})
         self.assertEqual(rules.length, (5, 2))

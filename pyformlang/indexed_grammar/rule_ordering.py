@@ -104,7 +104,7 @@ class RuleOrdering:
         arborescence = nx.minimum_spanning_tree(di_graph.to_undirected())
         to_process = Queue()
         processed = set()
-        res = dict()
+        res = {}
         res["S"] = 0
         for symbol in arborescence["S"]:
             if symbol not in processed:

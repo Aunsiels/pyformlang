@@ -22,11 +22,11 @@ class PreviousTransitions:
     """For internal usage"""
 
     def __init__(self, states, symbols):
-        self._to_index_state = dict()
+        self._to_index_state = {}
         self._to_index_state[None] = 0
         for i, state in enumerate(states):
             self._to_index_state[state] = i + 1
-        self._to_index_symbol = dict()
+        self._to_index_symbol = {}
         for i, symbol in enumerate(symbols):
             self._to_index_symbol[symbol] = i
         self._conversion = np.empty((len(states) + 1, len(symbols)),
@@ -339,7 +339,9 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         """
         if not self._start_state or not self._final_states:
-            return DeterministicFiniteAutomaton()
+            res = DeterministicFiniteAutomaton()
+            res.add_start_state(State("Empty"))
+            return res
         # Remove unreachable
         reachables = self._get_reachable_states()
         states = self._states.intersection(reachables)
@@ -347,7 +349,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         partition = self._get_partition()
         groups = partition.get_groups()
         # Create a state for this
-        to_new_states = dict()
+        to_new_states = {}
         for group in groups:
             new_state = to_single_state(group)
             for state in group:
@@ -467,8 +469,10 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                 return False
             if len(next_self) == 0:
                 continue
-            for next_temp, other_temp in zip(sorted(list(next_self), key=lambda x: x[0].value),
-                                             sorted(list(next_other), key=lambda x: x[0].value)):
+            for next_temp, other_temp in zip(sorted(list(next_self),
+                                                    key=lambda x: x[0].value),
+                                             sorted(list(next_other),
+                                                    key=lambda x: x[0].value)):
                 next_symbol_self, next_state_self = next_temp
                 next_symbol_other, next_state_other = other_temp
                 if next_symbol_other != next_symbol_self:

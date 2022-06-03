@@ -19,9 +19,9 @@ class CYKTable:
     def __init__(self, cfg, word):
         self._cnf = cfg.to_normal_form()
         self._word = word
-        self._productions_d = dict()
+        self._productions_d = {}
         self._set_productions_by_body()
-        self._cyk_table = dict()
+        self._cyk_table = {}
         if not self._generates_all_terminals():
             self._cyk_table[(0, len(self._word))] = set()
         else:

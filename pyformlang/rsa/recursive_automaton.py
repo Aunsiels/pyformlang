@@ -7,7 +7,7 @@ from typing import AbstractSet
 from pyformlang.finite_automaton.finite_automaton import to_symbol
 from pyformlang.finite_automaton.symbol import Symbol
 from pyformlang.regular_expression import Regex
-from pyformlang.cfg import CFG, Epsilon
+from pyformlang.cfg import Epsilon
 
 from pyformlang.rsa.box import Box
 
@@ -43,7 +43,7 @@ class RecursiveAutomaton:
                 self._labels.add(initial_label)
         self._initial_label = initial_label or Symbol("")
 
-        self._boxes = dict()
+        self._boxes = {}
         if boxes is not None:
             for box in boxes:
                 self._boxes.update({to_symbol(box.label): box})
@@ -52,7 +52,8 @@ class RecursiveAutomaton:
         for label in self._labels:
             box = self.get_box(label)
             if box is None:
-                raise ValueError("RSA must have the same number of labels and DFAs")
+                raise ValueError(
+                    "RSA must have the same number of labels and DFAs")
 
     def get_box(self, label: Symbol):
         """ Box by label """
@@ -93,7 +94,8 @@ class RecursiveAutomaton:
 
         new_initial_label = to_symbol(new_initial_label)
         if new_initial_label not in self._labels:
-            raise ValueError("New initial label not in set of labels for boxes")
+            raise ValueError(
+                "New initial label not in set of labels for boxes")
 
     @property
     def labels(self) -> set:
@@ -151,7 +153,7 @@ class RecursiveAutomaton:
             The new recursive automaton built from context-free grammar
         """
 
-        productions = dict()
+        productions = {}
         boxes = set()
         labels = set()
         for production in text.splitlines():
@@ -173,7 +175,8 @@ class RecursiveAutomaton:
                 productions[head] = body
 
         for head, body in productions.items():
-            boxes.add(Box(Regex(body).to_epsilon_nfa().minimize(), to_symbol(head)))
+            boxes.add(Box(Regex(body).to_epsilon_nfa().minimize(),
+                          to_symbol(head)))
 
         return RecursiveAutomaton(labels, start_symbol, boxes)
 

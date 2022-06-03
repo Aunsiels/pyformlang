@@ -11,7 +11,7 @@ class HopcroftProcessingList:
     """
 
     def __init__(self, n_states, symbols):
-        self._reverse_symbols = dict()
+        self._reverse_symbols = {}
         for i, symbol in enumerate(symbols):
             self._reverse_symbols[symbol] = i
         self._inclusion = np.zeros((n_states, len(symbols)), dtype=bool)

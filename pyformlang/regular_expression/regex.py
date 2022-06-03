@@ -114,7 +114,7 @@ class Regex(RegexReader):
         The two symbols are "a" and "b".
         """
         if self.sons:
-            return sum([son.get_number_symbols() for son in self.sons])
+            return sum(son.get_number_symbols() for son in self.sons)
         return 1
 
     def get_number_operators(self) -> int:
@@ -136,7 +136,7 @@ class Regex(RegexReader):
 
         """
         if self.sons:
-            return 1 + sum([son.get_number_operators() for son in self.sons])
+            return 1 + sum(son.get_number_operators() for son in self.sons)
         return 0
 
     def to_epsilon_nfa(self):

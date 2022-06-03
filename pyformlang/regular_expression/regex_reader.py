@@ -176,8 +176,7 @@ class RegexReader:
     def _setup_sons(self):
         self.sons = []
 
-    @classmethod
-    def from_string(cls, regex_str: str):
+    def from_string(self, regex_str: str):
         """
         Read a regex from a string
         Parameters

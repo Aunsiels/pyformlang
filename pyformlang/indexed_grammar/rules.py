@@ -32,7 +32,7 @@ class Rules:
 
     def __init__(self, rules: Iterable[ReducedRule], optim: int = 7):
         self._rules = []
-        self._consumption_rules = dict()
+        self._consumption_rules = {}
         self._optim = optim
         for rule in rules:
             # We separate consumption rule from other

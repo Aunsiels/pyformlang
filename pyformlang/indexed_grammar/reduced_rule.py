@@ -13,8 +13,7 @@ class ReducedRule:
         * Duplication
     """
 
-    @staticmethod
-    def is_consumption() -> bool:
+    def is_consumption(self) -> bool:
         """Whether the rule is a consumption rule or not
 
         Returns
@@ -24,8 +23,7 @@ class ReducedRule:
         """
         return False
 
-    @staticmethod
-    def is_duplication() -> bool:
+    def is_duplication(self) -> bool:
         """Whether the rule is a duplication rule or not
 
         Returns
@@ -35,8 +33,7 @@ class ReducedRule:
         """
         return False
 
-    @staticmethod
-    def is_production() -> bool:
+    def is_production(self) -> bool:
         """Whether the rule is a production rule or not
 
         Returns
@@ -46,8 +43,7 @@ class ReducedRule:
         """
         return False
 
-    @staticmethod
-    def is_end_rule() -> bool:
+    def is_end_rule(self) -> bool:
         """Whether the rule is an end rule or not
 
         Returns

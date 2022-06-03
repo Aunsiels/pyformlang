@@ -2,7 +2,7 @@
 
 from typing import List
 
-from . import Terminal
+from .terminal import Terminal
 from .variable import Variable
 from .cfg_object import CFGObject
 from .epsilon import Epsilon

@@ -11,7 +11,7 @@ class TransitionFunction:
     """ A transition function in a pushdown automaton """
 
     def __init__(self):
-        self._transitions = dict()
+        self._transitions = {}
         self._iter_key = None
         self._current_key = None
         self._iter_inside = None
@@ -24,7 +24,7 @@ class TransitionFunction:
         n_transitions : int
             The number of transitions
         """
-        return sum([len(x) for x in self._transitions.values()])
+        return sum(len(x) for x in self._transitions.values())
 
     # pylint: disable=too-many-arguments
     def add_transition(self,
@@ -64,8 +64,8 @@ class TransitionFunction:
             The copy of the transition function
         """
         new_tf = TransitionFunction()
-        for temp_in in self._transitions:
-            for temp_out in self._transitions[temp_in]:
+        for temp_in, transition in self._transitions.items():
+            for temp_out in transition:
                 new_tf.add_transition(temp_in[0], temp_in[1], temp_in[2],
                                       temp_out[0], temp_out[1])
         return new_tf

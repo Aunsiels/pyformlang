@@ -486,13 +486,7 @@ class FiniteAutomaton:
                            peripheries=2 if state in self.final_states else 1,
                            label=state.value)
             if state in self.start_states:
-                graph.add_node(str(state.value) + "_starting",
-                               label="",
-                               shape=None,
-                               height=.0,
-                               width=.0)
-                graph.add_edge(str(state.value) + "_starting",
-                               state.value)
+                add_start_state_to_graph(graph, state)
         for s_from, symbol, s_to in self._transition_function.get_edges():
             label_ = symbol.value
             if label_ == 'epsilon':
@@ -669,6 +663,17 @@ def to_symbol(given: Any) -> Symbol:
     """
     if isinstance(given, Symbol):
         return given
-    if given == "epsilon" or given == "ɛ":
+    if given in ("epsilon", "ɛ"):
         return Epsilon()
     return Symbol(given)
+
+
+def add_start_state_to_graph(graph, state):
+    """ Adds a starting node to a given graph """
+    graph.add_node(str(state.value) + "_starting",
+                   label="",
+                   shape=None,
+                   height=.0,
+                   width=.0)
+    graph.add_edge(str(state.value) + "_starting",
+                   state.value)

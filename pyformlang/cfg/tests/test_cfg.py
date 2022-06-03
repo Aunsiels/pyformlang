@@ -685,7 +685,7 @@ class TestCFG(unittest.TestCase):
 
     def test_string_variable(self):
         var = Variable("A")
-        self.assertEqual(var.__repr__(), "Variable(A)")
+        self.assertEqual(repr(var), "Variable(A)")
 
     def test_get_leftmost_derivation(self):
         ter_a = Terminal("a")
@@ -800,13 +800,7 @@ class TestCFG(unittest.TestCase):
         self.assertEqual(Variable("S1"), cfg.start_symbol)
 
     def test_is_not_normal_form(self):
-        text = """
-                            E  -> T E’
-                            E’ -> + T E’ | Є
-                            T  -> F T’
-                            T’ -> * F T’ | Є
-                            F  -> ( E ) | id
-                        """
+        text = get_example_text_duplicate()
         cfg = CFG.from_text(text, start_symbol="E")
         self.assertFalse(cfg.is_normal_form())
 
@@ -848,3 +842,15 @@ class TestCFG(unittest.TestCase):
     def test_to_text_epsilon(self):
         cfg = CFG.from_text("S -> a S b | a b epsilon")
         self.assertTrue(cfg.contains(["a", "b"]))
+
+
+def get_example_text_duplicate():
+    """ Duplicate text """
+    text = """
+                        E  -> T E’
+                        E’ -> + T E’ | Є
+                        T  -> F T’
+                        T’ -> * F T’ | Є
+                        F  -> ( E ) | id
+                    """
+    return text
