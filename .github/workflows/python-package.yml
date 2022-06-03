@@ -45,11 +45,12 @@ jobs:
     - name: Pytest coverage comment
       if: ${{ matrix.python-version == '3.8'}}
       uses: MishaKav/pytest-coverage-comment@main
+      id: coverageComment
       with:
         pytest-coverage-path: ./pytest-coverage.txt
         junitxml-path: ./pytest.xml
         default-branch: master
-    - name: Create coverga Badge
+    - name: Create coverage Badge
       if: ${{ matrix.python-version == '3.8'}}
       uses: schneegans/dynamic-badges-action@v1.0.0
       with:
