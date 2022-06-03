@@ -266,14 +266,7 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         self.assertFalse(dfa.is_acyclic())
 
     def test_equivalent(self):
-        dfa1 = DeterministicFiniteAutomaton()
-        dfa1.add_transitions(
-            [("A", "c", "B"),
-             ("C", "d", "D"),
-             ("B", "S", "C"),
-             ("B", "d", "D")])
-        dfa1.add_start_state(State("A"))
-        dfa1.add_final_state(State("D"))
+        dfa1 = get_dfa_example()
         dfa2 = DeterministicFiniteAutomaton()
         dfa2.add_transitions(
             [("A", "c", "B"),
@@ -283,6 +276,11 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa2.add_start_state(State("A"))
         dfa2.add_final_state(State("D"))
         self.assertNotEqual(dfa2, dfa1)
+
+    def test_regex_dfa(self):
+        dfa1 = get_dfa_example()
+        dfa_regex = dfa1.to_regex().to_epsilon_nfa()
+        self.assertEqual(dfa1, dfa_regex)
 
 
 def get_example0():
@@ -317,3 +315,15 @@ def get_example0_bis():
     dfa.add_transition(1, "c", 2)
     dfa.add_transition(1, "d", 3)
     return dfa
+
+
+def get_dfa_example():
+    dfa1 = DeterministicFiniteAutomaton()
+    dfa1.add_transitions(
+        [("A", "c", "B"),
+         ("C", "d", "D"),
+         ("B", "S", "C"),
+         ("B", "d", "D")])
+    dfa1.add_start_state(State("A"))
+    dfa1.add_final_state(State("D"))
+    return dfa1

@@ -890,7 +890,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                     if "+" in symbol_str:
                         symbol_str = "(" + symbol_str + ")"
                     if base:
-                        new_transitions[out_state] = base + "+" + symbol_str
+                        new_transitions[out_state] = "((" + base + ")+(" + symbol_str + "))"
                     else:
                         new_transitions[out_state] = symbol_str
             for out_state in new_transitions:
