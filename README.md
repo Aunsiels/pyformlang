@@ -3,7 +3,7 @@
 [![Python package](https://github.com/Aunsiels/pyformlang/actions/workflows/python-package.yml/badge.svg)](https://github.com/Aunsiels/pyformlang/actions/workflows/python-package.yml)
 [![pypi](https://img.shields.io/pypi/v/pyformlang.svg)](https://pypi.org/project/pyformlang/)
 [![Documentation](https://readthedocs.org/projects/pyformlang/badge/?version=latest)](https://pyformlang.readthedocs.io/en/latest/)
-![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Aunsiels/135f01c630063c3e69d999a2edf59fdb/raw/)
+![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Aunsiels/135f01c630063c3e69d999a2edf59fdb/raw/coverage_pyformlang.json)
 
 
 A python library to manipulate formal grammar. In general, it can be used to better understand algorithms in a formal way.

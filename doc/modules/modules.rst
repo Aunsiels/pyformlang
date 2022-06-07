@@ -10,3 +10,4 @@ Modules
    context_free_grammar
    push_down_automata
    indexed_grammar
+   rsa
