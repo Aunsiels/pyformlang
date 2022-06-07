@@ -670,10 +670,10 @@ def to_symbol(given: Any) -> Symbol:
 
 def add_start_state_to_graph(graph, state):
     """ Adds a starting node to a given graph """
-    graph.add_node(str(state.value) + "_starting",
+    graph.add_node("starting_" + str(state.value),
                    label="",
                    shape=None,
                    height=.0,
                    width=.0)
-    graph.add_edge(str(state.value) + "_starting",
+    graph.add_edge("starting_" + str(state.value),
                    state.value)

@@ -125,3 +125,4 @@ prof/
 *.dot
 *.report
 .idea
+pytest-coverage.txt

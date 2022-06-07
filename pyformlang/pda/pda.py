@@ -625,7 +625,7 @@ class PDA:
         """
         pda = PDA()
         for s_from in graph:
-            if isinstance(s_from, str) and s_from.endswith("_starting"):
+            if isinstance(s_from, str) and s_from.startswith("starting_"):
                 continue
             for s_to in graph[s_from]:
                 for transition in graph[s_from][s_to].values():
