@@ -1,10 +1,11 @@
+"""Testing of the feature structure"""
 import unittest
 
 from pyformlang.fcfg.feature_structure import FeatureStructure, PathDoesNotExistsException, \
     ContentAlreadyExistsException, FeatureStructuresNotCompatibleException
 
 
-def get_agreement_subject_number_person():
+def _get_agreement_subject_number_person():
     fs2 = FeatureStructure()
     agreement = FeatureStructure()
     agreement.add_content("NUMBER", FeatureStructure("sg"))
@@ -17,8 +18,10 @@ def get_agreement_subject_number_person():
 
 
 class TestFeatureStructure(unittest.TestCase):
+    """Testing of the feature structure"""
 
     def test_creation(self):
+        """Test of creation"""
         feature_structure = FeatureStructure()
         self.assertEqual(len(feature_structure.content), 0)
         self.assertEqual(feature_structure.pointer, None)
@@ -31,18 +34,21 @@ class TestFeatureStructure(unittest.TestCase):
             feature_structure.add_content("NUMBER", FeatureStructure("sg"))
 
     def test_unify1(self):
+        """First tests to unify"""
         left = FeatureStructure()
         right = FeatureStructure()
         left.unify(right)
         self.assertEqual(len(left.content), len(right.content))
 
     def test_unify2(self):
+        """Second test to unify"""
         left = FeatureStructure("pl")
         right = FeatureStructure("sg")
         with self.assertRaises(FeatureStructuresNotCompatibleException):
             left.unify(right)
 
     def test_unify3(self):
+        """Test to unify"""
         left = FeatureStructure()
         right = FeatureStructure("sg")
         left.unify(right)
@@ -50,6 +56,7 @@ class TestFeatureStructure(unittest.TestCase):
         self.assertEqual(left.value, right.value)
 
     def test_unify4(self):
+        """Test to unify"""
         left = FeatureStructure("pl")
         right = FeatureStructure()
         left.unify(right)
@@ -57,6 +64,7 @@ class TestFeatureStructure(unittest.TestCase):
         self.assertEqual(left.value, right.value)
 
     def test_unify5(self):
+        """Test to unify"""
         left = FeatureStructure()
         right = FeatureStructure()
         right.add_content("NUMBER", FeatureStructure("sg"))
@@ -67,6 +75,7 @@ class TestFeatureStructure(unittest.TestCase):
         self.assertEqual(left.get_feature_by_path(["NUMBER"]).value, "sg")
 
     def test_unify6(self):
+        """Test to unify"""
         left = FeatureStructure()
         left.add_content("PERSON", FeatureStructure("M"))
         right = FeatureStructure()
@@ -78,6 +87,7 @@ class TestFeatureStructure(unittest.TestCase):
         self.assertEqual(left.get_feature_by_path(["NUMBER"]).value, "sg")
 
     def test_unify7(self):
+        """Test to unify"""
         left = FeatureStructure()
         agreement_left = FeatureStructure()
         agreement_left.add_content("NUMBER", FeatureStructure("sg"))
@@ -98,6 +108,7 @@ class TestFeatureStructure(unittest.TestCase):
                          "3rd")
 
     def test_subsumes1(self):
+        """Test to subsume"""
         fs0 = FeatureStructure()
         fs0.add_content("NUMBER", FeatureStructure("pl"))
         fs1 = FeatureStructure()
@@ -154,36 +165,37 @@ class TestFeatureStructure(unittest.TestCase):
         self.assertFalse(fs5.subsumes(fs4))
 
     def test_copy(self):
+        """Test to subsume"""
         fs1 = FeatureStructure()
         agreement = FeatureStructure()
         subject = FeatureStructure()
         subject.add_content("AGREEMENT", agreement)
         fs1.add_content("SUBJECT", subject)
         fs1.add_content("AGREEMENT", agreement)
-        fs2 = get_agreement_subject_number_person()
+        fs2 = _get_agreement_subject_number_person()
         fs1_copy = fs1.copy()
         fs1_copy.unify(fs2)
-        self.assertions_test_copy(fs1_copy)
+        self._assertions_test_copy(fs1_copy)
         fs1_copy2 = fs1.copy()
         subject_copy = fs1_copy2.get_feature_by_path(["SUBJECT"])
         subject2 = fs2.get_feature_by_path(["SUBJECT"])
         subject_copy.unify(subject2)
-        self.assertions_test_copy(fs1_copy2)
+        self._assertions_test_copy(fs1_copy2)
         copy_of_copy = fs1_copy2.copy()
-        self.assertions_test_copy(copy_of_copy)
+        self._assertions_test_copy(copy_of_copy)
 
-    def assertions_test_copy(self, fs1_copy):
+    def _assertions_test_copy(self, fs1_copy):
         self.assertEqual(fs1_copy.get_feature_by_path(["AGREEMENT", "NUMBER"]).value, "sg")
         self.assertEqual(fs1_copy.get_feature_by_path(["AGREEMENT", "PERSON"]).value, "3")
         self.assertEqual(fs1_copy.get_feature_by_path(["SUBJECT", "AGREEMENT", "NUMBER"]).value, "sg")
         self.assertEqual(fs1_copy.get_feature_by_path(["SUBJECT", "AGREEMENT", "PERSON"]).value, "3")
 
     def test_paths(self):
-        fs2 = get_agreement_subject_number_person()
+        """Test the path generation"""
+        fs2 = _get_agreement_subject_number_person()
         self.assertEqual(len(fs2.get_all_paths()), 4)
         representation = repr(fs2)
         self.assertIn("AGREEMENT.NUMBER", representation)
         self.assertIn("AGREEMENT.PERSON", representation)
         self.assertIn("SUBJECT.AGREEMENT.NUMBER", representation)
         self.assertIn("SUBJECT.AGREEMENT.PERSON", representation)
-

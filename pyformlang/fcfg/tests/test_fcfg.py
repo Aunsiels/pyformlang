@@ -1,3 +1,4 @@
+"""Test a FCFG"""
 import unittest
 
 from pyformlang.cfg import Variable, Terminal
@@ -8,8 +9,10 @@ from pyformlang.fcfg.state import State, StateProcessed
 
 
 class TestFCFG(unittest.TestCase):
+    """Test a FCFG"""
 
     def test_contains(self):
+        """Test containment"""
         # 1st: S -> NP VP
         agreement = FeatureStructure()
         np_feat = FeatureStructure()
@@ -139,11 +142,11 @@ class TestFCFG(unittest.TestCase):
                                  nominal_feat,
                                  [noun_feat])
         productions = [fp1, fp2, fp3, fp4, fp5, fp6, fp7, fp8, fp9, fp10, fp11,
-               fp12, fp13]
+                       fp12, fp13]
         fcfg = FCFG(start_symbol=Variable("S"), productions=productions)
-        self.sub_tests_contains1(fcfg)
+        self._sub_tests_contains1(fcfg)
 
-    def sub_tests_contains1(self, fcfg):
+    def _sub_tests_contains1(self, fcfg):
         self.assertTrue(fcfg.contains(["this", "flight", "serves"]))
         self.assertTrue(["this", "flight", "serves"] in fcfg)
         self.assertTrue(fcfg.contains(["these", "flights", "serve"]))
@@ -152,6 +155,7 @@ class TestFCFG(unittest.TestCase):
         self.assertFalse(fcfg.contains(["this", "flights", "serve"]))
 
     def test_contains2(self):
+        """Test containment"""
         # 1st: S -> NP
         number = FeatureStructure("sg")
         np_feat = FeatureStructure()
@@ -173,6 +177,7 @@ class TestFCFG(unittest.TestCase):
         self.assertFalse(fcfg.contains(["flights"]))
 
     def test_state(self):
+        """Test functions on states"""
         fs1 = FeatureStructure()
         fs1.add_content("NUMBER", FeatureStructure("sg"))
         state0 = State(FeatureProduction(Variable("S"), [], FeatureStructure, []), (0, 0, 0), fs1)
@@ -182,6 +187,7 @@ class TestFCFG(unittest.TestCase):
         self.assertFalse(processed.add(0, state1))
 
     def test_from_text(self):
+        """Test containment from a text description"""
         fcfg = FCFG.from_text("""
              S -> NP[AGREEMENT=?a] VP[AGREEMENT=?a]
              S -> Aux[AGREEMENT=?a] NP[AGREEMENT=?a] VP
@@ -197,4 +203,4 @@ class TestFCFG(unittest.TestCase):
              Noun[AGREEMENT=[NUMBER=pl]] -> flights
              Nominal[AGREEMENT=?a] -> Noun[AGREEMENT=?a]
         """)
-        self.sub_tests_contains1(fcfg)
+        self._sub_tests_contains1(fcfg)

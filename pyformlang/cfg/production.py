@@ -1,5 +1,4 @@
 """ A production or rule of a CFG """
-
 from typing import List
 
 from .terminal import Terminal

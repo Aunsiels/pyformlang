@@ -1,3 +1,4 @@
+"""Feature Context-Free Grammar"""
 import string
 from typing import Iterable, AbstractSet
 
@@ -10,6 +11,19 @@ from pyformlang.fcfg.state import State, StateProcessed
 
 
 class FCFG(CFG):
+    """ A class representing a feature context-free grammar
+
+    Parameters
+    ----------
+    variables : set of :class:`~pyformlang.cfg.Variable`, optional
+        The variables of the FCFG
+    terminals : set of :class:`~pyformlang.cfg.Terminal`, optional
+        The terminals of the FCFG
+    start_symbol : :class:`~pyformlang.cfg.Variable`, optional
+        The start symbol
+    productions : set of :class:`~pyformlang.fcfg.FeatureProduction`, optional
+        The feature productions or rules of the FCFG
+    """
 
     def __init__(self,
                  variables: AbstractSet[Variable] = None,
@@ -18,7 +32,7 @@ class FCFG(CFG):
                  productions: Iterable[FeatureProduction] = None):
         super().__init__(variables, terminals, start_symbol, productions)
 
-    def predictor(self, state, chart, processed):
+    def __predictor(self, state, chart, processed):
         # We have an incomplete state and the next token is a variable
         # We must ask to process the variable with another rule
         end_idx = state.positions[1]
@@ -29,37 +43,19 @@ class FCFG(CFG):
                 if processed.add(end_idx, new_state):
                     chart[end_idx].append(new_state)
 
-    def scanner(self, state, chart, processed):
-        # We have an incomplete state and the next token is the word given as input
-        # We move the end token and the dot token by one.
-        end_idx = state.positions[1]
-        new_state = State(state.production, (state.positions[0], end_idx + 1, state.positions[2] + 1),
-                          state.feature_stucture)
-        if processed.add(end_idx + 1, new_state):
-            chart[end_idx + 1].append(new_state)
-
-    def completer(self, state, chart, processed):
-        # We have a complete state. We must check if it helps to move another state forward.
-        begin_idx = state.positions[0]
-        head = state.production.head
-        for next_state in processed.generator(begin_idx):
-            # next_state[1][1] == begin_idx always true
-            if next_state.is_incomplete() and next_state.production.body[next_state.positions[2]] == head:
-                try:
-                    copy_left = state.feature_stucture.copy()
-                    copy_left = copy_left.get_feature_by_path(["head"])
-                    copy_right = next_state.feature_stucture.copy()
-                    copy_right_considered = copy_right.get_feature_by_path([str(next_state.positions[2])])
-                    copy_right_considered.unify(copy_left)
-                except FeatureStructuresNotCompatibleException:
-                    continue
-                new_state = State(next_state.production,
-                                  (next_state.positions[0], state.positions[1], next_state.positions[2] + 1),
-                                  copy_right)
-                if processed.add(state.positions[1], new_state):
-                    chart[state.positions[1]].append(new_state)
-
     def contains(self, word: Iterable[Terminal]) -> bool:
+        """ Gives the membership of a word to the grammar
+
+        Parameters
+        ----------
+        word : iterable of :class:`~pyformlang.cfg.Terminal`
+            The word to check
+
+        Returns
+        ----------
+        contains : bool
+            Whether word if in the FCFG or not
+        """
         word = [to_terminal(x) for x in word if x != Epsilon()]
         chart = [[] for _ in range(len(word) + 1)]
         # Processed[i] contains all production rule that are currently working until i.
@@ -74,16 +70,16 @@ class FCFG(CFG):
             while chart[i]:
                 state = chart[i].pop()
                 if state.is_incomplete() and state.next_is_variable():
-                    self.predictor(state, chart, processed)
+                    self.__predictor(state, chart, processed)
                 elif state.is_incomplete():
                     if state.next_is_word(word[i]):
-                        self.scanner(state, chart, processed)
+                        _scanner(state, chart, processed)
                 else:
-                    self.completer(state, chart, processed)
+                    _completer(state, chart, processed)
         while chart[len(chart) - 1]:
             state = chart[len(chart) - 1].pop()
             if not state.is_incomplete():
-                self.completer(state, chart, processed)
+                _completer(state, chart, processed)
         for state in processed.generator(len(word)):
             if state.positions[0] == 0 and not state.is_incomplete() and state.production.head == self.start_symbol:
                 return True
@@ -91,12 +87,12 @@ class FCFG(CFG):
 
     @classmethod
     def _read_line(cls, line, productions, terminals, variables):
-        structure_variables = dict()
+        structure_variables = {}
         head_s, body_s = line.split("->")
         head_text = head_s.strip()
         if is_special_text(head_text):
             head_text = head_text[5:-1]
-        head_text, head_conditions = split_text_conditions(head_text)
+        head_text, head_conditions = _split_text_conditions(head_text)
         head_fs = FeatureStructure.from_text(head_conditions, structure_variables)
         head = Variable(head_text)
         variables.add(head)
@@ -111,7 +107,7 @@ class FCFG(CFG):
                     type_component = ""
                 if body_component[0] in string.ascii_uppercase or \
                         type_component == "VAR":
-                    body_component, body_conditions = split_text_conditions(body_component)
+                    body_component, body_conditions = _split_text_conditions(body_component)
                     body_fs = FeatureStructure.from_text(body_conditions, structure_variables)
                     all_body_fs.append(body_fs)
                     body_var = Variable(body_component)
@@ -127,7 +123,7 @@ class FCFG(CFG):
             productions.add(production)
 
 
-def split_text_conditions(head_text):
+def _split_text_conditions(head_text):
     if head_text[-1] != "]":
         return head_text, ""
     idx = head_text.find("[")
@@ -135,3 +131,34 @@ def split_text_conditions(head_text):
         return head_text, ""
     return head_text[:idx], head_text[idx+1:-1]
 
+
+def _scanner(state, chart, processed):
+    # We have an incomplete state and the next token is the word given as input
+    # We move the end token and the dot token by one.
+    end_idx = state.positions[1]
+    new_state = State(state.production, (state.positions[0], end_idx + 1, state.positions[2] + 1),
+                      state.feature_stucture)
+    if processed.add(end_idx + 1, new_state):
+        chart[end_idx + 1].append(new_state)
+
+
+def _completer(state, chart, processed):
+    # We have a complete state. We must check if it helps to move another state forward.
+    begin_idx = state.positions[0]
+    head = state.production.head
+    for next_state in processed.generator(begin_idx):
+        # next_state[1][1] == begin_idx always true
+        if next_state.is_incomplete() and next_state.production.body[next_state.positions[2]] == head:
+            try:
+                copy_left = state.feature_stucture.copy()
+                copy_left = copy_left.get_feature_by_path(["head"])
+                copy_right = next_state.feature_stucture.copy()
+                copy_right_considered = copy_right.get_feature_by_path([str(next_state.positions[2])])
+                copy_right_considered.unify(copy_left)
+            except FeatureStructuresNotCompatibleException:
+                continue
+            new_state = State(next_state.production,
+                              (next_state.positions[0], state.positions[1], next_state.positions[2] + 1),
+                              copy_right)
+            if processed.add(state.positions[1], new_state):
+                chart[state.positions[1]].append(new_state)

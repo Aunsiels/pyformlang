@@ -157,7 +157,7 @@ class Rules:
         prod : any
             The production used in the rule
         """
-        self._rules = list(filter(lambda x: not(x.is_production() and
+        self._rules = list(filter(lambda x: not (x.is_production() and
                                                 x.left_term == left and
                                                 x.right_term == right and
                                                 x.production == prod),
