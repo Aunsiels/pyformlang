@@ -11,3 +11,4 @@ Modules
    push_down_automata
    indexed_grammar
    rsa
+   feature_context_free_grammar

@@ -1,6 +1,6 @@
 """
 :mod:`pyformlang.fcfg`
-=====================
+=======================
 
 This submodule implements functions related to feature-based grammars.
 
