@@ -23,6 +23,34 @@ class FCFG(CFG):
         The start symbol
     productions : set of :class:`~pyformlang.fcfg.FeatureProduction`, optional
         The feature productions or rules of the FCFG
+
+    Examples
+    --------
+
+    Creation of a FCFG from a textual description.
+
+    >>> fcfg = FCFG.from_text(\"\"\"
+    >>>          S -> NP[AGREEMENT=?a] VP[AGREEMENT=?a]
+    >>>          S -> Aux[AGREEMENT=?a] NP[AGREEMENT=?a] VP
+    >>>          NP[AGREEMENT=?a] -> Det[AGREEMENT=?a] Nominal[AGREEMENT=?a]
+    >>>          Aux[AGREEMENT=[NUMBER=pl, PERSON=3rd]] -> do
+    >>>          Aux[AGREEMENT=[NUMBER=sg, PERSON=3rd]] -> does
+    >>>          Det[AGREEMENT=[NUMBER=sg]] -> this
+    >>>          Det[AGREEMENT=[NUMBER=pl]] -> these
+    >>>          "VAR:VP[AGREEMENT=?a]" -> Verb[AGREEMENT=?a]
+    >>>          Verb[AGREEMENT=[NUMBER=pl]] -> serve
+    >>>          Verb[AGREEMENT=[NUMBER=sg, PERSON=3rd]] -> "TER:serves"
+    >>>          Noun[AGREEMENT=[NUMBER=sg]] -> flight
+    >>>          Noun[AGREEMENT=[NUMBER=pl]] -> flights
+    >>>          Nominal[AGREEMENT=?a] -> Noun[AGREEMENT=?a]
+    >>>     \"\"\")
+
+    Check if a word is in the FCFG
+
+    >>> fcfg.contains(["this", "flight", "serves"])
+
+    True
+
     """
 
     def __init__(self,

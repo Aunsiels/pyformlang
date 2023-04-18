@@ -252,6 +252,10 @@ class FeatureStructure:
         feature_structure : :class:`~pyformlang.fcfg.FeatureStructure`
             The parsed feature structure
 
+        TODO
+        ----
+        Parse the references to other parts like (1)
+
         """
         if structure_variables is None:
             structure_variables = {}
