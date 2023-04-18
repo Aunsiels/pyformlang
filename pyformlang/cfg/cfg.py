@@ -706,6 +706,9 @@ class CFG:
     def __bool__(self):
         return not self.is_empty()
 
+    def __contains__(self, word: Iterable[Terminal]) -> bool:
+        return self.contains(word)
+
     def contains(self, word: Iterable[Terminal]) -> bool:
         """ Gives the membership of a word to the grammar
 

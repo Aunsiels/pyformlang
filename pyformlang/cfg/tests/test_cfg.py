@@ -709,6 +709,8 @@ class TestCFG(unittest.TestCase):
                           [ter_a, var_a, var_b],
                           [ter_a, ter_a, var_b],
                           [ter_a, ter_a, ter_b]])
+        with self.assertRaises(DerivationDoesNotExist):
+            cfg.get_cnf_parse_tree([])
 
     def test_get_rightmost_derivation(self):
         ter_a = Terminal("a")
@@ -768,10 +770,11 @@ class TestCFG(unittest.TestCase):
         """
         cfg = CFG.from_text(text)
         self.assertTrue(cfg.contains(["a", "b"]))
+        self.assertTrue(["a", "b"] in cfg)
 
     def test_from_text_union(self):
         text = """
-        S -> a | b
+        "VAR:S" -> TER:a | b
         """
         cfg = CFG.from_text(text)
         self.assertEqual(2, len(cfg.productions))
