@@ -2,7 +2,7 @@
 
 import unittest
 
-from pyformlang.cfg import Terminal
+from pyformlang.cfg import Terminal, Epsilon
 
 
 class TestTerminal(unittest.TestCase):
@@ -22,3 +22,6 @@ class TestTerminal(unittest.TestCase):
         self.assertEqual(str(terminal0), str(terminal2))
         self.assertEqual(str(terminal0), str(terminal3))
         self.assertNotEqual(str(terminal0), str(terminal1))
+        epsilon = Epsilon()
+        self.assertEqual(epsilon.to_text(), "epsilon")
+        self.assertEqual(Terminal("C").to_text(), '"TER:C"')

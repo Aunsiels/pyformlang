@@ -63,7 +63,3 @@ class TestRecursiveDecentParser(unittest.TestCase):
         with self.assertRaises(RecursionError):
             parser.is_parsable([")"])
         self.assertFalse(parser.is_parsable([")"], left=False))
-
-
-if __name__ == '__main__':
-    unittest.main()

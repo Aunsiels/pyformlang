@@ -121,5 +121,88 @@ class FeatureStructure:
     def __repr__(self):
         res = []
         for path in self.get_all_paths():
-            res.append(".".join(path) + "=" + str(self.get_feature_by_path(path).value))
+            if path:
+                feature = self.get_feature_by_path(path)
+                value = feature.value
+                if value is None:
+                    value = id(feature)
+                res.append(".".join(path) + "=" + str(value))
         return " | ".join(res)
+
+    @classmethod
+    def from_text(cls, text, structure_variables=None):
+        if structure_variables is None:
+            structure_variables = dict()
+        preprocessed_conditions = preprocess_conditions(text)
+        return create_feature_structure(preprocessed_conditions, structure_variables)
+
+
+def find_closing_bracket(condition, start):
+    counter = 0
+    pos = start
+    for x in condition[start:]:
+        if x == "[":
+            counter += 1
+        elif x == "]":
+            counter -= 1
+        if counter == 0:
+            return pos
+        pos += 1
+    return -1
+
+
+def preprocess_conditions(conditions, start=0, end=-1):
+    conditions = conditions.strip()
+    res = []
+    reading_feature = True
+    current_feature = ""
+    current_value = ""
+    pos = start
+    end = len(conditions) if end == -1 else end
+    while pos < end:
+        current = conditions[pos]
+        if current == "=":
+            reading_feature = False
+            pos += 1
+        elif reading_feature:
+            current_feature += current
+            pos += 1
+        elif current == "[":
+            end = find_closing_bracket(conditions, pos)
+            if end == -1:
+                raise Exception()
+            current_value = preprocess_conditions(conditions, pos + 1, end)
+            pos = end + 1
+        elif current == ",":
+            reading_feature = True
+            if type(current_value) == str:
+                current_value = current_value.strip()
+            res.append((current_feature.strip(), current_value))
+            current_feature = ""
+            current_value = ""
+            pos += 1
+        else:
+            current_value += current
+            pos += 1
+    if current_feature.strip():
+        if type(current_value) == str:
+            current_value = current_value.strip()
+        res.append((current_feature.strip(), current_value))
+    return res
+
+
+def create_feature_structure(conditions, structure_variables):
+    fs = FeatureStructure()
+    for feature, value in conditions:
+        if type(value) == str:
+            if value[0] != "?":
+                fs.add_content(feature, FeatureStructure(value))
+            elif value[1:] in structure_variables:
+                fs.add_content(feature, structure_variables[value[1:]])
+            else:
+                new_fs = FeatureStructure()
+                fs.add_content(feature, new_fs)
+                structure_variables[value[1:]] = new_fs
+        else:
+            fs.add_content(feature, create_feature_structure(value, structure_variables))
+    return fs

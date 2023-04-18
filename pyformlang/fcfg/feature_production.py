@@ -17,3 +17,16 @@ class FeatureProduction(Production):
     @property
     def features(self):
         return self._features
+
+    def __repr__(self):
+        res = [self.head.to_text()]
+        cond_head = str(self._features.get_feature_by_path(["head"]))
+        if cond_head:
+            res.append("[" + cond_head + "]")
+        res.append("->")
+        for i, body_part in enumerate(self.body):
+            res.append(body_part.to_text())
+            body_part_cond = str(self._features.get_feature_by_path([str(i)]))
+            if body_part_cond:
+                res.append("[" + body_part_cond + "]")
+        return " ".join(res)

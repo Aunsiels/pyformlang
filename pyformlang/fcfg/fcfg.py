@@ -1,6 +1,8 @@
+import string
 from typing import Iterable, AbstractSet
 
 from pyformlang.cfg import CFG, Terminal, Epsilon, Variable
+from pyformlang.cfg.cfg import is_special_text, EPSILON_SYMBOLS
 from pyformlang.cfg.utils import to_terminal
 from pyformlang.fcfg.feature_production import FeatureProduction
 from pyformlang.fcfg.feature_structure import FeatureStructure, FeatureStructuresNotCompatibleException
@@ -86,3 +88,50 @@ class FCFG(CFG):
             if state.positions[0] == 0 and not state.is_incomplete() and state.production.head == self.start_symbol:
                 return True
         return False
+
+    @classmethod
+    def _read_line(cls, line, productions, terminals, variables):
+        structure_variables = dict()
+        head_s, body_s = line.split("->")
+        head_text = head_s.strip()
+        if is_special_text(head_text):
+            head_text = head_text[5:-1]
+        head_text, head_conditions = split_text_conditions(head_text)
+        head_fs = FeatureStructure.from_text(head_conditions, structure_variables)
+        head = Variable(head_text)
+        variables.add(head)
+        all_body_fs = []
+        for sub_body in body_s.split("|"):
+            body = []
+            for body_component in sub_body.split():
+                if is_special_text(body_component):
+                    type_component = body_component[1:4]
+                    body_component = body_component[5:-1]
+                else:
+                    type_component = ""
+                if body_component[0] in string.ascii_uppercase or \
+                        type_component == "VAR":
+                    body_component, body_conditions = split_text_conditions(body_component)
+                    body_fs = FeatureStructure.from_text(body_conditions, structure_variables)
+                    all_body_fs.append(body_fs)
+                    body_var = Variable(body_component)
+                    variables.add(body_var)
+                    body.append(body_var)
+                elif body_component not in EPSILON_SYMBOLS or type_component \
+                        == "TER":
+                    body_ter = Terminal(body_component)
+                    terminals.add(body_ter)
+                    body.append(body_ter)
+                    all_body_fs.append(FeatureStructure())
+            production = FeatureProduction(head, body, head_fs, all_body_fs)
+            productions.add(production)
+
+
+def split_text_conditions(head_text):
+    if head_text[-1] != "]":
+        return head_text, ""
+    idx = head_text.find("[")
+    if idx == -1:
+        return head_text, ""
+    return head_text[:idx], head_text[idx+1:-1]
+

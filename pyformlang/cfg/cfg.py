@@ -1062,7 +1062,7 @@ class CFG:
             if not line:
                 continue
             cls._read_line(line, productions, terminals, variables)
-        return CFG(variables=variables, terminals=terminals,
+        return cls(variables=variables, terminals=terminals,
                    productions=productions, start_symbol=start_symbol)
 
     @classmethod
