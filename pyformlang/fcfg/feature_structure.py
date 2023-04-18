@@ -76,6 +76,11 @@ class FeatureStructure:
         """Gets the value associated to the current node"""
         return self._value if self.pointer is None else self.pointer.value
 
+    @value.setter
+    def value(self, new_value) -> Any:
+        """Gets the value associated to the current node"""
+        self._value = new_value
+
     def add_content(self, content_name: str, feature_structure: "FeatureStructure"):
         """Add content to the current feature structure.
 
@@ -252,10 +257,6 @@ class FeatureStructure:
         feature_structure : :class:`~pyformlang.fcfg.FeatureStructure`
             The parsed feature structure
 
-        TODO
-        ----
-        Parse the references to other parts like (1)
-
         """
         if structure_variables is None:
             structure_variables = {}
@@ -263,13 +264,13 @@ class FeatureStructure:
         return _create_feature_structure(preprocessed_conditions, structure_variables)
 
 
-def _find_closing_bracket(condition, start):
+def _find_closing_bracket(condition, start, opening="[", closing="]"):
     counter = 0
     pos = start
     for current_char in condition[start:]:
-        if current_char == "[":
+        if current_char == opening:
             counter += 1
-        elif current_char == "]":
+        elif current_char == closing:
             counter -= 1
         if counter == 0:
             return pos
@@ -282,11 +283,13 @@ class ParsingException(Exception):
 
 
 def _preprocess_conditions(conditions, start=0, end=-1):
+    conditions = conditions.replace("->", "=")
     conditions = conditions.strip()
     res = []
     reading_feature = True
     current_feature = ""
     current_value = ""
+    reference = None
     pos = start
     end = len(conditions) if end == -1 else end
     while pos < end:
@@ -298,18 +301,25 @@ def _preprocess_conditions(conditions, start=0, end=-1):
             current_feature += current
             pos += 1
         elif current == "[":
-            end = _find_closing_bracket(conditions, pos)
-            if end == -1:
+            end_bracket = _find_closing_bracket(conditions, pos)
+            if end_bracket == -1:
                 raise ParsingException()
-            current_value = _preprocess_conditions(conditions, pos + 1, end)
-            pos = end + 1
+            current_value = _preprocess_conditions(conditions, pos + 1, end_bracket)
+            pos = end_bracket + 1
+        elif current == "(":
+            end_bracket = _find_closing_bracket(conditions, pos, "(", ")")
+            if end_bracket == -1:
+                raise ParsingException()
+            reference = conditions[pos+1: end_bracket]
+            pos = end_bracket + 1
         elif current == ",":
             reading_feature = True
             if isinstance(current_value, str):
                 current_value = current_value.strip()
-            res.append((current_feature.strip(), current_value))
+            res.append((current_feature.strip(), current_value, reference))
             current_feature = ""
             current_value = ""
+            reference = None
             pos += 1
         else:
             current_value += current
@@ -317,22 +327,35 @@ def _preprocess_conditions(conditions, start=0, end=-1):
     if current_feature.strip():
         if isinstance(current_value, str):
             current_value = current_value.strip()
-        res.append((current_feature.strip(), current_value))
+        res.append((current_feature.strip(), current_value, reference))
     return res
 
 
-def _create_feature_structure(conditions, structure_variables):
-    feature_structure = FeatureStructure()
-    for feature, value in conditions:
-        if isinstance(value, str):
+def _create_feature_structure(conditions, structure_variables, existing_references=None, feature_structure=None):
+    if existing_references is None:
+        existing_references = {}
+    if feature_structure is None:
+        feature_structure = FeatureStructure()
+    for feature, value, reference in conditions:
+        if reference is not None:
+            if reference not in existing_references:
+                existing_references[reference] = FeatureStructure()
+            new_fs = existing_references[reference]
+        else:
+            new_fs = FeatureStructure()
+        if value and isinstance(value, str):
             if value[0] != "?":
-                feature_structure.add_content(feature, FeatureStructure(value))
+                new_fs.value = value
+                feature_structure.add_content(feature, new_fs)
             elif value[1:] in structure_variables:
-                feature_structure.add_content(feature, structure_variables[value[1:]])
+                new_fs.pointer = structure_variables[value[1:]]
+                feature_structure.add_content(feature, new_fs)
             else:
-                new_fs = FeatureStructure()
                 feature_structure.add_content(feature, new_fs)
                 structure_variables[value[1:]] = new_fs
+        elif not isinstance(value, str):
+            structure = _create_feature_structure(value, structure_variables, existing_references, new_fs)
+            feature_structure.add_content(feature, structure)
         else:
-            feature_structure.add_content(feature, _create_feature_structure(value, structure_variables))
+            feature_structure.add_content(feature, new_fs)
     return feature_structure

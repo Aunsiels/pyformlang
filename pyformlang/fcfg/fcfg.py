@@ -3,7 +3,8 @@ import string
 from typing import Iterable, AbstractSet
 
 from pyformlang.cfg import CFG, Terminal, Epsilon, Variable
-from pyformlang.cfg.cfg import is_special_text, EPSILON_SYMBOLS
+from pyformlang.cfg.cfg import is_special_text, EPSILON_SYMBOLS, NotParsableException
+from pyformlang.cfg.parse_tree import ParseTree
 from pyformlang.cfg.utils import to_terminal
 from pyformlang.fcfg.feature_production import FeatureProduction
 from pyformlang.fcfg.feature_structure import FeatureStructure, FeatureStructuresNotCompatibleException
@@ -67,7 +68,7 @@ class FCFG(CFG):
         next_var = state.production.body[state.positions[2]]
         for production in self.productions:
             if production.head == next_var:
-                new_state = State(production, (end_idx, end_idx, 0), production.features)
+                new_state = State(production, (end_idx, end_idx, 0), production.features, ParseTree(production.head))
                 if processed.add(end_idx, new_state):
                     chart[end_idx].append(new_state)
 
@@ -84,6 +85,32 @@ class FCFG(CFG):
         contains : bool
             Whether word if in the FCFG or not
         """
+        return self._get_final_state(word) is not None
+
+    def get_parse_tree(self, word: Iterable[Terminal]) -> ParseTree:
+        """ Gives the parse tree for a sentence, if possible
+
+        Parameters
+        ----------
+        word : iterable of :class:`~pyformlang.cfg.Terminal`
+            The word to check
+
+        Returns
+        ----------
+        parse_tree : :class:`~pyformlang.cfg.ParseTree`
+            The parse tree
+
+        Raises
+        ------
+        NotParsableException
+            When the word is not parsable.
+        """
+        final_state = self._get_final_state(word)
+        if final_state is None:
+            raise NotParsableException()
+        return final_state.parse_tree
+
+    def _get_final_state(self, word: Iterable[Terminal]):
         word = [to_terminal(x) for x in word if x != Epsilon()]
         chart = [[] for _ in range(len(word) + 1)]
         # Processed[i] contains all production rule that are currently working until i.
@@ -91,7 +118,7 @@ class FCFG(CFG):
         gamma = Variable("Gamma")
         dummy_rule = FeatureProduction(gamma, [self.start_symbol], FeatureStructure(), [FeatureStructure()])
         # State = (rule, [begin, end, dot position, diag)
-        first_state = State(dummy_rule, (0, 0, 0), dummy_rule.features)
+        first_state = State(dummy_rule, (0, 0, 0), dummy_rule.features, ParseTree("BEGIN"))
         chart[0].append(first_state)
         processed.add(0, first_state)
         for i in range(len(chart) - 1):
@@ -110,8 +137,8 @@ class FCFG(CFG):
                 _completer(state, chart, processed)
         for state in processed.generator(len(word)):
             if state.positions[0] == 0 and not state.is_incomplete() and state.production.head == self.start_symbol:
-                return True
-        return False
+                return state
+        return None
 
     @classmethod
     def _read_line(cls, line, productions, terminals, variables):
@@ -164,8 +191,9 @@ def _scanner(state, chart, processed):
     # We have an incomplete state and the next token is the word given as input
     # We move the end token and the dot token by one.
     end_idx = state.positions[1]
+    state.parse_tree.sons.append(ParseTree(state.production.body[state.positions[2]]))
     new_state = State(state.production, (state.positions[0], end_idx + 1, state.positions[2] + 1),
-                      state.feature_stucture)
+                      state.feature_stucture, state.parse_tree)
     if processed.add(end_idx + 1, new_state):
         chart[end_idx + 1].append(new_state)
 
@@ -185,8 +213,10 @@ def _completer(state, chart, processed):
                 copy_right_considered.unify(copy_left)
             except FeatureStructuresNotCompatibleException:
                 continue
+            parse_tree = next_state.parse_tree
+            parse_tree.sons.append(state.parse_tree)
             new_state = State(next_state.production,
                               (next_state.positions[0], state.positions[1], next_state.positions[2] + 1),
-                              copy_right)
+                              copy_right, parse_tree)
             if processed.add(state.positions[1], new_state):
                 chart[state.positions[1]].append(new_state)

@@ -6,14 +6,7 @@ from pyformlang.fcfg.feature_structure import FeatureStructure, PathDoesNotExist
 
 
 def _get_agreement_subject_number_person():
-    fs2 = FeatureStructure()
-    agreement = FeatureStructure()
-    agreement.add_content("NUMBER", FeatureStructure("sg"))
-    agreement.add_content("PERSON", FeatureStructure("3"))
-    subject = FeatureStructure()
-    subject.add_content("AGREEMENT", agreement)
-    fs2.add_content("SUBJECT", subject)
-    fs2.add_content("AGREEMENT", agreement)
+    fs2 = FeatureStructure.from_text("AGREEMENT=(1)[NUMBER=sg, PERSON=3], SUBJECT=[AGREEMENT->(1)]")
     return fs2
 
 
@@ -32,6 +25,8 @@ class TestFeatureStructure(unittest.TestCase):
         self.assertEqual(feature_structure.get_feature_by_path(["NUMBER"]).value, "sg")
         with self.assertRaises(ContentAlreadyExistsException):
             feature_structure.add_content("NUMBER", FeatureStructure("sg"))
+        feature_structure = _get_agreement_subject_number_person()
+        self.assertEqual(feature_structure.get_feature_by_path(["SUBJECT", "AGREEMENT", "NUMBER"]).value, "sg")
 
     def test_unify1(self):
         """First tests to unify"""

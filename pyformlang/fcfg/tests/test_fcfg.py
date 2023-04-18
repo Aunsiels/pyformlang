@@ -2,6 +2,8 @@
 import unittest
 
 from pyformlang.cfg import Variable, Terminal
+from pyformlang.cfg.cfg import NotParsableException
+from pyformlang.cfg.parse_tree import ParseTree
 from pyformlang.fcfg.fcfg import FCFG
 from pyformlang.fcfg.feature_production import FeatureProduction
 from pyformlang.fcfg.feature_structure import FeatureStructure
@@ -180,9 +182,9 @@ class TestFCFG(unittest.TestCase):
         """Test functions on states"""
         fs1 = FeatureStructure()
         fs1.add_content("NUMBER", FeatureStructure("sg"))
-        state0 = State(FeatureProduction(Variable("S"), [], FeatureStructure, []), (0, 0, 0), fs1)
+        state0 = State(FeatureProduction(Variable("S"), [], FeatureStructure, []), (0, 0, 0), fs1, ParseTree("S"))
         processed = StateProcessed(1)
-        state1 = State(FeatureProduction(Variable("S"), [], FeatureStructure, []), (0, 0, 0), fs1)
+        state1 = State(FeatureProduction(Variable("S"), [], FeatureStructure, []), (0, 0, 0), fs1, ParseTree("S"))
         self.assertTrue(processed.add(0, state0))
         self.assertFalse(processed.add(0, state1))
 
@@ -204,3 +206,7 @@ class TestFCFG(unittest.TestCase):
              Nominal[AGREEMENT=?a] -> Noun[AGREEMENT=?a]
         """)
         self._sub_tests_contains1(fcfg)
+        parse_tree = fcfg.get_parse_tree(["this", "flight", "serves"])
+        with self.assertRaises(NotParsableException):
+            fcfg.get_parse_tree(["these", "flight", "serves"])
+        self.assertIn("Det", str(parse_tree))

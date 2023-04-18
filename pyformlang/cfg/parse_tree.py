@@ -90,7 +90,10 @@ class ParseTree:
         while to_process:
             previous_node, current_node = to_process.pop()
             new_node = str(counter)
-            tree.add_node(new_node, label=current_node.value.value)
+            if isinstance(current_node.value, str):
+                tree.add_node(new_node, label=current_node.value)
+            else:
+                tree.add_node(new_node, label=current_node.value.value)
             counter += 1
             tree.add_edge(previous_node, new_node)
             to_process += [(new_node, son) for son in current_node.sons[::-1]]

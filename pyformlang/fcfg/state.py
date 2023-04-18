@@ -2,6 +2,7 @@
 from typing import Tuple
 
 from pyformlang.cfg import Variable
+from pyformlang.cfg.parse_tree import ParseTree
 from pyformlang.fcfg.feature_production import FeatureProduction
 from pyformlang.fcfg.feature_structure import FeatureStructure
 
@@ -12,10 +13,12 @@ class State:
     def __init__(self,
                  production: FeatureProduction,
                  positions: Tuple[int, int, int],
-                 feature_stucture: FeatureStructure):
+                 feature_stucture: FeatureStructure,
+                 parse_tree: ParseTree):
         self.production = production
         self.positions = positions
         self.feature_stucture = feature_stucture
+        self.parse_tree = parse_tree
 
     def get_key(self):
         """Get the key of the state"""
