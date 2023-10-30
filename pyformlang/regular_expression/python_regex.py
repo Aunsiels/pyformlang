@@ -198,7 +198,7 @@ class PythonRegex(regex.Regex):
         self._python_regex = "".join(regex_temp)
 
     def _preprocess_dot(self):
-        self._python_regex = self._python_regex.replace(".", DOT_REPLACEMENT)
+        self._python_regex = re.sub(r'(?<!\\)\.', DOT_REPLACEMENT, self._python_regex)
 
     def _preprocess_optional(self):
         regex_temp = []
