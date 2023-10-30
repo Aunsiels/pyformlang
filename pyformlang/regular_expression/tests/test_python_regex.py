@@ -195,3 +195,9 @@ class TestPythonRegex(unittest.TestCase):
         self.assertTrue(regex.accepts(["a", "_"]))
         self.assertTrue(regex.accepts(["a", "A"]))
         self.assertTrue(regex.accepts(["a", "f"]))
+
+    def test_backslash(self):
+        r_all = PythonRegex('.*')
+        r_python = re.compile(".*")
+        self.assertEqual(r_all.accepts(']'), r_python.match("]") is not None)
+        self.assertEqual(r_all.accepts('\\'), r_python.match("\\") is not None)

@@ -22,7 +22,7 @@ TRANSFORMATIONS = {
     "$": "\\$",
     "\n": "",
     " ": "\\ ",
-    '\\' : '\\\\'
+    '\\': '\\\\'
 }
 
 ESCAPED_PRINTABLES = [TRANSFORMATIONS.get(x, x)
