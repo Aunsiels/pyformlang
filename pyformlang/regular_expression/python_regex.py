@@ -197,9 +197,12 @@ class PythonRegex(regex.Regex):
                 regex_temp.append("*")
         self._python_regex = "".join(regex_temp)
 
+    @staticmethod
+    def _dot_replacer(dot):
+        return DOT_REPLACEMENT
+
     def _preprocess_dot(self):
-        simple_replace = lambda x: DOT_REPLACEMENT
-        self._python_regex = re.sub(r'(?<!\\)\.', simple_replace, self._python_regex)
+        self._python_regex = re.sub(r'(?<!\\)\.', self._dot_replacer, self._python_regex)
 
     def _preprocess_optional(self):
         regex_temp = []

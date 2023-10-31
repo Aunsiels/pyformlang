@@ -201,3 +201,8 @@ class TestPythonRegex(unittest.TestCase):
         r_python = re.compile(".*")
         self.assertEqual(r_all.accepts(']'), r_python.match("]") is not None)
         self.assertEqual(r_all.accepts('\\'), r_python.match("\\") is not None)
+
+    def test_escape_dot(self):
+        r_pyformlang = PythonRegex('\\.')
+        r_re = re.compile("\\.")
+        self.assertEqual(r_pyformlang.accepts("."), r_re.match(".") is not None)
