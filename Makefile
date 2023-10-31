@@ -33,7 +33,8 @@ doc:
 build:
 	rm -f dist/*
 	$(PYTHON) setup.py sdist bdist_wheel
-	$(TWINE) upload dist/*
+	$(TWINE) check dist/*
+	$(TWINE) upload --repository pyformlang dist/*
 
 clean:
 	rm -rf coverage .coverage
