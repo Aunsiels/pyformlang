@@ -111,10 +111,14 @@ class PythonRegex(regex.Regex):
         in_brackets = 0
         in_brackets_temp = []
         for symbol in self._python_regex:
-            if symbol == "[" and (not regex_temp or regex_temp[-1] != "\\"):
+            if symbol == "[" and (not regex_temp or regex_temp[-1] != "\\") and \
+                    (in_brackets == 0 or not in_brackets_temp[-1] or in_brackets_temp[-1][-1] != "\\"):
                 in_brackets += 1
                 in_brackets_temp.append([])
-            elif symbol == "]" and (not regex_temp or regex_temp[-1] != "\\"):
+            elif symbol == "]" and (not regex_temp or regex_temp[-1] != "\\") and \
+                    (in_brackets == 0 or not in_brackets_temp[-1] or
+                     (in_brackets_temp[-1][-1] != "\\" or
+                      (len(in_brackets_temp[-1]) > 1 and in_brackets_temp[-1][-2] == "\\"))):
                 if len(in_brackets_temp) == 1:
                     regex_temp.append("(")
                     regex_temp += self._preprocess_brackets_content(
@@ -151,7 +155,11 @@ class PythonRegex(regex.Regex):
                 else:
                     for j in range(ord(bracket_content[i - 1]) + 1,
                                    ord(bracket_content[i + 1])):
-                        bracket_content_temp.append(chr(j))
+                        next_char = chr(j)
+                        if next_char in TRANSFORMATIONS:
+                            bracket_content_temp.append(TRANSFORMATIONS[next_char])
+                        else:
+                            bracket_content_temp.append(next_char)
                     previous_is_valid_for_range = False
             else:
                 if self._should_escape_next_symbol(bracket_content_temp):

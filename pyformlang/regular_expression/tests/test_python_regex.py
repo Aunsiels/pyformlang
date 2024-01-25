@@ -122,12 +122,12 @@ class TestPythonRegex(unittest.TestCase):
         regex = PythonRegex(r"a\\[ab]")
         self.assertTrue(regex.accepts(["a", "\\", "a"]))
         self.assertTrue(regex.accepts(["a", "\\", "b"]))
+        self._test_compare(r"a\\[ab]", "a\\a")
 
     def test_escape_backslash_closing_bracket(self):
-        regex = PythonRegex(r"a[ab\\]")
-        self.assertTrue(regex.accepts(["a", "a"]))
-        self.assertTrue(regex.accepts(["a", "b"]))
-        self.assertTrue(regex.accepts(["a", "\\"]))
+        self._test_compare(r"a[ab\\]", "aa")
+        self._test_compare(r"a[ab\\]", "ab")
+        self._test_compare(r"a[ab\\]", "a\\")
 
     def test_escape_backslash_question_mark(self):
         regex = PythonRegex(r"a\\?")
@@ -196,13 +196,33 @@ class TestPythonRegex(unittest.TestCase):
         self.assertTrue(regex.accepts(["a", "A"]))
         self.assertTrue(regex.accepts(["a", "f"]))
 
+    def _test_compare(self, regex, s_test):
+        r_pyformlang = PythonRegex(regex)
+        r_python = re.compile(regex)
+        self.assertEqual(r_pyformlang.accepts(s_test), r_python.match(s_test) is not None)
+
     def test_backslash(self):
-        r_all = PythonRegex('.*')
-        r_python = re.compile(".*")
-        self.assertEqual(r_all.accepts(']'), r_python.match("]") is not None)
-        self.assertEqual(r_all.accepts('\\'), r_python.match("\\") is not None)
+        self._test_compare(".*", "]")
+        self._test_compare(".*", "\\")
 
     def test_escape_dot(self):
-        r_pyformlang = PythonRegex('\\.')
-        r_re = re.compile("\\.")
-        self.assertEqual(r_pyformlang.accepts("."), r_re.match(".") is not None)
+        self._test_compare("\\.", ".")
+
+    def test_brackets(self):
+        self._test_compare(r"[{}]", "{")
+        self._test_compare(r"[{-}]", "{")
+        self._test_compare(r"[{-}]", "-")
+        self._test_compare(r"[{-}]", "}")
+
+    def test_brackets_escape(self):
+        self._test_compare(r"[\[]", "[")
+        self._test_compare(r"[Z-\[]", "Z")
+        self._test_compare(r"[Z-\[]", "[")
+        self._test_compare(r"[\[-a]", "[")
+        self._test_compare(r"[\[-a]", "a")
+        self._test_compare(r"[\[-\]]", "[")
+        self._test_compare(r"[\[-\]]", "]")
+        self._test_compare(r"[Z-\]]", "Z")
+        self._test_compare(r"[Z-\]]", "]")
+        self._test_compare(r"[\]-a]", "]")
+        self._test_compare(r"[\]-a]", "a")
