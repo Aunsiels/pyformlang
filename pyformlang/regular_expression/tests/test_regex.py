@@ -285,3 +285,8 @@ class TestRegex(unittest.TestCase):
         self.assertTrue(Regex('b a* | a').accepts('a'))
         self.assertTrue(Regex('b a* | a').accepts('b'))
         self.assertTrue(Regex('(b a*) | a').accepts('a'))
+
+    def test_backslash_b(self):
+        self.assertTrue(Regex("( a | \b )").accepts("\b"))
+        self.assertTrue(Regex("( a | \b )").accepts("a"))
+        self.assertFalse(Regex("( a | \b )").accepts("b"))

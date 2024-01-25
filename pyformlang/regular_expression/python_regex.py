@@ -4,6 +4,7 @@ A class to read Python format regex
 
 import re
 import string
+import unicodedata
 
 # pylint: disable=cyclic-import
 from pyformlang.regular_expression import regex, MisformedRegexError
@@ -25,6 +26,14 @@ TRANSFORMATIONS = {
     '\\': '\\\\'
 }
 
+RECOMBINE = {
+    "\\b": "\b",
+    "\\n": "\n",
+    "\\r": "\r",
+    "\\t": "\t",
+    "\\f": "\f"
+}
+
 ESCAPED_PRINTABLES = [TRANSFORMATIONS.get(x, x)
                       for x in PRINTABLES
                       if TRANSFORMATIONS.get(x, x)]
@@ -40,6 +49,9 @@ SHORTCUTS = {
     r"\w": "[a-zA-Z0-9_]"
 }
 
+HEXASTRING = "0123456789ABCDEF"
+OCTAL = "01234567"
+ESCAPED_OCTAL = ["\\0", "\\1", "\\2", "\\3", "\\4", "\\5", "\\6", "\\7"]
 
 class PythonRegex(regex.Regex):
     """ Represents a regular expression as used in Python.
@@ -87,6 +99,7 @@ class PythonRegex(regex.Regex):
             python_regex = python_regex.pattern
         else:
             re.compile(python_regex)  # Check if it is valid
+
         self._python_regex = python_regex
         self._replace_shortcuts()
         self._escape_in_brackets()
@@ -95,6 +108,7 @@ class PythonRegex(regex.Regex):
         self._preprocess_optional()
         self._preprocess_dot()
         self._separate()
+        self._python_regex = self._python_regex.lstrip('\b')
         super().__init__(self._python_regex)
 
     def _separate(self):
@@ -104,6 +118,7 @@ class PythonRegex(regex.Regex):
                 regex_temp[-1] += symbol
             else:
                 regex_temp.append(symbol)
+        regex_temp = self._recombine(regex_temp)
         self._python_regex = " ".join(regex_temp)
 
     def _preprocess_brackets(self):
@@ -134,13 +149,67 @@ class PythonRegex(regex.Regex):
                 in_brackets -= 1
                 in_brackets_temp.pop()
             elif in_brackets > 0:
-                in_brackets_temp[-1].append(symbol)
+                if self._should_escape_next_symbol(in_brackets_temp[-1]):
+                    in_brackets_temp[-1][-1] += symbol
+                elif symbol == "|":
+                    in_brackets_temp[-1].append("\\|")
+                else:
+                    in_brackets_temp[-1].append(symbol)
             else:
                 if self._should_escape_next_symbol(regex_temp):
                     regex_temp[-1] += symbol
                 else:
                     regex_temp.append(symbol)
         self._python_regex = "".join(regex_temp)
+
+    @staticmethod
+    def _recombine(regex_to_recombine):
+        temp = []
+        idx = 0
+        while idx < len(regex_to_recombine):
+            if regex_to_recombine[idx] == "\\x" and idx < len(regex_to_recombine) - 2 \
+                    and regex_to_recombine[idx + 1] in HEXASTRING \
+                    and regex_to_recombine[idx + 2] in HEXASTRING:
+                next_str = "".join(regex_to_recombine[idx+1:idx+3])
+                s_trans = chr(int(next_str, 16))
+                temp.append(TRANSFORMATIONS.get(s_trans, s_trans))
+                idx += 3
+            elif regex_to_recombine[idx] in ESCAPED_OCTAL \
+                    and idx < len(regex_to_recombine) - 2 \
+                    and regex_to_recombine[idx + 1] in OCTAL \
+                    and regex_to_recombine[idx + 2] in OCTAL:
+                next_str = "".join(regex_to_recombine[idx:idx + 3])[1:]
+                s_trans = chr(int(next_str, 8))
+                temp.append(TRANSFORMATIONS.get(s_trans, s_trans))
+                idx += 3
+            elif regex_to_recombine[idx] == "\\N":
+                idx_end = idx
+                while regex_to_recombine[idx_end] != "}":
+                    idx_end += 1
+                name = "".join(regex_to_recombine[idx + 2: idx_end])
+                name = unicodedata.lookup(name)
+                temp.append(TRANSFORMATIONS.get(name, name))
+                idx = idx_end + 1
+            elif regex_to_recombine[idx] == "\\u":
+                unicode_str = "".join(regex_to_recombine[idx+1: idx+5])
+                decoded = chr(int(unicode_str, 16))
+                temp.append(TRANSFORMATIONS.get(decoded, decoded))
+                idx = idx + 5
+            elif regex_to_recombine[idx] == "\\U":
+                unicode_str = "".join(regex_to_recombine[idx+1: idx+9])
+                decoded = chr(int(unicode_str, 16))
+                temp.append(TRANSFORMATIONS.get(decoded, decoded))
+                idx = idx + 9
+            else:
+                temp.append(regex_to_recombine[idx])
+                idx += 1
+        res = []
+        for x in temp:
+            if x in RECOMBINE:
+                res.append(RECOMBINE[x])
+            else:
+                res.append(x)
+        return res
 
     def _preprocess_brackets_content(self, bracket_content):
         bracket_content_temp = []
@@ -153,8 +222,9 @@ class PythonRegex(regex.Regex):
                     bracket_content_temp.append("-")
                     previous_is_valid_for_range = True
                 else:
-                    for j in range(ord(bracket_content[i - 1]) + 1,
-                                   ord(bracket_content[i + 1])):
+                    bracket_content[i - 1] = self._recombine(bracket_content[i - 1])
+                    for j in range(ord(bracket_content[i - 1][-1]) + 1,
+                                   ord(bracket_content[i + 1][-1])):
                         next_char = chr(j)
                         if next_char in TRANSFORMATIONS:
                             bracket_content_temp.append(TRANSFORMATIONS[next_char])
@@ -171,7 +241,19 @@ class PythonRegex(regex.Regex):
                     previous_is_valid_for_range = False
                 else:
                     previous_is_valid_for_range = True
-        return "|".join(bracket_content_temp)
+        bracket_content_temp = self._insert_or(bracket_content_temp)
+        bracket_content_temp = self._recombine(bracket_content_temp)
+        return bracket_content_temp
+
+    @staticmethod
+    def _insert_or(l_to_modify):
+        res = []
+        for x in l_to_modify:
+            res.append(x)
+            res.append("|")
+        if res:
+            return res[:-1]
+        return res
 
     def _find_previous_opening_parenthesis(self, split_sequence):
         counter = 0

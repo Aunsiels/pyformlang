@@ -199,7 +199,7 @@ class TestPythonRegex(unittest.TestCase):
     def _test_compare(self, regex, s_test):
         r_pyformlang = PythonRegex(regex)
         r_python = re.compile(regex)
-        self.assertEqual(r_pyformlang.accepts(s_test), r_python.match(s_test) is not None)
+        self.assertEqual(r_python.match(s_test) is not None, r_pyformlang.accepts(s_test))
 
     def test_backslash(self):
         self._test_compare(".*", "]")
@@ -209,10 +209,11 @@ class TestPythonRegex(unittest.TestCase):
         self._test_compare("\\.", ".")
 
     def test_brackets(self):
+        self._test_compare(r"[{-}]", "}")
         self._test_compare(r"[{}]", "{")
         self._test_compare(r"[{-}]", "{")
         self._test_compare(r"[{-}]", "-")
-        self._test_compare(r"[{-}]", "}")
+        self._test_compare(r"[{-}]", "|")
 
     def test_brackets_escape(self):
         self._test_compare(r"[\[]", "[")
@@ -226,3 +227,49 @@ class TestPythonRegex(unittest.TestCase):
         self._test_compare(r"[Z-\]]", "]")
         self._test_compare(r"[\]-a]", "]")
         self._test_compare(r"[\]-a]", "a")
+
+    def test_brackets_end_range_escaped(self):
+        self._test_compare(r"[{-\}]", "|")
+        self._test_compare(r"[{\}]", "{")
+        self._test_compare(r"[{-\}]", "{")
+        self._test_compare(r"[{-\}]", "-")
+        self._test_compare(r"[{-\}]", "}")
+
+    def test_brackets_backslash_middle(self):
+        self._test_compare(r"[a\b]", "b")
+        self._test_compare(r"[a\b]", "\b")
+        self._test_compare(r"[a\\b]", "a")
+        self._test_compare(r"[a\\b]", "b")
+        self._test_compare(r"[a\\b]", "\\")
+        self._test_compare(r"[a\b]", "a")
+        self._test_compare(r"[a\b]", "\\b")
+        self._test_compare(r"[a\b]", "\\")
+
+    def test_backslash(self):
+        self._test_compare(r"\t", "t")
+        self._test_compare(r"\t", "\t")
+        self._test_compare(r"\t", "\\t")
+        self._test_compare(r"(a | \t)", "t")
+        self._test_compare(r"(a | \t)", "\t")
+        self._test_compare(r"(a | \t)", "\\t")
+
+    def test_octal(self):
+        self._test_compare(r"\x10", "\x10")
+        self._test_compare(r"\110", "\110")
+
+    def test_backspace(self):
+        self._test_compare(r"a[b\b]", "ab")
+        self._test_compare(r"a[b\b]", "a\b")
+        self._test_compare(r"\ba[b\b]", "ab")
+        self._test_compare(r"\ba[b\b]", "a\b")
+        self._test_compare(r"a[b|\b]", "ab")
+        self._test_compare(r"a[b|\b]", "a|")
+
+    def test_unicode_name(self):
+        self._test_compare(r" ", " ")
+        self._test_compare(r"\N{space}", " ")
+        self._test_compare(r"\N{space}", "a")
+
+    def test_unicode(self):
+        self._test_compare(r"\u1111", "\u1111")
+        self._test_compare(r"\U00001111", "\U00001111")
