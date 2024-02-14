@@ -53,6 +53,7 @@ HEXASTRING = "0123456789ABCDEF"
 OCTAL = "01234567"
 ESCAPED_OCTAL = ["\\0", "\\1", "\\2", "\\3", "\\4", "\\5", "\\6", "\\7"]
 
+
 class PythonRegex(regex.Regex):
     """ Represents a regular expression as used in Python.
 
@@ -106,7 +107,6 @@ class PythonRegex(regex.Regex):
         self._preprocess_brackets()
         self._preprocess_positive_closure()
         self._preprocess_optional()
-        self._preprocess_dot()
         self._separate()
         self._python_regex = self._python_regex.lstrip('\b')
         super().__init__(self._python_regex)
@@ -119,7 +119,13 @@ class PythonRegex(regex.Regex):
             else:
                 regex_temp.append(symbol)
         regex_temp = self._recombine(regex_temp)
-        self._python_regex = " ".join(regex_temp)
+        regex_temp_dot = []
+        for symbol in regex_temp:
+            if symbol == ".":
+                regex_temp_dot.append(DOT_REPLACEMENT)
+            else:
+                regex_temp_dot.append(symbol)
+        self._python_regex = " ".join(regex_temp_dot)
 
     def _preprocess_brackets(self):
         regex_temp = []
@@ -286,13 +292,6 @@ class PythonRegex(regex.Regex):
                     regex_temp.append(regex_temp[j])
                 regex_temp.append("*")
         self._python_regex = "".join(regex_temp)
-
-    @staticmethod
-    def _dot_replacer(dot):
-        return DOT_REPLACEMENT
-
-    def _preprocess_dot(self):
-        self._python_regex = re.sub(r'(?<!\\)\.', self._dot_replacer, self._python_regex)
 
     def _preprocess_optional(self):
         regex_temp = []

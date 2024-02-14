@@ -256,6 +256,8 @@ class TestPythonRegex(unittest.TestCase):
     def test_octal(self):
         self._test_compare(r"\x10", "\x10")
         self._test_compare(r"\110", "\110")
+        self._test_compare(r"\\\\x10", "\x10")
+        self._test_compare(r"\\\\x10", "\\x10")
 
     def test_backspace(self):
         self._test_compare(r"a[b\b]", "ab")
@@ -273,3 +275,11 @@ class TestPythonRegex(unittest.TestCase):
     def test_unicode(self):
         self._test_compare(r"\u1111", "\u1111")
         self._test_compare(r"\U00001111", "\U00001111")
+
+    def test_dot_harder(self):
+        self._test_compare(r"\\.", "\\a")
+        self._test_compare(r"\\.", "\\.")
+        self._test_compare(r"\.", "a")
+        self._test_compare(r"\.", ".")
+        self._test_compare(r"\\\.", "\\a")
+        self._test_compare(r"\\\.", "\\.")
