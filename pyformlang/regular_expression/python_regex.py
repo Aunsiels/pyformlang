@@ -60,10 +60,12 @@ class PythonRegex(regex.Regex):
 
     It adds the following features to the basic regex:
 
-    * Set of characters with [] (no inverse with [^...])
+    * Set of characters with []
+    * Inverse set of character with [^...]
     * positive closure +
     * . for all printable characters
     * ? for optional character/group
+    * Repetition of characters with {m} and {n,m}q
     * Shortcuts: \\d, \\s, \\w
 
     Parameters
