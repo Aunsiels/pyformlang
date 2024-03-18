@@ -308,3 +308,6 @@ class TestPythonRegex(unittest.TestCase):
         self._test_compare(r"[a-z]{1,3}", "do")
         self._test_compare(r"[a-z]{1,3}", "dpo")
         self._test_compare(r"[a-z]{1,3}", "dpoz")
+
+    def test_error_backslash(self):
+        self._test_compare(r"\"([^\"\\\\]|\\\\.)*\"", '"ddd"')

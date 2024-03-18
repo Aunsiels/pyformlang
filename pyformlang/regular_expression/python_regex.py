@@ -358,6 +358,7 @@ class PythonRegex(regex.Regex):
 
     def _preprocess_optional(self):
         regex_temp = []
+        print(self._python_regex)
         for symbol in self._python_regex:
             if symbol == "?":
                 if regex_temp[-1] == ")":
@@ -371,6 +372,7 @@ class PythonRegex(regex.Regex):
                     regex_temp[-1] += symbol
                 else:
                     regex_temp.append(symbol)
+        print(regex_temp)
         self._python_regex = "".join(regex_temp)
 
     @staticmethod
@@ -391,6 +393,8 @@ class PythonRegex(regex.Regex):
                     and not self._should_escape_next_symbol(regex_temp)
                     and symbol in TO_ESCAPE_IN_BRACKETS):
                 regex_temp.append("\\" + symbol)
+            elif self._should_escape_next_symbol(regex_temp):
+                regex_temp[-1] += symbol
             else:
                 regex_temp.append(symbol)
         self._python_regex = "".join(regex_temp)
