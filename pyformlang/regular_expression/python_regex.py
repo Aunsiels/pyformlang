@@ -132,14 +132,11 @@ class PythonRegex(regex.Regex):
         in_brackets = 0
         in_brackets_temp = []
         for symbol in self._python_regex:
-            if symbol == "[" and (not regex_temp or regex_temp[-1] != "\\") and \
-                    (in_brackets == 0 or not in_brackets_temp[-1] or in_brackets_temp[-1][-1] != "\\"):
+            if symbol == "[" and not self._should_escape_next_symbol(regex_temp) and \
+                    (in_brackets == 0 or not self._should_escape_next_symbol(in_brackets_temp[-1])):
                 in_brackets += 1
                 in_brackets_temp.append([])
-            elif symbol == "]" and (not regex_temp or regex_temp[-1] != "\\") and \
-                    (in_brackets == 0 or not in_brackets_temp[-1] or
-                     (in_brackets_temp[-1][-1] != "\\" or
-                      (len(in_brackets_temp[-1]) > 1 and in_brackets_temp[-1][-2] == "\\"))):
+            elif symbol == "]" and in_brackets >= 1 and not self._should_escape_next_symbol(in_brackets_temp[-1]):
                 if len(in_brackets_temp) == 1:
                     regex_temp.append("(")
                     regex_temp += self._preprocess_brackets_content(
@@ -358,7 +355,6 @@ class PythonRegex(regex.Regex):
 
     def _preprocess_optional(self):
         regex_temp = []
-        print(self._python_regex)
         for symbol in self._python_regex:
             if symbol == "?":
                 if regex_temp[-1] == ")":
@@ -372,7 +368,6 @@ class PythonRegex(regex.Regex):
                     regex_temp[-1] += symbol
                 else:
                     regex_temp.append(symbol)
-        print(regex_temp)
         self._python_regex = "".join(regex_temp)
 
     @staticmethod

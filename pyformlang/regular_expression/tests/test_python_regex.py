@@ -310,4 +310,6 @@ class TestPythonRegex(unittest.TestCase):
         self._test_compare(r"[a-z]{1,3}", "dpoz")
 
     def test_error_backslash(self):
-        self._test_compare(r"\"([^\"\\\\]|\\\\.)*\"", '"ddd"')
+        self._test_compare(r"[a\\\\\\]]", "\\]")
+        self._test_compare(r"\"([d\"\\\\]|\\\\.)*\"", '"d\\"')
+        self._test_compare(r"[a\\\\]", "a")
