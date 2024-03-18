@@ -23,7 +23,8 @@ TRANSFORMATIONS = {
     "$": "\\$",
     "\n": "",
     " ": "\\ ",
-    '\\': '\\\\'
+    '\\': '\\\\',
+    "?": "\\?"
 }
 
 RECOMBINE = {
@@ -218,13 +219,14 @@ class PythonRegex(regex.Regex):
         bracket_content_temp = []
         previous_is_valid_for_range = False
         for i, symbol in enumerate(bracket_content):
-            if (symbol == "-" and not self._should_escape_next_symbol(
-                    bracket_content_temp)):
-                if (not previous_is_valid_for_range
-                        or i == len(bracket_content) - 1):
+            # We have a range
+            if symbol == "-" and not self._should_escape_next_symbol(bracket_content_temp):
+                if not previous_is_valid_for_range or i == len(bracket_content) - 1:
+                    # False alarm, no range
                     bracket_content_temp.append("-")
                     previous_is_valid_for_range = True
                 else:
+                    # We insert all the characters in the range
                     bracket_content[i - 1] = self._recombine(bracket_content[i - 1])
                     for j in range(ord(bracket_content[i - 1][-1]) + 1,
                                    ord(bracket_content[i + 1][-1])):
@@ -244,9 +246,17 @@ class PythonRegex(regex.Regex):
                     previous_is_valid_for_range = False
                 else:
                     previous_is_valid_for_range = True
+        bracket_content_temp = self._preprocess_negation(bracket_content_temp)
         bracket_content_temp = self._insert_or(bracket_content_temp)
         bracket_content_temp = self._recombine(bracket_content_temp)
         return bracket_content_temp
+
+    @staticmethod
+    def _preprocess_negation(bracket_content):
+        if not bracket_content or bracket_content[0] != "^":
+            return bracket_content
+        # We inverse everything
+        return [x for x in ESCAPED_PRINTABLES if x not in bracket_content]
 
     @staticmethod
     def _insert_or(l_to_modify):

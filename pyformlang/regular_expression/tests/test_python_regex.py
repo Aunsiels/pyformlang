@@ -313,3 +313,18 @@ class TestPythonRegex(unittest.TestCase):
         self._test_compare(r"[a\\\\\\]]", "\\]")
         self._test_compare(r"\"([d\"\\\\]|\\\\.)*\"", '"d\\"')
         self._test_compare(r"[a\\\\]", "a")
+
+    def test_negation_brackets(self):
+        self._test_compare(r"[^abc]*", "")
+        self._test_compare(r"[^abc]*", "a")
+        self._test_compare(r"[^abc]*", "b")
+        self._test_compare(r"[^abc]*", "c")
+        self._test_compare(r"[^abc]*", "d")
+        self._test_compare(r"[^abc]*", "dga")
+        self._test_compare(r"[^abc]*", "dgh")
+        self._test_compare(r"[^?]*", "dgh")
+
+    def test_question_mark(self):
+        self._test_compare(r".", "?")
+        self._test_compare(r"a(a|b)?", "a")
+        self._test_compare(r"a(a|b)\?", "ab?")
