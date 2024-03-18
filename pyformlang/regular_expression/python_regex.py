@@ -176,7 +176,7 @@ class PythonRegex(regex.Regex):
             if regex_to_recombine[idx] == "\\x" and idx < len(regex_to_recombine) - 2 \
                     and regex_to_recombine[idx + 1] in HEXASTRING \
                     and regex_to_recombine[idx + 2] in HEXASTRING:
-                next_str = "".join(regex_to_recombine[idx+1:idx+3])
+                next_str = "".join(regex_to_recombine[idx + 1:idx + 3])
                 s_trans = chr(int(next_str, 16))
                 temp.append(TRANSFORMATIONS.get(s_trans, s_trans))
                 idx += 3
@@ -197,12 +197,12 @@ class PythonRegex(regex.Regex):
                 temp.append(TRANSFORMATIONS.get(name, name))
                 idx = idx_end + 1
             elif regex_to_recombine[idx] == "\\u":
-                unicode_str = "".join(regex_to_recombine[idx+1: idx+5])
+                unicode_str = "".join(regex_to_recombine[idx + 1: idx + 5])
                 decoded = chr(int(unicode_str, 16))
                 temp.append(TRANSFORMATIONS.get(decoded, decoded))
                 idx = idx + 5
             elif regex_to_recombine[idx] == "\\U":
-                unicode_str = "".join(regex_to_recombine[idx+1: idx+9])
+                unicode_str = "".join(regex_to_recombine[idx + 1: idx + 9])
                 decoded = chr(int(unicode_str, 16))
                 temp.append(TRANSFORMATIONS.get(decoded, decoded))
                 idx = idx + 9
@@ -291,7 +291,70 @@ class PythonRegex(regex.Regex):
                 for j in range(pos_opening, len(regex_temp)):
                     regex_temp.append(regex_temp[j])
                 regex_temp.append("*")
+        regex_temp = self._add_repetition(regex_temp)
         self._python_regex = "".join(regex_temp)
+
+    @staticmethod
+    def _is_repetition(regex_list, idx):
+        if regex_list[idx] == "{":
+            end = idx
+            for i in range(idx + 1, len(regex_list)):
+                if regex_list[i] == "}":
+                    end = i
+                    break
+            inner = "".join(regex_list[idx + 1:end])
+            if "," in inner:
+                split = inner.split(",")
+                if len(split) != 2 or not split[0].isdigit() or not split[1].isdigit():
+                    return None
+                return int(split[0]), int(split[1]), end
+            if inner.isdigit():
+                return int(inner), end
+        return None
+
+    @staticmethod
+    def _find_repeated_sequence(regex_list):
+        if regex_list[-1] != ")":
+            return [regex_list[-1]]
+        res = [")"]
+        counter = -1
+        for i in range(len(regex_list) - 2, -1, -1):
+            if regex_list[i] == "(":
+                counter += 1
+                res.append("(")
+                if counter == 0:
+                    return res[::-1]
+            elif regex_list[i] == ")":
+                counter -= 1
+                res.append(")")
+            else:
+                res.append(regex_list[i])
+        return []
+
+    def _add_repetition(self, regex_list):
+        res = []
+        idx = 0
+        while idx < len(regex_list):
+            rep = self._is_repetition(regex_list, idx)
+            if rep is None:
+                res.append(regex_list[idx])
+                idx += 1
+            elif len(rep) == 2:
+                n_rep, end = rep
+                repeated = self._find_repeated_sequence(res)
+                for _ in range(n_rep - 1):
+                    res.extend(repeated)
+                idx = end + 1
+            elif len(rep) == 3:
+                min_rep, max_rep, end = rep
+                repeated = self._find_repeated_sequence(res)
+                for _ in range(min_rep - 1):
+                    res.extend(repeated)
+                for _ in range(min_rep, max_rep):
+                    res.extend(repeated)
+                    res.append("?")
+                idx = end + 1
+        return res
 
     def _preprocess_optional(self):
         regex_temp = []

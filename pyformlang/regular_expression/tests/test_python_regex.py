@@ -199,7 +199,7 @@ class TestPythonRegex(unittest.TestCase):
     def _test_compare(self, regex, s_test):
         r_pyformlang = PythonRegex(regex)
         r_python = re.compile(regex)
-        self.assertEqual(r_python.match(s_test) is not None, r_pyformlang.accepts(s_test))
+        self.assertEqual(r_python.fullmatch(s_test) is not None, r_pyformlang.accepts(s_test))
 
     def test_backslash(self):
         self._test_compare(".*", "]")
@@ -283,3 +283,28 @@ class TestPythonRegex(unittest.TestCase):
         self._test_compare(r"\.", ".")
         self._test_compare(r"\\\.", "\\a")
         self._test_compare(r"\\\.", "\\.")
+
+    def test_single_repetition(self):
+        self._test_compare(r"\d{3}-\d{3}-\d{4}", "012-876-3789")
+        self._test_compare(r"a{5}b", "ab")
+        self._test_compare(r"a{5}b", "aaaaab")
+        self._test_compare(r"a{5b", "aaaaab")
+        self._test_compare(r"a{5b", "a{5b")
+        self._test_compare(r"T{4}P{3}", "TTTTTTPPPPPPPPPPPP")
+
+    def test_range_repetition(self):
+        self._test_compare(r"a{2,5}b", "ab")
+        self._test_compare(r"a{2,5}b", "aab")
+        self._test_compare(r"a{2,5}b", "aaaaab")
+        self._test_compare(r"a{2,5}b", "aaaaaab")
+        self._test_compare(r"a{2,5,7}b", "aaaaab")
+        self._test_compare(r"a{2,5,7}b", "a{2,5,7}b")
+        self._test_compare(r"ab{2,5}", "ab")
+        self._test_compare(r"ab{2,5}", "abbb")
+        self._test_compare(r"ab{2,5}", "abbbbb")
+        self._test_compare(r"ab{2,5}", "abbbbbbbbb")
+        self._test_compare(r"[a-z]{1,3}", "")
+        self._test_compare(r"[a-z]{1,3}", "d")
+        self._test_compare(r"[a-z]{1,3}", "do")
+        self._test_compare(r"[a-z]{1,3}", "dpo")
+        self._test_compare(r"[a-z]{1,3}", "dpoz")
