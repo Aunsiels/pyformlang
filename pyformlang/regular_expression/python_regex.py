@@ -23,7 +23,8 @@ TRANSFORMATIONS = {
     "$": "\\$",
     "\n": "",
     " ": "\\ ",
-    '\\': '\\\\'
+    '\\': '\\\\',
+    "?": "\\?"
 }
 
 RECOMBINE = {
@@ -59,10 +60,12 @@ class PythonRegex(regex.Regex):
 
     It adds the following features to the basic regex:
 
-    * Set of characters with [] (no inverse with [^...])
+    * Set of characters with []
+    * Inverse set of character with [^...]
     * positive closure +
     * . for all printable characters
     * ? for optional character/group
+    * Repetition of characters with {m} and {n,m}q
     * Shortcuts: \\d, \\s, \\w
 
     Parameters
@@ -132,14 +135,11 @@ class PythonRegex(regex.Regex):
         in_brackets = 0
         in_brackets_temp = []
         for symbol in self._python_regex:
-            if symbol == "[" and (not regex_temp or regex_temp[-1] != "\\") and \
-                    (in_brackets == 0 or not in_brackets_temp[-1] or in_brackets_temp[-1][-1] != "\\"):
+            if symbol == "[" and not self._should_escape_next_symbol(regex_temp) and \
+                    (in_brackets == 0 or not self._should_escape_next_symbol(in_brackets_temp[-1])):
                 in_brackets += 1
                 in_brackets_temp.append([])
-            elif symbol == "]" and (not regex_temp or regex_temp[-1] != "\\") and \
-                    (in_brackets == 0 or not in_brackets_temp[-1] or
-                     (in_brackets_temp[-1][-1] != "\\" or
-                      (len(in_brackets_temp[-1]) > 1 and in_brackets_temp[-1][-2] == "\\"))):
+            elif symbol == "]" and in_brackets >= 1 and not self._should_escape_next_symbol(in_brackets_temp[-1]):
                 if len(in_brackets_temp) == 1:
                     regex_temp.append("(")
                     regex_temp += self._preprocess_brackets_content(
@@ -176,7 +176,7 @@ class PythonRegex(regex.Regex):
             if regex_to_recombine[idx] == "\\x" and idx < len(regex_to_recombine) - 2 \
                     and regex_to_recombine[idx + 1] in HEXASTRING \
                     and regex_to_recombine[idx + 2] in HEXASTRING:
-                next_str = "".join(regex_to_recombine[idx+1:idx+3])
+                next_str = "".join(regex_to_recombine[idx + 1:idx + 3])
                 s_trans = chr(int(next_str, 16))
                 temp.append(TRANSFORMATIONS.get(s_trans, s_trans))
                 idx += 3
@@ -197,12 +197,12 @@ class PythonRegex(regex.Regex):
                 temp.append(TRANSFORMATIONS.get(name, name))
                 idx = idx_end + 1
             elif regex_to_recombine[idx] == "\\u":
-                unicode_str = "".join(regex_to_recombine[idx+1: idx+5])
+                unicode_str = "".join(regex_to_recombine[idx + 1: idx + 5])
                 decoded = chr(int(unicode_str, 16))
                 temp.append(TRANSFORMATIONS.get(decoded, decoded))
                 idx = idx + 5
             elif regex_to_recombine[idx] == "\\U":
-                unicode_str = "".join(regex_to_recombine[idx+1: idx+9])
+                unicode_str = "".join(regex_to_recombine[idx + 1: idx + 9])
                 decoded = chr(int(unicode_str, 16))
                 temp.append(TRANSFORMATIONS.get(decoded, decoded))
                 idx = idx + 9
@@ -221,13 +221,14 @@ class PythonRegex(regex.Regex):
         bracket_content_temp = []
         previous_is_valid_for_range = False
         for i, symbol in enumerate(bracket_content):
-            if (symbol == "-" and not self._should_escape_next_symbol(
-                    bracket_content_temp)):
-                if (not previous_is_valid_for_range
-                        or i == len(bracket_content) - 1):
+            # We have a range
+            if symbol == "-" and not self._should_escape_next_symbol(bracket_content_temp):
+                if not previous_is_valid_for_range or i == len(bracket_content) - 1:
+                    # False alarm, no range
                     bracket_content_temp.append("-")
                     previous_is_valid_for_range = True
                 else:
+                    # We insert all the characters in the range
                     bracket_content[i - 1] = self._recombine(bracket_content[i - 1])
                     for j in range(ord(bracket_content[i - 1][-1]) + 1,
                                    ord(bracket_content[i + 1][-1])):
@@ -247,9 +248,17 @@ class PythonRegex(regex.Regex):
                     previous_is_valid_for_range = False
                 else:
                     previous_is_valid_for_range = True
+        bracket_content_temp = self._preprocess_negation(bracket_content_temp)
         bracket_content_temp = self._insert_or(bracket_content_temp)
         bracket_content_temp = self._recombine(bracket_content_temp)
         return bracket_content_temp
+
+    @staticmethod
+    def _preprocess_negation(bracket_content):
+        if not bracket_content or bracket_content[0] != "^":
+            return bracket_content
+        # We inverse everything
+        return [x for x in ESCAPED_PRINTABLES if x not in bracket_content]
 
     @staticmethod
     def _insert_or(l_to_modify):
@@ -291,7 +300,70 @@ class PythonRegex(regex.Regex):
                 for j in range(pos_opening, len(regex_temp)):
                     regex_temp.append(regex_temp[j])
                 regex_temp.append("*")
+        regex_temp = self._add_repetition(regex_temp)
         self._python_regex = "".join(regex_temp)
+
+    @staticmethod
+    def _is_repetition(regex_list, idx):
+        if regex_list[idx] == "{":
+            end = idx
+            for i in range(idx + 1, len(regex_list)):
+                if regex_list[i] == "}":
+                    end = i
+                    break
+            inner = "".join(regex_list[idx + 1:end])
+            if "," in inner:
+                split = inner.split(",")
+                if len(split) != 2 or not split[0].isdigit() or not split[1].isdigit():
+                    return None
+                return int(split[0]), int(split[1]), end
+            if inner.isdigit():
+                return int(inner), end
+        return None
+
+    @staticmethod
+    def _find_repeated_sequence(regex_list):
+        if regex_list[-1] != ")":
+            return [regex_list[-1]]
+        res = [")"]
+        counter = -1
+        for i in range(len(regex_list) - 2, -1, -1):
+            if regex_list[i] == "(":
+                counter += 1
+                res.append("(")
+                if counter == 0:
+                    return res[::-1]
+            elif regex_list[i] == ")":
+                counter -= 1
+                res.append(")")
+            else:
+                res.append(regex_list[i])
+        return []
+
+    def _add_repetition(self, regex_list):
+        res = []
+        idx = 0
+        while idx < len(regex_list):
+            rep = self._is_repetition(regex_list, idx)
+            if rep is None:
+                res.append(regex_list[idx])
+                idx += 1
+            elif len(rep) == 2:
+                n_rep, end = rep
+                repeated = self._find_repeated_sequence(res)
+                for _ in range(n_rep - 1):
+                    res.extend(repeated)
+                idx = end + 1
+            elif len(rep) == 3:
+                min_rep, max_rep, end = rep
+                repeated = self._find_repeated_sequence(res)
+                for _ in range(min_rep - 1):
+                    res.extend(repeated)
+                for _ in range(min_rep, max_rep):
+                    res.extend(repeated)
+                    res.append("?")
+                idx = end + 1
+        return res
 
     def _preprocess_optional(self):
         regex_temp = []
@@ -328,6 +400,8 @@ class PythonRegex(regex.Regex):
                     and not self._should_escape_next_symbol(regex_temp)
                     and symbol in TO_ESCAPE_IN_BRACKETS):
                 regex_temp.append("\\" + symbol)
+            elif self._should_escape_next_symbol(regex_temp):
+                regex_temp[-1] += symbol
             else:
                 regex_temp.append(symbol)
         self._python_regex = "".join(regex_temp)
