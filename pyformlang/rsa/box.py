@@ -28,28 +28,6 @@ class Box:
         nonterminal = to_symbol(nonterminal)
         self._nonterminal = nonterminal
 
-    def change_nonterminal(self, nonterminal: Symbol | str):
-        """ Set a new nonterminal
-
-        Parameters
-        -----------
-        nonterminal : :class:`~pyformlang.finite_automaton.Symbol`
-            The new nonterminal for automaton
-
-        """
-        self._nonterminal = to_symbol(nonterminal)
-
-    def change_dfa(self, enfa: EpsilonNFA):
-        """ Set an epsilon finite automaton
-
-        Parameters
-        -----------
-        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
-            The new epsilon finite automaton
-
-        """
-        self._dfa = enfa
-
     def to_subgraph_dot(self):
         graph = self._dfa.to_networkx()
         strange_nodes = []
@@ -76,12 +54,6 @@ class Box:
             dot_string += f'\n{node_from} -> {node_to} [label = "{label}"];'
         dot_string += "\n}"
         return dot_string
-
-    @classmethod
-    def empty_box(cls):
-        enfa = EpsilonNFA()
-        nonterminal = Symbol("")
-        return Box(enfa, nonterminal)
 
     @property
     def dfa(self):

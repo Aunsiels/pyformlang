@@ -47,40 +47,10 @@ class RecursiveAutomaton:
 
         return None
 
-    def add_box(self, new_box: Box):
-        """ Set a box
-
-        Parameters
-        -----------
-        new_box : :class:`~pyformlang.rsa.Box`
-            The new box
-
-        """
-
-        self._boxes.update({new_box.nonterminal: new_box})
-
     def get_number_of_boxes(self):
         """ Size of set of boxes """
 
         return len(self._boxes)
-
-    def change_start_nonterminal(self, new_start_nonterminal: Symbol | str) -> None:
-        """ Set a start nonterminal
-
-        Parameters
-        -----------
-        new_start_nonterminal : :class:`~pyformlang.finite_automaton.Symbol` | str
-            The new start nonterminal
-
-        """
-
-        new_start_nonterminal = to_symbol(new_start_nonterminal)
-        if new_start_nonterminal not in self._boxes.keys():
-            raise ValueError(
-                "New start nonterminal not in set of nonterminals for boxes")
-        if self.start_nonterminal == Symbol(""):
-            del self._boxes[self.start_nonterminal]
-        self._start_nonterminal = new_start_nonterminal
 
     def to_dot(self):
         dot_string = f'digraph ""{{'
@@ -129,7 +99,6 @@ class RecursiveAutomaton:
         rsa : :class:`~pyformlang.rsa.RecursiveAutomaton`
             The new recursive automaton built from regular expression
         """
-
         start_nonterminal = to_symbol(start_nonterminal)
         box = Box(regex.to_epsilon_nfa().minimize(), start_nonterminal)
         return RecursiveAutomaton(box, {box})
@@ -178,16 +147,9 @@ class RecursiveAutomaton:
         start_box = Box(Regex(productions[start_nonterminal.value]).to_epsilon_nfa().minimize(), start_nonterminal)
         return RecursiveAutomaton(start_box, boxes)
 
-    @classmethod
-    def empty(cls):
-        """ Generate empty rsa """
-
-        empty_box = Box.empty_box()
-        return RecursiveAutomaton(empty_box, {empty_box})
-
 # equivalency not in terms of formal languages theory. Just mapping boxes.
     def is_equals_to(self, other):
-        """ Check whether two recursive automata are equivalent
+        """ Check whether two recursive automata are equals by boxes
 
         Parameters
         ----------
@@ -197,7 +159,7 @@ class RecursiveAutomaton:
         Returns
         ----------
         are_equivalent : bool
-            Whether the two recursive automata are equivalent or not
+            Whether the two recursive automata are equals or not
         """
         if not isinstance(other, RecursiveAutomaton):
             return False

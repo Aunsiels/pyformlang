@@ -14,19 +14,18 @@ class TestRSA(unittest.TestCase):
     def test_creation(self):
         """ Test the creation of an RSA """
         # S -> a S b | a b
-        enfa = Regex("a S b | a b").to_epsilon_nfa()
+        regex = Regex("a S b | a b")
+        enfa = regex.to_epsilon_nfa()
         dfa = enfa.minimize()
         box = Box(dfa, "S")
-        rsa_1 = RecursiveAutomaton(box, {box})
+        rsa_1 = RecursiveAutomaton(box, {})
 
         self.assertEqual(rsa_1.get_number_of_boxes(), 1)
         self.assertEqual(box, rsa_1.get_box_by_nonterminal("S"))
         self.assertEqual(rsa_1.nonterminals, {Symbol("S")})
         self.assertEqual(rsa_1.start_nonterminal, Symbol("S"))
 
-        rsa_2 = RecursiveAutomaton.empty()
-        rsa_2.add_box(box)
-        rsa_2.change_start_nonterminal("S")
+        rsa_2 = RecursiveAutomaton.from_regex(regex, "S")
 
         self.assertEqual(rsa_2, rsa_1)
 
@@ -38,12 +37,12 @@ class TestRSA(unittest.TestCase):
         enfa = Regex("a*").to_epsilon_nfa()
         dfa = enfa.minimize()
         box = Box(dfa, "S")
-        rsa_1 = RecursiveAutomaton(box, {box})
+        rsa_1 = RecursiveAutomaton(box, {})
 
         self.assertEqual(rsa_2, rsa_1)
 
     def test_is_equals_to(self):
-        """ Test the equivalence of two RSAs"""
+        """ Test the equals of two RSAs"""
         # S -> a* b*
         rsa_1 = RecursiveAutomaton.from_regex(Regex("a* b*"), "S")
 
@@ -52,16 +51,8 @@ class TestRSA(unittest.TestCase):
 
         self.assertNotEqual(rsa_1, rsa_2)
 
-    def test_add_box(self):
-        """ Test adding a box """
-        rsa_1 = RecursiveAutomaton.from_regex(Regex("a* b*"), "S")
-        new_box = Box(Regex("a*").to_epsilon_nfa().minimize(), "S")
-        rsa_1.add_box(new_box)
-        self.assertEqual(new_box.dfa, rsa_1.get_box_by_nonterminal("S").dfa)
-        self.assertEqual(rsa_1.nonterminals, {Symbol("S")})
-
-    def test_from_text(self):
-        """ Test reading RSA from a text"""
+    def test_from_ebnf(self):
+        """ Test reading RSA from ebnf"""
         # g1: S -> a S b | a b
         rsa1_g1 = RecursiveAutomaton.from_ebnf("S -> a S b | a b")
         rsa2_g1 = RecursiveAutomaton.from_regex(
