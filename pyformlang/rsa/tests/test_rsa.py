@@ -18,9 +18,9 @@ class TestRSA(unittest.TestCase):
         enfa = regex.to_epsilon_nfa()
         dfa = enfa.minimize()
         box = Box(dfa, "S")
-        rsa_1 = RecursiveAutomaton(box, {})
+        rsa_1 = RecursiveAutomaton(box, set())
 
-        self.assertEqual(rsa_1.get_number_of_boxes(), 1)
+        self.assertEqual(rsa_1.get_number_boxes(), 1)
         self.assertEqual(box, rsa_1.get_box_by_nonterminal("S"))
         self.assertEqual(rsa_1.nonterminals, {Symbol("S")})
         self.assertEqual(rsa_1.start_nonterminal, Symbol("S"))
@@ -37,7 +37,7 @@ class TestRSA(unittest.TestCase):
         enfa = Regex("a*").to_epsilon_nfa()
         dfa = enfa.minimize()
         box = Box(dfa, "S")
-        rsa_1 = RecursiveAutomaton(box, {})
+        rsa_1 = RecursiveAutomaton(box, set())
 
         self.assertEqual(rsa_2, rsa_1)
 
@@ -65,7 +65,7 @@ class TestRSA(unittest.TestCase):
         rsa1_g2 = RecursiveAutomaton.from_ebnf("""
             S -> a V b
             V -> c S d | c d""")
-        self.assertEqual(rsa1_g2.get_number_of_boxes(), 2)
+        self.assertEqual(rsa1_g2.get_number_boxes(), 2)
         self.assertEqual(rsa1_g2.nonterminals, {Symbol("S"), Symbol("V")})
 
         dfa_s = Regex("a V b").to_epsilon_nfa().minimize()

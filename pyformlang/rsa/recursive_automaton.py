@@ -4,7 +4,6 @@ Representation of a recursive automaton
 
 from typing import AbstractSet
 
-import pydot
 
 from pyformlang.finite_automaton.finite_automaton import to_symbol
 from pyformlang.finite_automaton.symbol import Symbol
@@ -31,30 +30,43 @@ class RecursiveAutomaton:
     def __init__(self,
                  start_box: Box,
                  boxes: AbstractSet[Box]):
-        self._boxes = {}
+        self._nonterminal_to_box = {}
         if start_box not in boxes:
-            self._boxes.update({to_symbol(start_box.nonterminal): start_box})
+            self._nonterminal_to_box[to_symbol(start_box.nonterminal)] = start_box
         self._start_nonterminal = to_symbol(start_box.nonterminal)
         for box in boxes:
-            self._boxes.update({to_symbol(box.nonterminal): box})
+            self._nonterminal_to_box[to_symbol(box.nonterminal)] = box
 
     def get_box_by_nonterminal(self, nonterminal: Symbol | str):
-        """ Box by nonterminal """
+        """
+        Box by nonterminal
+
+        Parameters
+        ----------
+        nonterminal: :class:`~pyformlang.finite_automaton.Symbol` | str
+            the nonterminal of which represents a box
+
+        Returns
+        -----------
+        box : :class:`~pyformlang.rsa.Box` | None
+            box represented by given nonterminal
+        """
 
         nonterminal = to_symbol(nonterminal)
-        if nonterminal in self._boxes:
-            return self._boxes[nonterminal]
+        if nonterminal in self._nonterminal_to_box:
+            return self._nonterminal_to_box[nonterminal]
 
         return None
 
-    def get_number_of_boxes(self):
+    def get_number_boxes(self):
         """ Size of set of boxes """
 
-        return len(self._boxes)
+        return len(self._nonterminal_to_box)
 
     def to_dot(self):
-        dot_string = f'digraph ""{{'
-        for box in self._boxes.values():
+        """ Create dot representation of recursive automaton """
+        dot_string = 'digraph "" {'
+        for box in self._nonterminal_to_box.values():
             dot_string += f'\n{box.to_subgraph_dot()}'
         dot_string += "\n}"
         return dot_string
@@ -63,13 +75,13 @@ class RecursiveAutomaton:
     def nonterminals(self) -> set:
         """ The set of nonterminals """
 
-        return set(self._boxes.keys())
+        return set(self._nonterminal_to_box.keys())
 
     @property
     def boxes(self) -> dict:
         """ The set of boxes """
 
-        return self._boxes
+        return self._nonterminal_to_box
 
     @property
     def start_nonterminal(self) -> Symbol:
@@ -105,7 +117,7 @@ class RecursiveAutomaton:
 
     @classmethod
     def from_ebnf(cls, text, start_nonterminal: Symbol | str = Symbol("S")):
-        """ Create a recursive automaton from ebnf
+        """ Create a recursive automaton from ebnf (ebnf = Extended Backus-Naur Form)
 
         Parameters
         -----------
@@ -147,9 +159,10 @@ class RecursiveAutomaton:
         start_box = Box(Regex(productions[start_nonterminal.value]).to_epsilon_nfa().minimize(), start_nonterminal)
         return RecursiveAutomaton(start_box, boxes)
 
-# equivalency not in terms of formal languages theory. Just mapping boxes.
     def is_equals_to(self, other):
-        """ Check whether two recursive automata are equals by boxes
+        """
+        Check whether two recursive automata are equals by boxes.
+        Not equivalency in terms of formal languages theory, just mapping boxes
 
         Parameters
         ----------
