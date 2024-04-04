@@ -5,7 +5,6 @@ Representation of a box for recursive automaton
 from pyformlang.finite_automaton.epsilon_nfa import EpsilonNFA
 from pyformlang.finite_automaton.finite_automaton import to_symbol
 from pyformlang.finite_automaton.symbol import Symbol
-import networkx as nx
 
 
 class Box:
@@ -29,6 +28,7 @@ class Box:
         self._nonterminal = nonterminal
 
     def to_subgraph_dot(self):
+        """Creates a named subgraph representing a box"""
         graph = self._dfa.to_networkx()
         strange_nodes = []
         dot_string = (f'subgraph cluster_{self._nonterminal}\n{{ label="{self._nonterminal}"\n'
@@ -37,24 +37,23 @@ class Box:
                       f'edge [fontname="Helvetica,Arial,sans-serif"]\nrankdir=LR;\n'
                       f'node [shape = circle style=filled fillcolor=white]')
         for node, data in graph.nodes(data=True):
+            node = node.replace('"', '').replace("'", "")
             if 'is_start' not in data.keys() or 'is_final' not in data.keys():
                 strange_nodes.append(node)
                 continue
-            node = node.replace(";", "")
             if data['is_start']:
-                dot_string += f'\n{node} [fillcolor = green];'
+                dot_string += f'\n"{node}" [fillcolor = green];'
             if data['is_final']:
-                dot_string += f'\n{node} [shape = doublecircle];'
+                dot_string += f'\n"{node}" [shape = doublecircle];'
         for strange_node in strange_nodes:
             graph.remove_node(strange_node)
         for node_from, node_to, data in graph.edges(data=True):
-            node_from = node_from.replace(";", "")
-            node_to = node_to.replace(";", "")
+            node_from = node_from.replace('"', '').replace("'", "")
+            node_to = node_to.replace('"', '').replace("'", "")
             label = data['label']
-            dot_string += f'\n{node_from} -> {node_to} [label = "{label}"];'
+            dot_string += f'\n"{node_from}" -> "{node_to}" [label = "{label}"];'
         dot_string += "\n}"
         return dot_string
-
     @property
     def dfa(self):
         """ Box's dfa """
