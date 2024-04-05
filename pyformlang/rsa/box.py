@@ -1,6 +1,7 @@
 """
 Representation of a box for recursive automaton
 """
+from typing import Union
 
 from pyformlang.finite_automaton.epsilon_nfa import EpsilonNFA
 from pyformlang.finite_automaton.finite_automaton import to_symbol
@@ -21,7 +22,7 @@ class Box:
 
     """
 
-    def __init__(self, enfa: EpsilonNFA, nonterminal: Symbol | str):
+    def __init__(self, enfa: EpsilonNFA, nonterminal: Union[Symbol, str]):
         self._dfa = enfa
 
         nonterminal = to_symbol(nonterminal)
@@ -31,7 +32,8 @@ class Box:
         """Creates a named subgraph representing a box"""
         graph = self._dfa.to_networkx()
         strange_nodes = []
-        dot_string = (f'subgraph cluster_{self._nonterminal}\n{{ label="{self._nonterminal}"\n'
+        nonterminal = self.nonterminal.value.replace('"', '').replace("'", "").replace(".", "")
+        dot_string = (f'subgraph cluster_{nonterminal}\n{{ label="{nonterminal}"\n'
                       f'fontname="Helvetica,Arial,sans-serif"\n'
                       f'node [fontname="Helvetica,Arial,sans-serif"]\n'
                       f'edge [fontname="Helvetica,Arial,sans-serif"]\nrankdir=LR;\n'
@@ -50,10 +52,11 @@ class Box:
         for node_from, node_to, data in graph.edges(data=True):
             node_from = node_from.replace('"', '').replace("'", "")
             node_to = node_to.replace('"', '').replace("'", "")
-            label = data['label']
+            label = data['label'].replace('"', '').replace("'", "")
             dot_string += f'\n"{node_from}" -> "{node_to}" [label = "{label}"];'
         dot_string += "\n}"
         return dot_string
+
     @property
     def dfa(self):
         """ Box's dfa """

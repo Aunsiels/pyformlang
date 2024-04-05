@@ -2,8 +2,7 @@
 Representation of a recursive automaton
 """
 
-from typing import AbstractSet
-
+from typing import AbstractSet, Union
 
 from pyformlang.finite_automaton.finite_automaton import to_symbol
 from pyformlang.finite_automaton.symbol import Symbol
@@ -37,7 +36,7 @@ class RecursiveAutomaton:
         for box in boxes:
             self._nonterminal_to_box[to_symbol(box.nonterminal)] = box
 
-    def get_box_by_nonterminal(self, nonterminal: Symbol | str):
+    def get_box_by_nonterminal(self, nonterminal: Union[Symbol, str]):
         """
         Box by nonterminal
 
@@ -96,7 +95,7 @@ class RecursiveAutomaton:
         return self.boxes[self.start_nonterminal]
 
     @classmethod
-    def from_regex(cls, regex: Regex, start_nonterminal: Symbol | str):
+    def from_regex(cls, regex: Regex, start_nonterminal: Union[Symbol, str]):
         """ Create a recursive automaton from regular expression
 
         Parameters
@@ -116,7 +115,7 @@ class RecursiveAutomaton:
         return RecursiveAutomaton(box, {box})
 
     @classmethod
-    def from_ebnf(cls, text, start_nonterminal: Symbol | str = Symbol("S")):
+    def from_ebnf(cls, text, start_nonterminal: Union[Symbol, str] = Symbol("S")):
         """ Create a recursive automaton from ebnf (ebnf = Extended Backus-Naur Form)
 
         Parameters
