@@ -1,3 +1,16 @@
 sphinx_rtd_theme
 networkx
 numpy
+pytest
+pytest-cov
+pytest-profiling
+numpydoc
+setuptools
+wheel
+twine
+pylint
+pycodestyle
+pydot
+pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
+pylint>=2.7.0 # not directly required, pinned by Snyk to avoid a vulnerability
+sphinx>=3.0.4 # not directly required, pinned by Snyk to avoid a vulnerability
