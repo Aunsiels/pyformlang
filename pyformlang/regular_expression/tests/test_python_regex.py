@@ -68,6 +68,7 @@ class TestPythonRegex(unittest.TestCase):
         self.assertTrue(regex.accepts(["a", "*"]))
         self.assertTrue(regex.accepts(["a", "+"]))
         self.assertTrue(regex.accepts(["a", "$"]))
+        self._test_compare(".", "\n")
 
     def test_dot_spaces(self):
         regex = PythonRegex("a.")
