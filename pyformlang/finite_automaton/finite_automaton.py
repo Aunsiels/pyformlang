@@ -594,6 +594,30 @@ class FiniteAutomaton:
         self_dfa = self.to_deterministic()
         return self_dfa.is_equivalent_to(other)
 
+    def get_accepted_words(self):
+        """ Gets words accepted by the finite automaton """
+        for start_state in self.start_states:
+            for word in self.get_words_accepted_from_state(start_state):
+                yield word
+
+    def get_words_accepted_from_state(self, initial_state: State):
+        """
+        Gets words that are accepted \
+        starting from the given state.
+        """
+        queue = [(initial_state, [])]
+        while len(queue) > 0:
+            (current_state, current_word) = queue.pop(0)
+            transitions = self._transition_function.get_transitions_from(
+                current_state)
+            for symbol, next_state in transitions:
+                temp_word = current_word.copy()
+                if symbol != Epsilon():
+                    temp_word.append(symbol)
+                if self.is_final_state(next_state):
+                    yield temp_word
+                queue.append((next_state, temp_word))
+
     def to_deterministic(self):
         """ Turns the automaton into a deterministic one"""
         raise NotImplementedError

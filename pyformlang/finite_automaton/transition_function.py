@@ -199,6 +199,12 @@ class TransitionFunction:
         """
         return copy.deepcopy(self._transitions)
 
+    def get_transitions_from(self, state_from: State):
+        """ Gets transitions from the given state """
+        if state_from in self._transitions:
+            for symb_by, state_to in self._transitions[state_from].items():
+                yield (symb_by, state_to)
+
 
 class DuplicateTransitionError(Exception):
     """ Signals a duplicated transition
