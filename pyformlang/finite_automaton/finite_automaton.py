@@ -606,6 +606,8 @@ class FiniteAutomaton:
         starting from the given state.
         """
         queue = [(initial_state, [])]
+        transitive_closure = nx.transitive_closure(
+            self.to_networkx())
         while len(queue) > 0:
             (current_state, current_word) = queue.pop(0)
             transitions = self._transition_function.get_transitions_from(
@@ -616,7 +618,10 @@ class FiniteAutomaton:
                     temp_word.append(symbol)
                 if self.is_final_state(next_state):
                     yield temp_word
-                queue.append((next_state, temp_word))
+                if exists_any_final_path(transitive_closure,
+                                         next_state,
+                                         self.final_states):
+                    queue.append((next_state, temp_word))
 
     def to_deterministic(self):
         """ Turns the automaton into a deterministic one"""
@@ -701,3 +706,15 @@ def add_start_state_to_graph(graph, state):
                    width=.0)
     graph.add_edge("starting_" + str(state.value),
                    state.value)
+
+def exists_any_final_path(transitive_closure, source, final_nodes):
+    """
+    Checks if there are any paths from \
+    given node to one of the final nodes.
+    """
+    return any(node_is_reachable(transitive_closure, source, final)
+               for final in final_nodes)
+
+def node_is_reachable(transitive_closure, source, target):
+    """ Checks if the target node can be reached from the source node """
+    return target in transitive_closure[source].keys()
