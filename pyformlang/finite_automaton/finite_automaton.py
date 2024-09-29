@@ -616,12 +616,12 @@ class FiniteAutomaton:
                 temp_word = current_word.copy()
                 if symbol != Epsilon():
                     temp_word.append(symbol)
-                if self.is_final_state(next_state):
-                    yield temp_word
                 if exists_any_final_path(transitive_closure,
                                          next_state,
                                          self.final_states):
                     queue.append((next_state, temp_word))
+            if self.is_final_state(current_state):
+                yield current_word
 
     def to_deterministic(self):
         """ Turns the automaton into a deterministic one"""
@@ -719,4 +719,5 @@ def exists_any_final_path(transitive_closure, source, final_nodes):
 
 def node_is_reachable(transitive_closure, source, target):
     """ Checks if the target node can be reached from the source node """
-    return target in transitive_closure[source].keys()
+    return target == source or \
+        target in transitive_closure[source].keys()

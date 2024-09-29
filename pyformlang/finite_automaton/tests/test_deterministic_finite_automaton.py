@@ -282,6 +282,14 @@ class TestDeterministicFiniteAutomaton(unittest.TestCase):
         dfa_regex = dfa1.to_regex().to_epsilon_nfa()
         self.assertEqual(dfa1, dfa_regex)
 
+    def test_word_generation(self):
+        dfa = get_dfa_example_for_word_generation()
+        accepted_words = list(dfa.get_accepted_words())
+        self.assertTrue([] in accepted_words)
+        self.assertTrue([Symbol("b"), Symbol("c")] in accepted_words)
+        self.assertTrue([Symbol("b"), Symbol("d")] in accepted_words)
+        self.assertEqual(len(accepted_words), 3)
+
 
 def get_example0():
     """ Gives a dfa """
@@ -328,3 +336,24 @@ def get_dfa_example():
     dfa1.add_start_state(State("A"))
     dfa1.add_final_state(State("D"))
     return dfa1
+
+
+def get_dfa_example_for_word_generation():
+    """ DFA example for the word generation test """
+    dfa = DeterministicFiniteAutomaton()
+    states = [State(x) for x in range(0, 4)]
+    symbol_a = Symbol("a")
+    symbol_b = Symbol("b")
+    symbol_c = Symbol("c")
+    symbol_d = Symbol("d")
+    dfa.add_transitions([
+        (states[0], symbol_a, states[1]),
+        (states[0], symbol_b, states[2]),
+        (states[1], symbol_a, states[1]),
+        (states[2], symbol_c, states[3]),
+        (states[2], symbol_d, states[3]),
+    ])
+    dfa.add_start_state(states[0])
+    dfa.add_final_state(states[0])
+    dfa.add_final_state(states[3])
+    return dfa
