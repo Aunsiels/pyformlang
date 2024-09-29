@@ -602,8 +602,8 @@ class FiniteAutomaton:
 
     def get_words_accepted_from_state(self, initial_state: State):
         """
-        Gets words that are accepted \
-        starting from the given state.
+        Gets words that are accepted by finite \
+        automaton starting from the given state.
         """
         queue = [(initial_state, [])]
         transitive_closure = nx.transitive_closure(
@@ -707,6 +707,7 @@ def add_start_state_to_graph(graph, state):
     graph.add_edge("starting_" + str(state.value),
                    state.value)
 
+
 def exists_any_final_path(transitive_closure, source, final_nodes):
     """
     Checks if there are any paths from \
@@ -714,6 +715,7 @@ def exists_any_final_path(transitive_closure, source, final_nodes):
     """
     return any(node_is_reachable(transitive_closure, source, final)
                for final in final_nodes)
+
 
 def node_is_reachable(transitive_closure, source, target):
     """ Checks if the target node can be reached from the source node """

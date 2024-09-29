@@ -5,9 +5,11 @@ name: Python package
 
 on:
   push:
-    branches: [ master ]
   pull_request:
-    branches: [ master ]
+    types:
+      - opened
+      - reopened
+      - closed
 
 jobs:
   build:
@@ -51,7 +53,7 @@ jobs:
         junitxml-path: ./pytest.xml
         default-branch: master
     - name: Create coverage Badge
-      if: ${{ matrix.python-version == '3.8'}}
+      if: ${{ github.ref_name == 'master' && matrix.python-version == '3.8'}}
       uses: schneegans/dynamic-badges-action@v1.0.0
       with:
         auth: ${{ secrets.GIST_SECRET }}
