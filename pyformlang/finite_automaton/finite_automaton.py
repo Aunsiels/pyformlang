@@ -597,8 +597,7 @@ class FiniteAutomaton:
     def get_accepted_words(self):
         """ Gets words accepted by the finite automaton """
         for start_state in self.start_states:
-            for word in self.get_words_accepted_from_state(start_state):
-                yield word
+            yield from self.get_words_accepted_from_state(start_state)
 
     def get_words_accepted_from_state(self, initial_state: State):
         """
@@ -613,12 +612,12 @@ class FiniteAutomaton:
             transitions = self._transition_function.get_transitions_from(
                 current_state)
             for symbol, next_state in transitions:
-                temp_word = current_word.copy()
-                if symbol != Epsilon():
-                    temp_word.append(symbol)
                 if exists_any_final_path(transitive_closure,
                                          next_state,
                                          self.final_states):
+                    temp_word = current_word.copy()
+                    if symbol != Epsilon():
+                        temp_word.append(symbol)
                     queue.append((next_state, temp_word))
             if self.is_final_state(current_state):
                 yield current_word
