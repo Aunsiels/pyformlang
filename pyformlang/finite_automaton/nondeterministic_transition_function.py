@@ -2,7 +2,7 @@
 A nondeterministic transition function
 """
 import copy
-from typing import Set
+from typing import Set, Iterable
 
 from .state import State
 from .symbol import Symbol
@@ -202,7 +202,8 @@ class NondeterministicTransitionFunction:
         """
         return copy.deepcopy(self._transitions)
 
-    def get_transitions_from(self, state_from: State):
+    def get_transitions_from(self, state_from: State) \
+            -> Iterable[tuple[Symbol, State]]:
         """ Gets transitions from the given state """
         if state_from in self._transitions:
             for symb_by, states_to in self._transitions[state_from].items():
