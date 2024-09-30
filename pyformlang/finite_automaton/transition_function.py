@@ -2,7 +2,7 @@
 Representation of a transition function
 """
 import copy
-from typing import List, Iterable
+from typing import List, Iterable, Tuple
 
 from pyformlang.finite_automaton.epsilon import Epsilon
 
@@ -200,7 +200,7 @@ class TransitionFunction:
         return copy.deepcopy(self._transitions)
 
     def get_transitions_from(self, state_from: State) \
-            -> Iterable[tuple[Symbol, State]]:
+            -> Iterable[Tuple[Symbol, State]]:
         """ Gets transitions from the given state """
         if state_from in self._transitions:
             yield from self._transitions[state_from].items()
