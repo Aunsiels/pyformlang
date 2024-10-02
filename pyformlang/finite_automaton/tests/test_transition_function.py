@@ -90,3 +90,21 @@ class TestTransitionFunction(unittest.TestCase):
         transition_function = TransitionFunction()
         with self.assertRaises(InvalidEpsilonTransition):
             transition_function.add_transition("1", Epsilon(), "2")
+
+    def test_get_transitions_from(self):
+        """ Tests iteration of transitions from specified state """
+        transition_function = TransitionFunction()
+        states = [State(x) for x in range(0, 4)]
+        symbol_a = Symbol("a")
+        symbol_b = Symbol("b")
+        symbol_c = Symbol("c")
+        symbol_d = Symbol("d")
+        transition_function.add_transition(states[0], symbol_a, states[1])
+        transition_function.add_transition(states[1], symbol_b, states[2])
+        transition_function.add_transition(states[1], symbol_c, states[2])
+        transition_function.add_transition(states[1], symbol_d, states[3])
+        transitions = list(transition_function.get_transitions_from(states[1]))
+        self.assertTrue((symbol_b, states[2]) in transitions)
+        self.assertTrue((symbol_c, states[2]) in transitions)
+        self.assertTrue((symbol_d, states[3]) in transitions)
+        self.assertEqual(len(transitions), 3)
