@@ -117,3 +117,47 @@ class TestNondeterministicFiniteAutomaton(unittest.TestCase):
         state1 = State(1)
         with self.assertRaises(InvalidEpsilonTransition):
             dfa.add_transition(state0, Epsilon(), state1)
+
+    def test_word_generation(self):
+        nfa = get_nfa_example_for_word_generation()
+        accepted_words = list(nfa.get_accepted_words())
+        self.assertTrue([] in accepted_words)
+        self.assertTrue([Symbol("a"), Symbol("b")] in accepted_words)
+        self.assertTrue([Symbol("a"), Symbol("c")] in accepted_words)
+        self.assertTrue([Symbol("d"), Symbol("e")] in accepted_words)
+        self.assertTrue(
+            [Symbol("d"), Symbol("e"), Symbol("f")] in accepted_words)
+        self.assertEqual(len(accepted_words), 5)
+
+
+def get_nfa_example_for_word_generation():
+    """
+    Gets Nondeterministic Finite Automaton \
+    example for the word generation test.
+    """
+    nfa = NondeterministicFiniteAutomaton()
+    states = [State(x) for x in range(0, 9)]
+    symbol_a = Symbol("a")
+    symbol_b = Symbol("b")
+    symbol_c = Symbol("c")
+    symbol_d = Symbol("d")
+    symbol_e = Symbol("e")
+    symbol_f = Symbol("f")
+    nfa.add_transitions([
+        (states[0], symbol_a, states[1]),
+        (states[0], symbol_a, states[2]),
+        (states[1], symbol_a, states[1]),
+        (states[2], symbol_b, states[3]),
+        (states[2], symbol_c, states[3]),
+        (states[4], symbol_d, states[5]),
+        (states[5], symbol_e, states[6]),
+        (states[5], symbol_e, states[7]),
+        (states[7], symbol_f, states[8]),
+    ])
+    nfa.add_start_state(states[0])
+    nfa.add_start_state(states[4])
+    nfa.add_final_state(states[3])
+    nfa.add_final_state(states[4])
+    nfa.add_final_state(states[6])
+    nfa.add_final_state(states[8])
+    return nfa

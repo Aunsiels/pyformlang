@@ -622,6 +622,17 @@ class TestEpsilonNFA(unittest.TestCase):
         self.assertEqual(nfa.get_number_transitions(), 3)
         self.assertTrue(nfa.is_equivalent_to(enfa))
 
+    def test_word_generation(self):
+        enfa = get_enfa_example_for_word_generation()
+        accepted_words = list(enfa.get_accepted_words())
+        self.assertTrue([] in accepted_words)
+        self.assertTrue([Symbol("b")] in accepted_words)
+        self.assertTrue([Symbol("c")] in accepted_words)
+        self.assertTrue([Symbol("d"), Symbol("e")] in accepted_words)
+        self.assertTrue(
+            [Symbol("d"), Symbol("e"), Symbol("f")] in accepted_words)
+        self.assertEqual(len(accepted_words), 5)
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """
@@ -730,3 +741,34 @@ def get_example_non_minimal():
     enfa0.add_transition(state5, symb_b, state3)
     enfa0.add_transition(state6, symb_b, state4)
     return enfa0
+
+
+def get_enfa_example_for_word_generation():
+    """ ENFA example for the word generation test """
+    enfa = EpsilonNFA()
+    states = [State(x) for x in range(0, 9)]
+    symbol_a = Symbol("a")
+    symbol_b = Symbol("b")
+    symbol_c = Symbol("c")
+    symbol_d = Symbol("d")
+    symbol_e = Symbol("e")
+    symbol_f = Symbol("f")
+    epsilon = Epsilon()
+    enfa.add_transitions([
+        (states[0], symbol_a, states[1]),
+        (states[0], epsilon, states[2]),
+        (states[1], symbol_a, states[1]),
+        (states[2], symbol_b, states[3]),
+        (states[2], symbol_c, states[3]),
+        (states[4], symbol_d, states[5]),
+        (states[5], symbol_e, states[6]),
+        (states[5], symbol_e, states[7]),
+        (states[7], symbol_f, states[8]),
+    ])
+    enfa.add_start_state(states[0])
+    enfa.add_start_state(states[4])
+    enfa.add_final_state(states[3])
+    enfa.add_final_state(states[4])
+    enfa.add_final_state(states[6])
+    enfa.add_final_state(states[8])
+    return enfa
