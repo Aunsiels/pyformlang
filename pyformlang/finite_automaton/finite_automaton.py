@@ -1,23 +1,29 @@
 """ A general finite automaton representation """
 
-from typing import List, Iterable, Set, Optional, Union, Any
-from collections import deque
+# pylint: disable=function-redefined
 
-import networkx as nx
+from typing import \
+    Dict, List, Set, Tuple, \
+    Iterable, Union, Optional, Any
+
+from fastcore.dispatch import typedispatch
+from networkx import MultiDiGraph, transitive_closure
 from networkx.drawing.nx_pydot import write_dot
 
+from pyformlang.finite_automaton import EpsilonNFA
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.fst import FST
-# pylint: disable=cyclic-import
-from pyformlang import finite_automaton
 
 from .epsilon import Epsilon
 from .state import State
 from .symbol import Symbol
+from .nondeterministic_transition_function import \
+    NondeterministicTransitionFunction
+from .transition_function import TransitionFunction
 
 
 class FiniteAutomaton:
     """ Represents a general finite automaton
-
 
     Attributes
     ----------
@@ -37,12 +43,15 @@ class FiniteAutomaton:
         A set of final or accepting states. It is a subset of states.
     """
 
-    def __init__(self):
-        self._states = set()
-        self._input_symbols = set()
-        self._transition_function = None
-        self._start_state = set()
-        self._final_states = set()
+    def __init__(self) -> None:
+        self._states: Set[State] = set()
+        self._input_symbols: Set[Symbol] = set()
+        self._transition_function: Union[NondeterministicTransitionFunction,
+                                         TransitionFunction] \
+                = NondeterministicTransitionFunction()
+        self._start_state: Set[State] = set()
+        self._final_states: Set[State] = set()
+        self.__transitive_closure: Optional[MultiDiGraph] = None
 
     def add_transition(self, s_from: Any, symb_by: Any,
                        s_to: Any) -> int:
@@ -85,7 +94,8 @@ class FiniteAutomaton:
             self._input_symbols.add(symb_by)
         return temp
 
-    def add_transitions(self, transitions_list):
+    def add_transitions(self, \
+            transitions_list: Iterable[Tuple[Any, Any, Any]]) -> int:
         """
         Adds several transitions to the automaton
 
@@ -119,8 +129,8 @@ class FiniteAutomaton:
             temp = self.add_transition(s_from, symb_by, s_to)
         return temp
 
-    def remove_transition(self, s_from: State, symb_by: Symbol,
-                          s_to: State) -> int:
+    def remove_transition(self, s_from: Any, symb_by: Any,
+                          s_to: Any) -> int:
         """ Remove a transition of the nfa
 
         Parameters
@@ -154,7 +164,7 @@ class FiniteAutomaton:
                                                            s_to)
 
     @property
-    def states(self):
+    def states(self) -> Set[State]:
         """ Gives the states
 
         Returns
@@ -185,12 +195,12 @@ class FiniteAutomaton:
         return self._transition_function.get_number_transitions()
 
     @property
-    def symbols(self):
+    def symbols(self) -> Set[Symbol]:
         """The symbols"""
         return self._input_symbols
 
     @property
-    def final_states(self):
+    def final_states(self) -> Set[State]:
         """The final states"""
         return self._final_states
 
@@ -221,7 +231,7 @@ class FiniteAutomaton:
         self._states.add(state)
         return 1
 
-    def remove_start_state(self, state: State) -> int:
+    def remove_start_state(self, state: Any) -> int:
         """ remove an initial state
 
         Parameters
@@ -278,7 +288,7 @@ class FiniteAutomaton:
         self._states.add(state)
         return 1
 
-    def remove_final_state(self, state: State) -> int:
+    def remove_final_state(self, state: Any) -> int:
         """ Remove a final state
 
         Parameters
@@ -307,7 +317,19 @@ class FiniteAutomaton:
             return 1
         return 0
 
-    def __call__(self, state: Any, symbol: Any = None) -> List[State]:
+    @typedispatch
+    def __call__(self, state: Any) \
+            -> Iterable[Tuple[Symbol, Set[State]]]:
+        """
+        Gives FA transitions from given state.
+        Calls the transition function
+        """
+        state = to_state(state)
+        return self._transition_function(state)
+
+    @typedispatch
+    def __call__(self, state: Any, symbol: Any) \
+            -> Set[State]:
         """ Gives the states obtained after calling a symbol on a state
         Calls the transition function
 
@@ -333,13 +355,11 @@ class FiniteAutomaton:
         [1]
 
         """
-        # pylint: disable=not-callable
         state = to_state(state)
-        if symbol is not None:
-            symbol = to_symbol(symbol)
+        symbol = to_symbol(symbol)
         return self._transition_function(state, symbol)
 
-    def is_final_state(self, state: State) -> bool:
+    def is_final_state(self, state: Any) -> bool:
         """ Checks if a state is final
 
         Parameters
@@ -368,11 +388,11 @@ class FiniteAutomaton:
         return state in self._final_states
 
     @property
-    def start_states(self):
+    def start_states(self) -> Set[State]:
         """The start states"""
         return self._start_state
 
-    def add_symbol(self, symbol: Symbol):
+    def add_symbol(self, symbol: Any) -> None:
         """ Add a symbol
 
         Parameters
@@ -390,7 +410,7 @@ class FiniteAutomaton:
         symbol = to_symbol(symbol)
         self._input_symbols.add(symbol)
 
-    def to_fst(self) -> "FST":
+    def to_fst(self) -> FST:
         """ Turns the finite automaton into a finite state transducer
 
         The transducers accepts only the words in the language of the \
@@ -459,7 +479,7 @@ class FiniteAutomaton:
                 to_process.append((state, visited.copy()))
         return True
 
-    def to_networkx(self) -> nx.MultiDiGraph:
+    def to_networkx(self) -> MultiDiGraph:
         """
         Transform the current automaton into a networkx graph
 
@@ -479,7 +499,7 @@ class FiniteAutomaton:
         >>> graph = enfa.to_networkx()
 
         """
-        graph = nx.MultiDiGraph()
+        graph = MultiDiGraph()
         for state in self._states:
             graph.add_node(state.value,
                            is_start=state in self.start_states,
@@ -496,7 +516,8 @@ class FiniteAutomaton:
         return graph
 
     @classmethod
-    def from_networkx(cls, graph):
+    def from_networkx(cls, graph: MultiDiGraph) \
+            -> EpsilonNFA:
         """
         Import a networkx graph into an finite state automaton. \
         The imported graph requires to have the good format, i.e. to come \
@@ -529,7 +550,7 @@ class FiniteAutomaton:
         >>> enfa_from_nx = EpsilonNFA.from_networkx(graph)
 
         """
-        enfa = finite_automaton.EpsilonNFA()
+        enfa = EpsilonNFA()
         for s_from in graph:
             for s_to in graph[s_from]:
                 for transition in graph[s_from][s_to].values():
@@ -544,7 +565,7 @@ class FiniteAutomaton:
                 enfa.add_final_state(node)
         return enfa
 
-    def write_as_dot(self, filename):
+    def write_as_dot(self, filename: str) -> None:
         """
         Write the automaton in dot format into a file
 
@@ -565,7 +586,7 @@ class FiniteAutomaton:
         """
         write_dot(self.to_networkx(), filename)
 
-    def is_equivalent_to(self, other):
+    def is_equivalent_to(self, other: "FiniteAutomaton") -> bool:
         """
         Checks if the current automaton is equivalent to a given one.
 
@@ -675,25 +696,27 @@ class FiniteAutomaton:
             next_states.add(next_state)
         return next_states
 
-    def to_deterministic(self):
+    def to_deterministic(self) -> DeterministicFiniteAutomaton:
         """ Turns the automaton into a deterministic one"""
         raise NotImplementedError
 
-    def is_deterministic(self):
+    def is_deterministic(self) -> bool:
         """ Checks if the automaton is deterministic """
         raise NotImplementedError
 
-    def __eq__(self, other):
-        return self.is_equivalent_to(other)
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, FiniteAutomaton):
+            return self.is_equivalent_to(other)
+        return False
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Number of transitions"""
         return len(self._transition_function)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[Tuple[State, Symbol, State]]:
         yield from self._transition_function.__iter__()
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[State, Dict[Symbol, Set[State]]]:
         """
         Get the dictionary representation of the transition function. The \
         keys of the dictionary are the source nodes. The items are \
@@ -737,8 +760,6 @@ def to_state(given: Any) -> Union[State, None]:
     given : any
         What we want to transform
     """
-    if given is None:
-        return None
     if isinstance(given, State):
         return given
     return State(given)
@@ -759,7 +780,7 @@ def to_symbol(given: Any) -> Symbol:
     return Symbol(given)
 
 
-def add_start_state_to_graph(graph, state):
+def add_start_state_to_graph(graph: MultiDiGraph, state: State) -> None:
     """ Adds a starting node to a given graph """
     graph.add_node("starting_" + str(state.value),
                    label="",

@@ -4,8 +4,9 @@ Representation of a nondeterministic finite automaton
 
 from typing import Iterable, Any
 
-# pylint: disable=cyclic-import
-from pyformlang.finite_automaton import epsilon
+from pyformlang.finite_automaton import \
+    Epsilon, DeterministicFiniteAutomaton
+
 from .epsilon_nfa import EpsilonNFA
 from .finite_automaton import to_symbol
 from .transition_function import InvalidEpsilonTransition
@@ -113,7 +114,7 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         return len(self._start_state) <= 1 and \
             self._transition_function.is_deterministic()
 
-    def to_deterministic(self) -> "DeterministicFiniteAutomaton":
+    def to_deterministic(self) -> DeterministicFiniteAutomaton:
         """ Transforms the nfa into a dfa
 
         Returns
@@ -140,6 +141,6 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
                        s_from: Any,
                        symb_by: Any,
                        s_to: Any) -> int:
-        if symb_by == epsilon.Epsilon():
+        if symb_by == Epsilon():
             raise InvalidEpsilonTransition
         return super().add_transition(s_from, symb_by, s_to)

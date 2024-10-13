@@ -2,6 +2,14 @@
 Representation of a deterministic finite automaton
 """
 
+# pylint: disable=too-many-arguments
+
+from typing import \
+    Dict, List, Iterable, Set, \
+    AbstractSet, Optional, Any
+
+from numpy import empty
+
 from typing import AbstractSet, Iterable, Any
 
 import numpy as np
@@ -10,7 +18,7 @@ import numpy as np
 from .epsilon_nfa import to_single_state
 from .finite_automaton import to_state, to_symbol
 from .hopcroft_processing_list import HopcroftProcessingList
-# pylint: disable=cyclic-import
+from .finite_automaton import FiniteAutomaton
 from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
 from .partition import Partition
 from .state import State
@@ -21,18 +29,23 @@ from .transition_function import TransitionFunction
 class PreviousTransitions:
     """For internal usage"""
 
-    def __init__(self, states, symbols):
-        self._to_index_state = {}
+    def __init__(self,
+                 states: AbstractSet[Any],
+                 symbols: AbstractSet[Any]) -> None:
+        self._to_index_state: Dict[Optional[State], int] = {}
         self._to_index_state[None] = 0
         for i, state in enumerate(states):
             self._to_index_state[state] = i + 1
-        self._to_index_symbol = {}
+        self._to_index_symbol: Dict[Optional[Symbol], int] = {}
         for i, symbol in enumerate(symbols):
             self._to_index_symbol[symbol] = i
-        self._conversion = np.empty((len(states) + 1, len(symbols)),
+        self._conversion = empty((len(states) + 1, len(symbols)),
                                     dtype=object)
 
-    def add(self, next0, symbol, state):
+    def add(self,
+            next0: Optional[State],
+            symbol: Symbol,
+            state: Optional[State]) -> None:
         """ Internal """
         i_next0 = self._to_index_state[next0]
         i_symbol = self._to_index_symbol[symbol]
@@ -41,7 +54,7 @@ class PreviousTransitions:
         else:
             self._conversion[i_next0, i_symbol].append(state)
 
-    def get(self, next0, symbol):
+    def get(self, next0: State, symbol: Symbol) -> List[object]:
         """ Internal """
         i_next0 = self._to_index_state[next0]
         i_symbol = self._to_index_symbol[symbol]
@@ -101,23 +114,23 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(self,
-                 states: AbstractSet[State] = None,
-                 input_symbols: AbstractSet[Symbol] = None,
+                 states: AbstractSet[Any] = None,
+                 input_symbols: AbstractSet[Any] = None,
                  transition_function: TransitionFunction = None,
-                 start_state: State = None,
-                 final_states: AbstractSet[State] = None):
+                 start_state: Any = None,
+                 final_states: AbstractSet[Any] = None) -> None:
         super().__init__(states, input_symbols, None, None, final_states)
-        start_state = to_state(start_state)
-        self._transition_function = transition_function or TransitionFunction()
+        self._transition_function: TransitionFunction = \
+            transition_function or TransitionFunction()
         if start_state is not None:
+            start_state = to_state(start_state)
             self._start_state = {start_state}
-        else:
-            self._start_state = {}
-        if start_state is not None:
             self._states.add(start_state)
+        else:
+            self._start_state = set()
 
+    def add_start_state(self, state: Any) -> int:
     def add_start_state(self, state: Any) -> int:
         """ Set an initial state
 
@@ -144,6 +157,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         return 1
 
     def remove_start_state(self, state: Any) -> int:
+    def remove_start_state(self, state: Any) -> int:
         """ remove an initial state
 
         Parameters
@@ -165,11 +179,12 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         """
         state = to_state(state)
-        if {state} == self._start_state:
-            self._start_state = {}
+        if self._start_state == {state}:
+            self._start_state.remove(state)
             return 1
         return 0
 
+    def accepts(self, word: Iterable[Any]) -> bool:
     def accepts(self, word: Iterable[Any]) -> bool:
         """ Checks whether the dfa accepts a given word
 
@@ -201,11 +216,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         for symbol in word:
             if current_state is None:
                 return False
-            current_state = self._transition_function(current_state, symbol)
-            if current_state:
-                current_state = current_state[0]
-            else:
-                current_state = None
+            current_state = self._transition_function.get_state(current_state,
+                                                                symbol)
         return current_state is not None and self.is_final_state(current_state)
 
     def is_deterministic(self) -> bool:
@@ -275,25 +287,17 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             dfa.add_final_state(final)
         for state in self._states:
             for symbol in self._input_symbols:
-                state_to = self._transition_function(state, symbol)
-                if state_to:
-                    state_to = state_to[0]
-                else:
-                    state_to = None
+                state_to = self._transition_function.get_state(state, symbol)
                 if state_to is not None:
                     dfa.add_transition(state, symbol, state_to)
         return dfa
 
-    def _get_previous_transitions(self):
+    def _get_previous_transitions(self) -> PreviousTransitions:
         previous_transitions = PreviousTransitions(self._states,
                                                    self._input_symbols)
         for state in self._states:
             for symbol in self._input_symbols:
-                next0 = self._transition_function(state, symbol)
-                if next0:
-                    next0 = next0[0]
-                else:
-                    next0 = None
+                next0 = self._transition_function.get_state(state, symbol)
                 previous_transitions.add(next0, symbol, state)
         for symbol in self._input_symbols:
             previous_transitions.add(None, symbol, None)
@@ -346,15 +350,15 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             done = set()
             new_state = to_new_states[state]
             for symbol in self._input_symbols:
-                for next_node in self._transition_function(state, symbol):
-                    if next_node in states:
-                        next_node = to_new_states[next_node]
-                        if (next_node, symbol) not in done:
-                            dfa.add_transition(new_state, symbol, next_node)
-                            done.add((next_node, symbol))
+                next_node = self._transition_function.get_state(state, symbol)
+                if next_node and next_node in states:
+                    next_node = to_new_states[next_node]
+                    if (next_node, symbol) not in done:
+                        dfa.add_transition(new_state, symbol, next_node)
+                        done.add((next_node, symbol))
         return dfa
 
-    def _get_partition(self):
+    def _get_partition(self) -> Partition:
         previous_transitions = self._get_previous_transitions()
         finals = []
         non_finals = []
@@ -395,7 +399,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                         processing_list.insert(new_class, symbol)
         return partition
 
-    def is_equivalent_to(self, other):
+    def is_equivalent_to(self, other: FiniteAutomaton) -> bool:
         """ Check whether two automata are equivalent
 
         Parameters
@@ -434,7 +438,9 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         return list(self._start_state)[0]
 
     @staticmethod
-    def _is_equivalent_to_minimal(self_minimal, other_minimal):
+    def _is_equivalent_to_minimal(
+            self_minimal: "DeterministicFiniteAutomaton",
+            other_minimal: "DeterministicFiniteAutomaton") -> bool:
         to_process = [(self_minimal.start_state,
                        other_minimal.start_state)]
         matches = {self_minimal.start_state: other_minimal.start_state}

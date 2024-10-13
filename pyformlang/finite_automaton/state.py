@@ -22,7 +22,7 @@ class State(FiniteAutomatonObject):  # pylint: disable=too-few-public-methods
 
     """
 
-    def __init__(self, value):
+    def __init__(self, value: Any) -> None:
         super().__init__(value)
         self.index = None
         self.index_cfg_converter = None

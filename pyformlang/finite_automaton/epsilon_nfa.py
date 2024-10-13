@@ -2,16 +2,20 @@
 Nondeterministic Automaton with epsilon transitions
 """
 
-from typing import Set, Iterable, AbstractSet, Any
+# pylint: disable=too-many-arguments
 
-# pylint: disable=cyclic-import
-from pyformlang import finite_automaton
+from typing import Iterable, Set, AbstractSet, Tuple, Any
+
+from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton
+from pyformlang.regular_expression import Regex
 
 from .epsilon import Epsilon
 from .state import State
 from .symbol import Symbol
 from .nondeterministic_transition_function import \
     NondeterministicTransitionFunction
+
 from .regexable import Regexable
 from .finite_automaton import FiniteAutomaton
 from .finite_automaton import to_state, to_symbol
@@ -19,7 +23,6 @@ from .finite_automaton import to_state, to_symbol
 
 class EpsilonNFA(Regexable, FiniteAutomaton):
     """ Represents an epsilon NFA
-
 
     Parameters
     ----------
@@ -63,14 +66,13 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
 
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(
             self,
-            states: AbstractSet[State] = None,
-            input_symbols: AbstractSet[Symbol] = None,
+            states: AbstractSet[Any] = None,
+            input_symbols: AbstractSet[Any] = None,
             transition_function: NondeterministicTransitionFunction = None,
-            start_state: AbstractSet[State] = None,
-            final_states: AbstractSet[State] = None):
+            start_state: AbstractSet[Any] = None,
+            final_states: AbstractSet[Any] = None) -> None:
         super().__init__()
         if states is not None:
             states = {to_state(x) for x in states}
@@ -78,8 +80,8 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         if input_symbols is not None:
             input_symbols = {to_symbol(x) for x in input_symbols}
         self._input_symbols = input_symbols or set()
-        self._transition_function = \
-            transition_function or NondeterministicTransitionFunction()
+        if transition_function is not None:
+            self._transition_function = transition_function
         if start_state is not None:
             start_state = {to_state(x) for x in start_state}
         self._start_state = start_state or set()
@@ -248,20 +250,20 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
 
         """
         return len(self._start_state) <= 1 \
-            and self._transition_function.is_deterministic()\
+            and self._transition_function.is_deterministic() \
             and all({x} == self.eclose(x) for x in self._states)
 
-    def remove_epsilon_transitions(self) -> "NondeterministicFiniteAutomaton":
+    def remove_epsilon_transitions(self) \
+            -> NondeterministicFiniteAutomaton:
         """ Removes the epsilon transitions from the automaton
 
         Returns
         ----------
-        dfa :  :class:`~pyformlang.finite_automaton.\
-NondeterministicFiniteAutomaton`
+        dfa :  :class:`~pyformlang.finite_automaton. \
+            NondeterministicFiniteAutomaton`
             A non-deterministic finite automaton equivalent to the current \
-nfa, with no epsilon transition
+            nfa, with no epsilon transition
         """
-        from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
         nfa = NondeterministicFiniteAutomaton()
         for state in self._start_state:
             nfa.add_start_state(state)
@@ -282,7 +284,7 @@ nfa, with no epsilon transition
 
     def _to_deterministic_internal(self,
                                    eclose: bool) \
-            -> "DeterministicFiniteAutomaton":
+            -> DeterministicFiniteAutomaton:
         """ Transforms the epsilon-nfa into a dfa
 
         Parameters
@@ -296,7 +298,7 @@ nfa, with no epsilon transition
         .DeterministicFiniteAutomaton`
             A dfa equivalent to the current nfa
         """
-        dfa = finite_automaton.DeterministicFiniteAutomaton()
+        dfa = DeterministicFiniteAutomaton()
         # Add Eclose
         if eclose:
             start_eclose = self.eclose_iterable(self._start_state)
@@ -330,7 +332,8 @@ nfa, with no epsilon transition
                     dfa.add_final_state(s_from)
         return dfa
 
-    def to_deterministic(self) -> "DeterministicFiniteAutomaton":
+    def to_deterministic(self) \
+            -> DeterministicFiniteAutomaton:
         """ Transforms the epsilon-nfa into a dfa
 
         Returns
@@ -393,10 +396,10 @@ nfa, with no epsilon transition
                 enfa.add_transition(state, Epsilon(), state_to)
         return enfa
 
-    def __copy__(self):
+    def __copy__(self) -> "EpsilonNFA":
         return self.copy()
 
-    def to_regex(self) -> "Regex":
+    def to_regex(self) -> Regex:
         """ Transforms the EpsilonNFA to a regular expression
 
         Returns
@@ -417,7 +420,7 @@ nfa, with no epsilon transition
         True
 
         """
-        from pyformlang.regular_expression import Regex
+        # pylint: disable=protected-access
         enfas = [self.copy() for _ in self._final_states]
         final_states = list(self._final_states)
         for i in range(len(self._final_states)):
@@ -426,9 +429,7 @@ nfa, with no epsilon transition
                     enfas[j].remove_final_state(final_states[i])
         regex_l = []
         for enfa in enfas:
-            # pylint: disable=protected-access
             enfa._remove_all_basic_states()
-            # pylint: disable=protected-access
             regex_sub = enfa._get_regex_simple()
             if regex_sub:
                 regex_l.append(regex_sub)
@@ -465,7 +466,7 @@ nfa, with no epsilon transition
                              end_to_start,
                              end_to_end)
 
-    def _get_bi_transitions(self) -> (str, str, str, str):
+    def _get_bi_transitions(self) -> Tuple[str, str, str, str]:
         """ Internal method to compute the transition in the case of a \
         simple automaton
 
@@ -550,7 +551,7 @@ nfa, with no epsilon transition
             enfa.add_transition(trash, symbol, trash)
         return enfa
 
-    def __neg__(self):
+    def __neg__(self) -> "EpsilonNFA":
         """ Get the complement of the current Epsilon NFA
 
         Returns
@@ -622,7 +623,7 @@ nfa, with no epsilon transition
                             to_process.append((new_s0, new_s1))
         return enfa
 
-    def __and__(self, other):
+    def __and__(self, other: "EpsilonNFA") -> "EpsilonNFA":
         """ Computes the intersection of two Epsilon NFAs
 
         Parameters
@@ -637,8 +638,7 @@ nfa, with no epsilon transition
         """
         return self.get_intersection(other)
 
-    def get_difference(self, other: "EpsilonNFA") \
-            -> "EpsilonNFA":
+    def get_difference(self, other: "EpsilonNFA") -> "EpsilonNFA":
         """ Compute the difference with another Epsilon NFA
 
         Equivalent to:
@@ -680,7 +680,7 @@ nfa, with no epsilon transition
             other.add_symbol(symbol)
         return self.get_intersection(other.get_complement())
 
-    def __sub__(self, other):
+    def __sub__(self, other: "EpsilonNFA") -> "EpsilonNFA":
         """ Compute the difference with another Epsilon NFA
 
         Equivalent to:
@@ -734,7 +734,7 @@ nfa, with no epsilon transition
             enfa.add_start_state(final)
         return enfa
 
-    def __invert__(self):
+    def __invert__(self) -> "EpsilonNFA":
         """ Compute the reversed EpsilonNFA
 
         Returns
@@ -784,9 +784,8 @@ nfa, with no epsilon transition
                     processed.add(state)
         return True
 
-    def _remove_all_basic_states(self):
+    def _remove_all_basic_states(self) -> None:
         """ Remove all states which are not the start state or a final state
-
 
         CAREFUL: This method modifies the current automaton, for internal usage
         only!
@@ -801,7 +800,7 @@ nfa, with no epsilon transition
                     and state not in self._final_states):
                 self._remove_state(state)
 
-    def _remove_state(self, state: State):
+    def _remove_state(self, state: State) -> None:
         """ Removes a given state from the epsilon NFA
 
         CAREFUL: This method modifies the current automaton, for internal usage
@@ -846,7 +845,7 @@ nfa, with no epsilon transition
         # We make sure the automaton has the good structure
         self._create_or_transitions()
 
-    def minimize(self) -> "DeterministicFiniteAutomaton":
+    def minimize(self) -> DeterministicFiniteAutomaton:
         """ Minimize the current epsilon NFA
 
         Returns
@@ -870,7 +869,7 @@ nfa, with no epsilon transition
         """
         return self.to_deterministic().minimize()
 
-    def _create_or_transitions(self):
+    def _create_or_transitions(self) -> None:
         """ Creates a OR transition instead of several connections
 
         CAREFUL: This method modifies the automaton and is designed for \
@@ -898,12 +897,12 @@ nfa, with no epsilon transition
                                     next_symb,
                                     out_state)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return not self.is_empty()
 
 
 def get_temp(start_to_end: str, end_to_start: str, end_to_end: str) \
-        -> (str, str):
+        -> Tuple[str, str]:
     """ Gets a temp values in the computation of the simple automaton regex """
     temp = "epsilon"
     if (start_to_end != "epsilon"
@@ -972,6 +971,6 @@ def to_single_state(l_states: Iterable[State]) -> State:
     return State(";".join(values))
 
 
-def combine_state_pair(state0, state1):
+def combine_state_pair(state0: State, state1: State) -> State:
     """ Combine two states """
     return State(str(state0.value) + "; " + str(state1.value))

@@ -1,6 +1,10 @@
-""" An abstract class to represent something which are be transformed into
-a regex
+""" 
+An abstract class to represent something 
+which are be transformed into a regex
 """
+
+from pyformlang.finite_automaton import EpsilonNFA
+from pyformlang.regular_expression import Regex
 
 
 class Regexable:
@@ -8,7 +12,7 @@ class Regexable:
     a regex
     """
 
-    def to_regex(self) -> "Regex":
+    def to_regex(self) -> Regex:
         """ Tranforms the EpsilonNFA to a regular expression
 
         Returns
@@ -18,7 +22,7 @@ class Regexable:
         """
         raise NotImplementedError()
 
-    def union(self, other: "Regexable") -> "EpsilonNFA":
+    def union(self, other: "Regexable") -> EpsilonNFA:
         """ Makes the union of two regexable objects
 
         Parameters
@@ -36,7 +40,7 @@ class Regexable:
         regex = regex0 | regex1
         return regex.to_epsilon_nfa()
 
-    def concatenate(self, other: "Regexable") -> "EpsilonNFA":
+    def concatenate(self, other: "Regexable") -> EpsilonNFA:
         """ Makes the concatenation of two regexable objects
 
         Parameters
@@ -54,7 +58,7 @@ class Regexable:
         regex = regex0 + regex1
         return regex.to_epsilon_nfa()
 
-    def kleene_star(self) -> "EpsilonNFA":
+    def kleene_star(self) -> EpsilonNFA:
         """ Makes the kleene star of the current regexable object
 
         Returns

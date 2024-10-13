@@ -14,7 +14,7 @@ class FiniteAutomatonObject:  # pylint: disable=too-few-public-methods
         The value of the object
     """
 
-    def __init__(self, value: Any):
+    def __init__(self, value: Any) -> None:
         self._value = value
         self._hash = None
 

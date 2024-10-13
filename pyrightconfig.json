@@ -1,0 +1,23 @@
+{
+    "include": [
+      "pyformlang"
+    ],
+  
+    "exclude": [
+      "**/node_modules",
+      "**/__pycache__",
+      "**/.*",
+      "**/tests"
+    ],
+
+    "pythonVersion": "3.8",
+    "pythonPlatform": "Linux",
+  
+    "strictListInference": true,
+    "strictSetInference": true,
+    "strictDictionaryInference": true,
+    "strictParameterNoneValue": false,
+
+    "reportMissingParameterType": "warning",
+    "reportRedeclaration": "none",
+  }
