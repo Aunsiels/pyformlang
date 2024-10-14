@@ -2,16 +2,17 @@
 A class to read Python format regex
 """
 
-import re
-import string
-import unicodedata
+from typing import Union
+from re import compile as comp, Pattern
+from string import printable
+from unicodedata import lookup
 
-# pylint: disable=cyclic-import
-from pyformlang.regular_expression import regex, MisformedRegexError
+from pyformlang.regular_expression import MisformedRegexError
+from pyformlang.regular_expression.regex import Regex
 from pyformlang.regular_expression.regex_reader import \
     WRONG_PARENTHESIS_MESSAGE
 
-PRINTABLES = list(string.printable)
+PRINTABLES = list(printable)
 
 TRANSFORMATIONS = {
     "|": "\\|",
@@ -55,7 +56,7 @@ OCTAL = "01234567"
 ESCAPED_OCTAL = ["\\0", "\\1", "\\2", "\\3", "\\4", "\\5", "\\6", "\\7"]
 
 
-class PythonRegex(regex.Regex):
+class PythonRegex(Regex):
     """ Represents a regular expression as used in Python.
 
     It adds the following features to the basic regex:
@@ -98,11 +99,11 @@ class PythonRegex(regex.Regex):
 
     """
 
-    def __init__(self, python_regex):
-        if not isinstance(python_regex, str):
-            python_regex = python_regex.pattern
+    def __init__(self, python_regex: Union[str, Pattern[str]]) -> None:
+        if isinstance(python_regex, str):
+            comp(python_regex)  # Check if it is valid
         else:
-            re.compile(python_regex)  # Check if it is valid
+            python_regex = python_regex.pattern
 
         self._python_regex = python_regex
         self._replace_shortcuts()
@@ -114,7 +115,7 @@ class PythonRegex(regex.Regex):
         self._python_regex = self._python_regex.lstrip('\b')
         super().__init__(self._python_regex)
 
-    def _separate(self):
+    def _separate(self) -> None:
         regex_temp = []
         for symbol in self._python_regex:
             if self._should_escape_next_symbol(regex_temp):
@@ -193,7 +194,7 @@ class PythonRegex(regex.Regex):
                 while regex_to_recombine[idx_end] != "}":
                     idx_end += 1
                 name = "".join(regex_to_recombine[idx + 2: idx_end])
-                name = unicodedata.lookup(name)
+                name = lookup(name)
                 temp.append(TRANSFORMATIONS.get(name, name))
                 idx = idx_end + 1
             elif regex_to_recombine[idx] == "\\u":

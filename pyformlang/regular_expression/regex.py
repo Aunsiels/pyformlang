@@ -1,16 +1,17 @@
 """
 Representation of a regular expression
 """
-from typing import Iterable
 
-from pyformlang import finite_automaton
-# pylint: disable=cyclic-import
-import pyformlang.regular_expression.regex_objects
-from pyformlang import cfg
-from pyformlang.finite_automaton import State
-# pylint: disable=cyclic-import
+from typing import List, Iterable, Tuple, Any
+
+from pyformlang.finite_automaton import Epsilon as FAEpsilon
+from pyformlang.finite_automaton import EpsilonNFA, State, Symbol
+from pyformlang.cfg.cfg import CFG, Production
+from pyformlang.cfg.utils import to_variable
 from pyformlang.regular_expression.regex_reader import RegexReader
-from pyformlang import regular_expression
+from pyformlang.regular_expression.python_regex import PythonRegex
+from pyformlang.regular_expression.regex_objects import \
+    Epsilon as RegexEpsilon, Empty, Concatenation, Union, KleeneStar
 
 
 class Regex(RegexReader):
@@ -85,16 +86,11 @@ class Regex(RegexReader):
 
     """
 
-    def __init__(self, regex):
-        self.head = None
-        self.sons = None
+    def __init__(self, regex: str) -> None:
         super().__init__(regex)
+        self.sons: List[Regex] = []
         self._counter = 0
-        self._initialize_enfa()
-        self._enfa = None
-
-    def _initialize_enfa(self):
-        self._enfa = finite_automaton.EpsilonNFA()
+        self._enfa = EpsilonNFA()
 
     def get_number_symbols(self) -> int:
         """ Gives the number of symbols in the regex
@@ -139,7 +135,7 @@ class Regex(RegexReader):
             return 1 + sum(son.get_number_operators() for son in self.sons)
         return 0
 
-    def to_epsilon_nfa(self):
+    def to_epsilon_nfa(self) -> EpsilonNFA:
         """ Transforms the regular expression into an epsilon NFA
 
         Returns
@@ -154,28 +150,28 @@ class Regex(RegexReader):
         >>> regex.to_epsilon_nfa()
 
         """
-        self._initialize_enfa()
+        self._enfa = EpsilonNFA()
         s_initial = self._set_and_get_initial_state_in_enfa()
         s_final = self._set_and_get_final_state_in_enfa()
         self._process_to_enfa(s_initial, s_final)
         return self._enfa
 
-    def _set_and_get_final_state_in_enfa(self):
+    def _set_and_get_final_state_in_enfa(self) -> State:
         s_final = self._get_next_state_enfa()
         self._enfa.add_final_state(s_final)
         return s_final
 
-    def _get_next_state_enfa(self):
-        s_final = finite_automaton.State(self._counter)
+    def _get_next_state_enfa(self) -> State:
+        s_final = State(self._counter)
         self._counter += 1
         return s_final
 
-    def _set_and_get_initial_state_in_enfa(self):
+    def _set_and_get_initial_state_in_enfa(self) -> State:
         s_initial = self._get_next_state_enfa()
         self._enfa.add_start_state(s_initial)
         return s_initial
 
-    def _process_to_enfa(self, s_from: State, s_to: State):
+    def _process_to_enfa(self, s_from: State, s_to: State) -> None:
         """ Internal function to add a regex to a given epsilon NFA
 
         Parameters
@@ -190,29 +186,24 @@ class Regex(RegexReader):
         else:
             self._process_to_enfa_when_no_son(s_from, s_to)
 
-    def _process_to_enfa_when_no_son(self, s_from, s_to):
-        if isinstance(self.head,
-                      pyformlang.regular_expression.regex_objects.Epsilon):
+    def _process_to_enfa_when_no_son(self, s_from: State, s_to: State) -> None:
+        if isinstance(self.head, RegexEpsilon):
             self._add_epsilon_transition_in_enfa_between(s_from, s_to)
-        elif not isinstance(self.head,
-                            pyformlang.regular_expression.regex_objects.Empty):
-            symbol = finite_automaton.Symbol(self.head.value)
+        elif not isinstance(self.head, Empty):
+            symbol = Symbol(self.head.value)
             self._enfa.add_transition(s_from, symbol, s_to)
 
-    def _process_to_enfa_when_sons(self, s_from, s_to):
+    def _process_to_enfa_when_sons(self, s_from: State, s_to: State) -> None:
         if isinstance(
-                self.head,
-                pyformlang.regular_expression.regex_objects.Concatenation):
+                self.head, Concatenation):
             self._process_to_enfa_concatenation(s_from, s_to)
-        elif isinstance(self.head,
-                        pyformlang.regular_expression.regex_objects.Union):
+        elif isinstance(self.head, Union):
             self._process_to_enfa_union(s_from, s_to)
         elif isinstance(
-                self.head,
-                pyformlang.regular_expression.regex_objects.KleeneStar):
+                self.head, KleeneStar):
             self._process_to_enfa_kleene_star(s_from, s_to)
 
-    def _process_to_enfa_kleene_star(self, s_from, s_to):
+    def _process_to_enfa_kleene_star(self, s_from: State, s_to: State) -> None:
         # pylint: disable=protected-access
         state_first = self._get_next_state_enfa()
         state_second = self._get_next_state_enfa()
@@ -222,30 +213,40 @@ class Regex(RegexReader):
         self._add_epsilon_transition_in_enfa_between(state_second, s_to)
         self._process_to_enfa_son(state_first, state_second, 0)
 
-    def _process_to_enfa_union(self, s_from, s_to):
+    def _process_to_enfa_union(self, s_from: State, s_to: State) -> None:
         son_number = 0
         self._create_union_branch_in_enfa(s_from, s_to, son_number)
         son_number = 1
         self._create_union_branch_in_enfa(s_from, s_to, son_number)
 
-    def _create_union_branch_in_enfa(self, s_from, s_to, son_number):
+    def _create_union_branch_in_enfa(self,
+                                     s_from: State,
+                                     s_to: State,
+                                     son_number: int) -> None:
         state0 = self._get_next_state_enfa()
         state2 = self._get_next_state_enfa()
         self._add_epsilon_transition_in_enfa_between(s_from, state0)
         self._add_epsilon_transition_in_enfa_between(state2, s_to)
         self._process_to_enfa_son(state0, state2, son_number)
 
-    def _process_to_enfa_concatenation(self, s_from, s_to):
+    def _process_to_enfa_concatenation(self,
+                                       s_from: State,
+                                       s_to: State) -> None:
         state0 = self._get_next_state_enfa()
         state1 = self._get_next_state_enfa()
         self._add_epsilon_transition_in_enfa_between(state0, state1)
         self._process_to_enfa_son(s_from, state0, 0)
         self._process_to_enfa_son(state1, s_to, 1)
 
-    def _add_epsilon_transition_in_enfa_between(self, state0, state1):
-        self._enfa.add_transition(state0, finite_automaton.Epsilon(), state1)
+    def _add_epsilon_transition_in_enfa_between(self,
+                                                state0: State,
+                                                state1: State) -> None:
+        self._enfa.add_transition(state0, FAEpsilon(), state1)
 
-    def _process_to_enfa_son(self, s_from, s_to, index_son):
+    def _process_to_enfa_son(self,
+                             s_from: State,
+                             s_to: State,
+                             index_son: int) -> None:
         # pylint: disable=protected-access
         self.sons[index_son]._counter = self._counter
         self.sons[index_son]._enfa = self._enfa
@@ -280,7 +281,7 @@ class Regex(RegexReader):
             temp += son.get_tree_str(depth + 1)
         return temp
 
-    def to_cfg(self, starting_symbol="S") -> "CFG":
+    def to_cfg(self, starting_symbol: str = "S") -> CFG:
         """
         Turns the regex into a context-free grammar
 
@@ -304,11 +305,12 @@ class Regex(RegexReader):
 
         """
         productions, _ = self._get_production(starting_symbol)
-        cfg_res = cfg.CFG(start_symbol=cfg.utils.to_variable(starting_symbol),
+        cfg_res = CFG(start_symbol=to_variable(starting_symbol),
                           productions=set(productions))
         return cfg_res
 
-    def _get_production(self, current_symbol, count=0):
+    def _get_production(self, current_symbol: Any, count: int = 0) \
+            -> Tuple[List[Production], int]:
         next_symbols = []
         next_productions = []
         for son in self.sons:
@@ -322,7 +324,7 @@ class Regex(RegexReader):
         next_productions += new_prods
         return next_productions, count
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.head.get_str_repr([str(son) for son in self.sons])
 
     def union(self, other: "Regex") -> "Regex":
@@ -357,11 +359,11 @@ class Regex(RegexReader):
 
         """
         regex = Regex("")
-        regex.head = pyformlang.regular_expression.regex_objects.Union()
+        regex.head = Union()
         regex.sons = [self, other]
         return regex
 
-    def __or__(self, other):
+    def __or__(self, other: "Regex") -> "Regex":
         """ Makes the union with another regex
 
         Parameters
@@ -427,12 +429,11 @@ class Regex(RegexReader):
         True
         """
         regex = Regex("")
-        regex.head = \
-            pyformlang.regular_expression.regex_objects.Concatenation()
+        regex.head = Concatenation()
         regex.sons = [self, other]
         return regex
 
-    def __add__(self, other):
+    def __add__(self, other: "Regex") -> "Regex":
         """ Concatenates a regular expression with an other one
 
         Parameters
@@ -485,11 +486,11 @@ class Regex(RegexReader):
 
         """
         regex = Regex("")
-        regex.head = pyformlang.regular_expression.regex_objects.KleeneStar()
+        regex.head = KleeneStar()
         regex.sons = [self]
         return regex
 
-    def from_string(self, regex_str: str):
+    def from_string(self, regex_str: str) -> "Regex":
         """ Construct a regex from a string. For internal usage.
 
         Equivalent to the constructor of Regex
@@ -515,7 +516,7 @@ class Regex(RegexReader):
         """
         return Regex(regex_str)
 
-    def accepts(self, word: Iterable[str]) -> bool:
+    def accepts(self, word: Iterable[Any]) -> bool:
         """
         Check if a word matches (completely) the regex
 
@@ -543,3 +544,31 @@ class Regex(RegexReader):
         if self._enfa is None:
             self._enfa = self.to_epsilon_nfa()
         return self._enfa.accepts(word)
+
+    @classmethod
+    def from_python_regex(cls, regex: str) -> PythonRegex:
+        """
+        Creates a regex from a string using the python way to write it.
+
+        Careful:
+        Not everything is implemented, check PythonRegex class \
+        documentation for more details.
+
+        It is equivalent to calling PythonRegex constructor directly.
+
+        Parameters
+        ----------
+        regex : str
+            The regex given as a string or compile regex
+
+        Returns
+        -------
+        python_regex : :class:`~pyformlang.regular_expression.PythonRegex`
+            The regex
+
+        Examples
+        --------
+        >>> Regex.from_python_regex("a+[cd]")
+
+        """
+        return PythonRegex(regex)
