@@ -86,7 +86,7 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
 
         """
         word = [to_symbol(x) for x in word]
-        current_states = self._start_state
+        current_states = self._start_states
         for symbol in word:
             current_states = self._get_next_states_iterable(current_states,
                                                             symbol)
@@ -111,7 +111,7 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         False
 
         """
-        return len(self._start_state) <= 1 and \
+        return len(self._start_states) <= 1 and \
             self._transition_function.is_deterministic()
 
     def to_deterministic(self) -> DeterministicFiniteAutomaton:

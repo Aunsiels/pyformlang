@@ -49,7 +49,7 @@ class FiniteAutomaton:
         self._transition_function: Union[NondeterministicTransitionFunction,
                                          TransitionFunction] \
                 = NondeterministicTransitionFunction()
-        self._start_state: Set[State] = set()
+        self._start_states: Set[State] = set()
         self._final_states: Set[State] = set()
         self.__transitive_closure: Optional[MultiDiGraph] = None
 
@@ -227,7 +227,7 @@ class FiniteAutomaton:
 
         """
         state = to_state(state)
-        self._start_state.add(state)
+        self._start_states.add(state)
         self._states.add(state)
         return 1
 
@@ -255,8 +255,8 @@ class FiniteAutomaton:
 
         """
         state = to_state(state)
-        if state in self._start_state:
-            self._start_state.remove(state)
+        if state in self._start_states:
+            self._start_states.remove(state)
             return 1
         return 0
 
@@ -390,7 +390,7 @@ class FiniteAutomaton:
     @property
     def start_states(self) -> Set[State]:
         """The start states"""
-        return self._start_state
+        return self._start_states
 
     def add_symbol(self, symbol: Any) -> None:
         """ Add a symbol
@@ -431,7 +431,7 @@ class FiniteAutomaton:
 
         """
         fst = FST()
-        for start_state in self._start_state:
+        for start_state in self._start_states:
             fst.add_start_state(start_state.value)
         for final_state in self._final_states:
             fst.add_final_state(final_state.value)
@@ -464,7 +464,7 @@ class FiniteAutomaton:
 
         """
         to_process = []
-        for state in self._start_state:
+        for state in self._start_states:
             to_process.append((state, set()))
         while to_process:
             current, visited = to_process.pop()

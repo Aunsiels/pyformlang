@@ -84,14 +84,14 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             self._transition_function = transition_function
         if start_state is not None:
             start_state = {to_state(x) for x in start_state}
-        self._start_state = start_state or set()
+        self._start_states = start_state or set()
         if final_states is not None:
             final_states = {to_state(x) for x in final_states}
         self._final_states = final_states or set()
         for state in self._final_states:
             if state is not None and state not in self._states:
                 self._states.add(state)
-        for state in self._start_state:
+        for state in self._start_states:
             if state is not None and state not in self._states:
                 self._states.add(state)
 
@@ -150,7 +150,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
 
         """
         word = [to_symbol(x) for x in word]
-        current_states = self.eclose_iterable(self._start_state)
+        current_states = self.eclose_iterable(self._start_states)
         for symbol in word:
             if symbol == Epsilon():
                 continue
@@ -249,7 +249,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         False
 
         """
-        return len(self._start_state) <= 1 \
+        return len(self._start_states) <= 1 \
             and self._transition_function.is_deterministic() \
             and all({x} == self.eclose(x) for x in self._states)
 
@@ -265,11 +265,11 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             nfa, with no epsilon transition
         """
         nfa = NondeterministicFiniteAutomaton()
-        for state in self._start_state:
+        for state in self._start_states:
             nfa.add_start_state(state)
         for state in self._final_states:
             nfa.add_final_state(state)
-        start_eclose = self.eclose_iterable(self._start_state)
+        start_eclose = self.eclose_iterable(self._start_states)
         for state in start_eclose:
             nfa.add_start_state(state)
         for state in self._states:
@@ -301,9 +301,9 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         dfa = DeterministicFiniteAutomaton()
         # Add Eclose
         if eclose:
-            start_eclose = self.eclose_iterable(self._start_state)
+            start_eclose = self.eclose_iterable(self._start_states)
         else:
-            start_eclose = self._start_state
+            start_eclose = self._start_states
         start_state = to_single_state(start_eclose)
         dfa.add_start_state(start_state)
         to_process = [start_eclose]
@@ -382,7 +382,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
 
         """
         enfa = EpsilonNFA()
-        for start in self._start_state:
+        for start in self._start_states:
             enfa.add_start_state(start)
         for final in self._final_states:
             enfa.add_final_state(final)
@@ -447,15 +447,15 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         regex : str
             A regex representing the automaton
         """
-        if not self._final_states or not self._start_state:
+        if not self._final_states or not self._start_states:
             return ""
-        if len(self._final_states) != 1 or len(self._start_state) != 1:
+        if len(self._final_states) != 1 or len(self._start_states) != 1:
             raise ValueError("The automaton is not simple enough!")
-        if self._start_state == self._final_states:
+        if self._start_states == self._final_states:
             # We are suppose to have only one good symbol
             for symbol in self._input_symbols:
                 out_states = self._transition_function(
-                    list(self._start_state)[0], symbol)
+                    list(self._start_states)[0], symbol)
                 if out_states:
                     return "(" + str(symbol.value) + ")*"
             return "epsilon"
@@ -481,7 +481,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             The transition from the end state to the end state
         ----------
         """
-        start = list(self._start_state)[0]
+        start = list(self._start_states)[0]
         end = list(self._final_states)[0]
         start_to_start = "epsilon"
         start_to_end = ""
@@ -728,7 +728,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                     enfa.add_transition(state1, symbol, state0)
             for state1 in self._transition_function(state0, Epsilon()):
                 enfa.add_transition(state1, Epsilon(), state0)
-        for start in self._start_state:
+        for start in self._start_states:
             enfa.add_final_state(start)
         for final in self._final_states:
             enfa.add_start_state(final)
@@ -766,7 +766,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         """
         to_process = []
         processed = set()
-        for start in self._start_state:
+        for start in self._start_states:
             to_process.append(start)
             processed.add(start)
         while to_process:
@@ -796,7 +796,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         self._create_or_transitions()
         states = self._states.copy()
         for state in states:
-            if (state not in self._start_state
+            if (state not in self._start_states
                     and state not in self._final_states):
                 self._remove_state(state)
 

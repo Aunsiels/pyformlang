@@ -125,10 +125,10 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             transition_function or TransitionFunction()
         if start_state is not None:
             start_state = to_state(start_state)
-            self._start_state = {start_state}
+            self._start_states = {start_state}
             self._states.add(start_state)
         else:
-            self._start_state = set()
+            self._start_states = set()
 
     def add_start_state(self, state: Any) -> int:
     def add_start_state(self, state: Any) -> int:
@@ -152,7 +152,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         """
         state = to_state(state)
-        self._start_state = {state}
+        self._start_states = {state}
         self._states.add(state)
         return 1
 
@@ -179,8 +179,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         """
         state = to_state(state)
-        if self._start_state == {state}:
-            self._start_state.remove(state)
+        if self._start_states == {state}:
+            self._start_states.remove(state)
             return 1
         return 0
 
@@ -211,8 +211,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         """
         word = [to_symbol(x) for x in word]
         current_state = None
-        if self._start_state:
-            current_state = list(self._start_state)[0]
+        if self._start_states:
+            current_state = list(self._start_states)[0]
         for symbol in word:
             if current_state is None:
                 return False
@@ -281,8 +281,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         """
         dfa = DeterministicFiniteAutomaton()
-        if self._start_state:
-            dfa.add_start_state(list(self._start_state)[0])
+        if self._start_states:
+            dfa.add_start_state(list(self._start_states)[0])
         for final in self._final_states:
             dfa.add_final_state(final)
         for state in self._states:
@@ -324,7 +324,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         True
 
         """
-        if not self._start_state or not self._final_states:
+        if not self._start_states or not self._final_states:
             res = DeterministicFiniteAutomaton()
             res.add_start_state(State("Empty"))
             return res
@@ -342,7 +342,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                 to_new_states[state] = new_state
         # Build the DFA
         dfa = DeterministicFiniteAutomaton()
-        for state in self._start_state:
+        for state in self._start_states:
             dfa.add_start_state(to_new_states[state])
         for state in states:
             if state in self._final_states:
@@ -433,9 +433,9 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         return self._is_equivalent_to_minimal(self_minimal, other_minimal)
 
     @property
-    def start_state(self) -> State:
+    def start_state(self) -> Optional[State]:
         """ The start state """
-        return list(self._start_state)[0]
+        return list(self._start_states)[0] if self._start_states else None
 
     @staticmethod
     def _is_equivalent_to_minimal(
