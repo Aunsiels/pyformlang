@@ -88,7 +88,7 @@ class Regex(RegexReader):
 
     def __init__(self, regex: str) -> None:
         super().__init__(regex)
-        self.sons: List[Regex] = []
+        self.sons: List[Regex] = [] # type: ignore
         self._counter = 0
         self._enfa = EpsilonNFA()
 
