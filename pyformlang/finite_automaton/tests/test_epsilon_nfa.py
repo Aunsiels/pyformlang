@@ -633,6 +633,16 @@ class TestEpsilonNFA(unittest.TestCase):
             [Symbol("d"), Symbol("e"), Symbol("f")] in accepted_words)
         self.assertEqual(len(accepted_words), 5)
 
+    def test_cyclic_word_generation(self):
+        enfa = get_cyclic_enfa_example()
+        max_length = 10
+        accepted_words = [[Symbol("a")] +
+                          [Symbol("b")] * x +
+                          [Symbol("c")]
+                          for x in range(1, max_length - 1)]
+        actual_accepted_words = list(enfa.get_accepted_words(max_length))
+        self.assertEqual(accepted_words, actual_accepted_words)
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """
@@ -746,7 +756,7 @@ def get_example_non_minimal():
 def get_enfa_example_for_word_generation():
     """ ENFA example for the word generation test """
     enfa = EpsilonNFA()
-    states = [State(x) for x in range(0, 9)]
+    states = [State(x) for x in range(9)]
     symbol_a = Symbol("a")
     symbol_b = Symbol("b")
     symbol_c = Symbol("c")
@@ -771,4 +781,23 @@ def get_enfa_example_for_word_generation():
     enfa.add_final_state(states[4])
     enfa.add_final_state(states[6])
     enfa.add_final_state(states[8])
+    return enfa
+
+
+def get_cyclic_enfa_example():
+    """ ENFA example with a cycle on the path to the final state """
+    enfa = EpsilonNFA()
+    states = [State(x) for x in range(4)]
+    symbol_a = Symbol("a")
+    symbol_b = Symbol("b")
+    symbol_c = Symbol("c")
+    epsilon = Epsilon()
+    enfa.add_transitions([
+        (states[0], symbol_a, states[1]),
+        (states[1], symbol_b, states[2]),
+        (states[2], epsilon, states[1]),
+        (states[2], symbol_c, states[3]),
+    ])
+    enfa.add_start_state(states[0])
+    enfa.add_final_state(states[3])
     return enfa

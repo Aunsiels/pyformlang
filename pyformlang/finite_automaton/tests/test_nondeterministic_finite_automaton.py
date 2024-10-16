@@ -136,7 +136,7 @@ def get_nfa_example_for_word_generation():
     example for the word generation test.
     """
     nfa = NondeterministicFiniteAutomaton()
-    states = [State(x) for x in range(0, 9)]
+    states = [State(x) for x in range(9)]
     symbol_a = Symbol("a")
     symbol_b = Symbol("b")
     symbol_c = Symbol("c")

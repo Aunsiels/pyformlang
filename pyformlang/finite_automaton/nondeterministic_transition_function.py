@@ -208,4 +208,4 @@ class NondeterministicTransitionFunction:
         if state_from in self._transitions:
             for symb_by, states_to in self._transitions[state_from].items():
                 for state_to in states_to:
-                    yield (symb_by, state_to)
+                    yield symb_by, state_to

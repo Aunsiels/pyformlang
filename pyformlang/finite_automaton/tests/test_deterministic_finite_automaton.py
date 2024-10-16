@@ -341,7 +341,7 @@ def get_dfa_example():
 def get_dfa_example_for_word_generation():
     """ DFA example for the word generation test """
     dfa = DeterministicFiniteAutomaton()
-    states = [State(x) for x in range(0, 4)]
+    states = [State(x) for x in range(4)]
     symbol_a = Symbol("a")
     symbol_b = Symbol("b")
     symbol_c = Symbol("c")
