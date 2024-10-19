@@ -1,6 +1,7 @@
 """ A general finite automaton representation """
 
 from typing import List, Iterable, Set, Any
+from collections import deque
 
 import networkx as nx
 from networkx.drawing.nx_pydot import write_dot
@@ -599,11 +600,11 @@ class FiniteAutomaton:
         """
         Gets words accepted by the finite automaton.
         """
-        states_to_visit = [(start_state, [])
-                           for start_state in self.start_states]
+        states_to_visit = deque((start_state, [])
+                                for start_state in self.start_states)
         states_leading_to_final = self._get_states_leading_to_final()
         while states_to_visit:
-            current_state, current_word = states_to_visit.pop(0)
+            current_state, current_word = states_to_visit.popleft()
             if len(current_word) > max_length and max_length != -1:
                 continue
             transitions = self._transition_function.get_transitions_from(
@@ -626,8 +627,8 @@ class FiniteAutomaton:
         """
         leading_to_final = self.final_states.copy()
         visited = set()
-        states_to_process = [(None, start_state)
-                             for start_state in self.start_states]
+        states_to_process = deque((None, start_state)
+                                  for start_state in self.start_states)
         while states_to_process:
             previous_state, current_state = states_to_process.pop()
             if previous_state and current_state in leading_to_final:
