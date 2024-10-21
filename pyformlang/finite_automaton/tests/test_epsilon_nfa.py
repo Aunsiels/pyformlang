@@ -824,6 +824,7 @@ def get_cyclic_enfa_example():
     enfa.add_final_state(states[3])
     return enfa
 
+
 def get_epsilon_cycle_enfa_example():
     """ ENFA example with an epsilon cycle """
     enfa = EpsilonNFA()
