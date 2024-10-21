@@ -600,25 +600,26 @@ class FiniteAutomaton:
         """
         Gets words accepted by the finite automaton.
         """
-        if max_length and max_length < 0:
+        if max_length is not None and max_length < 0:
             return []
-        states_to_visit = deque((start_state, [])
+        states_to_visit = deque((start_state, start_state, [])
                                 for start_state in self.start_states)
         states_leading_to_final = self._get_states_leading_to_final()
         while states_to_visit:
-            current_state, current_word = states_to_visit.popleft()
-            if max_length and len(current_word) > max_length:
+            last_state, current_state, current_word = states_to_visit.popleft()
+            if max_length is not None and len(current_word) > max_length:
                 continue
             transitions = self._transition_function.get_transitions_from(
                 current_state)
             for symbol, next_state in transitions:
-                if symbol == Epsilon() and next_state == current_state:
-                    continue
+                if symbol == Epsilon() and next_state == last_state:
+                    continue    # avoiding epsilon cycles
                 if next_state in states_leading_to_final:
                     temp_word = current_word.copy()
                     if symbol != Epsilon():
                         temp_word.append(symbol)
-                    states_to_visit.append((next_state, temp_word))
+                        last_state = next_state
+                    states_to_visit.append((last_state, next_state, temp_word))
             if self.is_final_state(current_state):
                 yield current_word
 

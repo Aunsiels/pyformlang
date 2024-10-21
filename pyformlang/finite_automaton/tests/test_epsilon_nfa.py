@@ -637,11 +637,33 @@ class TestEpsilonNFA(unittest.TestCase):
         enfa = get_cyclic_enfa_example()
         max_length = 10
         accepted_words = [[Symbol("a")] +
-                          [Symbol("b")] * x +
+                          [Symbol("b")] * (i + 1) +
                           [Symbol("c")]
-                          for x in range(1, max_length - 1)]
+                          for i in range(max_length - 2)]
         actual_accepted_words = list(enfa.get_accepted_words(max_length))
         self.assertEqual(accepted_words, actual_accepted_words)
+
+    def test_epsilon_cycle_word_generation(self):
+        enfa = get_epsilon_cycle_enfa_example()
+        max_length = 4
+        accepted_words = list(enfa.get_accepted_words(max_length))
+        self.assertTrue([] in accepted_words)
+        self.assertTrue([Symbol("a"), Symbol("c")] in accepted_words)
+        self.assertTrue([Symbol("a"),
+                         Symbol("b"),Symbol("c")] in accepted_words)
+        self.assertTrue([Symbol("a"), Symbol("b"),
+                         Symbol("b"), Symbol("c")] in accepted_words)
+        self.assertEqual(len(accepted_words), 4)
+
+    def test_max_length_zero_accepting_empty_string(self):
+        enfa = get_enfa_example_for_word_generation()
+        accepted_words = list(enfa.get_accepted_words(0))
+        self.assertEqual(accepted_words, [[]])
+
+    def test_max_length_zero_not_accepting_empty_string(self):
+        enfa = get_cyclic_enfa_example()
+        accepted_words = list(enfa.get_accepted_words(0))
+        self.assertEqual(accepted_words, [])
 
 
 def get_digits_enfa():
@@ -799,5 +821,26 @@ def get_cyclic_enfa_example():
         (states[2], symbol_c, states[3]),
     ])
     enfa.add_start_state(states[0])
+    enfa.add_final_state(states[3])
+    return enfa
+
+def get_epsilon_cycle_enfa_example():
+    """ ENFA example with an epsilon cycle """
+    enfa = EpsilonNFA()
+    states = [State(x) for x in range(4)]
+    symbol_a = Symbol("a")
+    symbol_b = Symbol("b")
+    symbol_c = Symbol("c")
+    epsilon = Epsilon()
+    enfa.add_transitions([
+        (states[0], epsilon, states[0]),
+        (states[0], symbol_a, states[1]),
+        (states[1], symbol_b, states[1]),
+        (states[1], epsilon, states[2]),
+        (states[2], epsilon, states[1]),
+        (states[1], symbol_c, states[3]),
+    ])
+    enfa.add_start_state(states[0])
+    enfa.add_final_state(states[0])
     enfa.add_final_state(states[3])
     return enfa
