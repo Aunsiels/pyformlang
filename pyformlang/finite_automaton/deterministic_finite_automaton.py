@@ -300,23 +300,6 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             previous_transitions.add(None, symbol, None)
         return previous_transitions
 
-    def _get_reachable_states(self) -> AbstractSet[State]:
-        """ Get all states which are reachable """
-        to_process = []
-        processed = set()
-        for state in self._start_state:
-            to_process.append(state)
-            processed.add(state)
-        while to_process:
-            current = to_process.pop()
-            for symbol in self._input_symbols:
-                next_state = self._transition_function(current, symbol)
-                if not next_state or next_state[0] in processed:
-                    continue
-                to_process.append(next_state[0])
-                processed.add(next_state[0])
-        return processed
-
     def minimize(self) -> "DeterministicFiniteAutomaton":
         """ Minimize the current DFA
 

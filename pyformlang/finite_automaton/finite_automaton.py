@@ -1,6 +1,6 @@
 """ A general finite automaton representation """
 
-from typing import List, Iterable, Set, Any
+from typing import List, Iterable, Set, Optional, Any
 from collections import deque
 
 import networkx as nx
@@ -595,17 +595,19 @@ class FiniteAutomaton:
         self_dfa = self.to_deterministic()
         return self_dfa.is_equivalent_to(other)
 
-    def get_accepted_words(self, max_length: int = -1) \
+    def get_accepted_words(self, max_length: Optional[int] = None) \
             -> Iterable[List[Symbol]]:
         """
         Gets words accepted by the finite automaton.
         """
+        if max_length and max_length < 0:
+            return []
         states_to_visit = deque((start_state, [])
                                 for start_state in self.start_states)
         states_leading_to_final = self._get_states_leading_to_final()
         while states_to_visit:
             current_state, current_word = states_to_visit.popleft()
-            if len(current_word) > max_length and max_length != -1:
+            if max_length and len(current_word) > max_length:
                 continue
             transitions = self._transition_function.get_transitions_from(
                 current_state)
@@ -643,6 +645,18 @@ class FiniteAutomaton:
                 for next_state in next_states:
                     states_to_process.append((current_state, next_state))
         return leading_to_final
+
+    def _get_reachable_states(self) -> Set[State]:
+        """ Get all states which are reachable """
+        visited = set()
+        states_to_process = deque(self.start_states)
+        while states_to_process:
+            current_state = states_to_process.pop()
+            visited.add(current_state)
+            for next_state in self._get_next_states_from(current_state):
+                if next_state not in visited:
+                    states_to_process.append(next_state)
+        return visited
 
     def _get_next_states_from(self, state_from: State) -> Set[State]:
         """ Gets a set of states that are next to the given one """
