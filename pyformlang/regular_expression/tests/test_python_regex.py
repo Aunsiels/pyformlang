@@ -203,8 +203,8 @@ class TestPythonRegex(unittest.TestCase):
         self.assertEqual(r_python.fullmatch(s_test) is not None, r_pyformlang.accepts(s_test))
 
     def test_backslash(self):
-        self._test_compare(".*", "]")
         self._test_compare(".*", "\\")
+        self._test_compare(".*", "]")
 
     def test_escape_dot(self):
         self._test_compare("\\.", ".")
@@ -246,7 +246,7 @@ class TestPythonRegex(unittest.TestCase):
         self._test_compare(r"[a\b]", "\\b")
         self._test_compare(r"[a\b]", "\\")
 
-    def test_backslash(self):
+    def test_backslash2(self):
         self._test_compare(r"\t", "t")
         self._test_compare(r"\t", "\t")
         self._test_compare(r"\t", "\\t")

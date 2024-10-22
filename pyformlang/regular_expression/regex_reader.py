@@ -227,7 +227,7 @@ def _pre_process_regex(regex: str) -> str:
         if not previous_is_escape and (current_c in SPECIAL_SYMBOLS) and \
                 pos != len(regex) - 1 and regex[pos + 1] != " ":
             res.append(" ")
-        previous_is_escape = current_c == "\\"
+        previous_is_escape = current_c == "\\" and not previous_is_escape
         pos += 1
     return "".join(res)
 
