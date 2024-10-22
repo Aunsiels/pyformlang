@@ -102,7 +102,7 @@ class TestTransitionFunction:
         transition_function.add_transition(states[1], symbol_c, states[2])
         transition_function.add_transition(states[1], symbol_d, states[3])
         transitions = list(transition_function.get_transitions_from(states[1]))
-        self.assertTrue((symbol_b, states[2]) in transitions)
-        self.assertTrue((symbol_c, states[2]) in transitions)
-        self.assertTrue((symbol_d, states[3]) in transitions)
-        self.assertEqual(len(transitions), 3)
+        assert (symbol_b, states[2]) in transitions
+        assert (symbol_c, states[2]) in transitions
+        assert (symbol_d, states[3]) in transitions
+        assert len(transitions) == 3

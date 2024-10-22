@@ -119,13 +119,12 @@ class TestNondeterministicFiniteAutomaton:
     def test_word_generation(self):
         nfa = get_nfa_example_for_word_generation()
         accepted_words = list(nfa.get_accepted_words())
-        self.assertTrue([] in accepted_words)
-        self.assertTrue([Symbol("a"), Symbol("b")] in accepted_words)
-        self.assertTrue([Symbol("a"), Symbol("c")] in accepted_words)
-        self.assertTrue([Symbol("d"), Symbol("e")] in accepted_words)
-        self.assertTrue(
-            [Symbol("d"), Symbol("e"), Symbol("f")] in accepted_words)
-        self.assertEqual(len(accepted_words), 5)
+        assert [] in accepted_words
+        assert [Symbol("a"), Symbol("b")] in accepted_words
+        assert [Symbol("a"), Symbol("c")] in accepted_words
+        assert [Symbol("d"), Symbol("e")] in accepted_words
+        assert [Symbol("d"), Symbol("e"), Symbol("f")] in accepted_words
+        assert len(accepted_words) == 5
 
 
 def get_nfa_example_for_word_generation():

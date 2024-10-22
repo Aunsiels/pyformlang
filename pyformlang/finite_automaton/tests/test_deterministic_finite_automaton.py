@@ -283,10 +283,10 @@ class TestDeterministicFiniteAutomaton:
     def test_word_generation(self):
         dfa = get_dfa_example_for_word_generation()
         accepted_words = list(dfa.get_accepted_words())
-        self.assertTrue([] in accepted_words)
-        self.assertTrue([Symbol("b"), Symbol("c")] in accepted_words)
-        self.assertTrue([Symbol("b"), Symbol("d")] in accepted_words)
-        self.assertEqual(len(accepted_words), 3)
+        assert [] in accepted_words
+        assert [Symbol("b"), Symbol("c")] in accepted_words
+        assert [Symbol("b"), Symbol("d")] in accepted_words
+        assert len(accepted_words) == 3
 
 
 def get_example0():

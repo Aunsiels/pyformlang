@@ -625,13 +625,12 @@ class TestEpsilonNFA:
     def test_word_generation(self):
         enfa = get_enfa_example_for_word_generation()
         accepted_words = list(enfa.get_accepted_words())
-        self.assertTrue([] in accepted_words)
-        self.assertTrue([Symbol("b")] in accepted_words)
-        self.assertTrue([Symbol("c")] in accepted_words)
-        self.assertTrue([Symbol("d"), Symbol("e")] in accepted_words)
-        self.assertTrue(
-            [Symbol("d"), Symbol("e"), Symbol("f")] in accepted_words)
-        self.assertEqual(len(accepted_words), 5)
+        assert [] in accepted_words
+        assert [Symbol("b")] in accepted_words
+        assert [Symbol("c")] in accepted_words
+        assert [Symbol("d"), Symbol("e")] in accepted_words
+        assert [Symbol("d"), Symbol("e"), Symbol("f")] in accepted_words
+        assert len(accepted_words) == 5
 
     def test_cyclic_word_generation(self):
         enfa = get_cyclic_enfa_example()
@@ -641,29 +640,28 @@ class TestEpsilonNFA:
                           [Symbol("c")]
                           for i in range(max_length - 2)]
         actual_accepted_words = list(enfa.get_accepted_words(max_length))
-        self.assertEqual(accepted_words, actual_accepted_words)
+        assert accepted_words == actual_accepted_words
 
     def test_epsilon_cycle_word_generation(self):
         enfa = get_epsilon_cycle_enfa_example()
         max_length = 4
         accepted_words = list(enfa.get_accepted_words(max_length))
-        self.assertTrue([] in accepted_words)
-        self.assertTrue([Symbol("a"), Symbol("c")] in accepted_words)
-        self.assertTrue([Symbol("a"),
-                         Symbol("b"),Symbol("c")] in accepted_words)
-        self.assertTrue([Symbol("a"), Symbol("b"),
-                         Symbol("b"), Symbol("c")] in accepted_words)
-        self.assertEqual(len(accepted_words), 4)
+        assert [] in accepted_words
+        assert [Symbol("a"), Symbol("c")] in accepted_words
+        assert [Symbol("a"), Symbol("b"),Symbol("c")] in accepted_words
+        assert [Symbol("a"), Symbol("b"),
+                Symbol("b"), Symbol("c")] in accepted_words
+        assert len(accepted_words) == 4
 
     def test_max_length_zero_accepting_empty_string(self):
         enfa = get_enfa_example_for_word_generation()
         accepted_words = list(enfa.get_accepted_words(0))
-        self.assertEqual(accepted_words, [[]])
+        assert accepted_words == [[]]
 
     def test_max_length_zero_not_accepting_empty_string(self):
         enfa = get_cyclic_enfa_example()
         accepted_words = list(enfa.get_accepted_words(0))
-        self.assertEqual(accepted_words, [])
+        assert accepted_words == []
 
 
 def get_digits_enfa():
