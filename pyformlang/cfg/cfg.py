@@ -1,7 +1,7 @@
 """ A context free grammar """
 import string
 from copy import deepcopy
-from typing import AbstractSet, Iterable, Tuple, Dict, Any
+from typing import AbstractSet, Iterable, Tuple, Dict, Any, Union
 
 import networkx as nx
 
@@ -56,9 +56,9 @@ class CFG:
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self,
-                 variables: AbstractSet[Variable] = None,
-                 terminals: AbstractSet[Terminal] = None,
-                 start_symbol: Variable = None,
+                 variables: AbstractSet[Union[Variable, str]] = None,
+                 terminals: AbstractSet[Union[Terminal, str]] = None,
+                 start_symbol: Union[Variable, str] = None,
                  productions: Iterable[Production] = None):
         if variables is not None:
             variables = {to_variable(x) for x in variables}
@@ -706,10 +706,10 @@ class CFG:
     def __bool__(self):
         return not self.is_empty()
 
-    def __contains__(self, word: Iterable[Terminal]) -> bool:
+    def __contains__(self, word: Iterable[Union[Terminal, str]]) -> bool:
         return self.contains(word)
 
-    def contains(self, word: Iterable[Terminal]) -> bool:
+    def contains(self, word: Iterable[Union[Terminal, str]]) -> bool:
         """ Gives the membership of a word to the grammar
 
         Parameters

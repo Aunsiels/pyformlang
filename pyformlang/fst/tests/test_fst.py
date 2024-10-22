@@ -1,9 +1,8 @@
 """ Tests the FST """
 # pylint: disable=duplicate-code
-
-
-import unittest
 from os import path
+
+import pytest
 
 from pyformlang.fst import FST
 from pyformlang.indexed_grammar import (
@@ -11,82 +10,89 @@ from pyformlang.indexed_grammar import (
     ConsumptionRule, IndexedGrammar, Rules)
 
 
-class TestFST(unittest.TestCase):
+@pytest.fixture
+def fst0():
+    fst0 = FST()
+    fst0.add_start_state("q0")
+    fst0.add_transition("q0", "a", "q1", ["b"])
+    fst0.add_final_state("q1")
+    yield fst0
+
+
+@pytest.fixture
+def fst1():
+    fst1 = FST()
+    fst1.add_start_state("q1")
+    fst1.add_transition("q1", "b", "q2", ["c"])
+    fst1.add_final_state("q2")
+    yield fst1
+
+
+class TestFST:
     """ Tests FST """
-
-    def setUp(self) -> None:
-        self.fst0 = FST()
-        self.fst0.add_start_state("q0")
-        self.fst0.add_transition("q0", "a", "q1", ["b"])
-        self.fst0.add_final_state("q1")
-        self.fst1 = FST()
-        self.fst1.add_start_state("q1")
-        self.fst1.add_transition("q1", "b", "q2", ["c"])
-        self.fst1.add_final_state("q2")
-
     def test_creation(self):
         """ Test Translate """
         fst = FST()
-        self.assertIsNotNone(fst)
-        self.assertEqual(len(fst.states), 0)
-        self.assertEqual(len(fst.input_symbols), 0)
-        self.assertEqual(len(fst.output_symbols), 0)
-        self.assertEqual(fst.get_number_transitions(), 0)
-        self.assertEqual(len(fst.final_states), 0)
+        assert fst is not None
+        assert len(fst.states) == 0
+        assert len(fst.input_symbols) == 0
+        assert len(fst.output_symbols) == 0
+        assert fst.get_number_transitions() == 0
+        assert len(fst.final_states) == 0
 
         fst.add_start_state("q0")
-        self.assertEqual(len(fst.states), 1)
+        assert len(fst.states) == 1
 
         fst.add_transition("q0", "a", "q1", ["bc"])
-        self.assertEqual(len(fst.states), 2)
-        self.assertEqual(len(fst.input_symbols), 1)
-        self.assertEqual(len(fst.output_symbols), 1)
-        self.assertEqual(fst.get_number_transitions(), 1)
-        self.assertEqual(len(fst.final_states), 0)
+        assert len(fst.states) == 2
+        assert len(fst.input_symbols) == 1
+        assert len(fst.output_symbols) == 1
+        assert fst.get_number_transitions() == 1
+        assert len(fst.final_states) == 0
 
         fst.add_transition("q0", "epsilon", "q1", ["bc"])
-        self.assertEqual(len(fst.states), 2)
-        self.assertEqual(len(fst.input_symbols), 1)
-        self.assertEqual(len(fst.output_symbols), 1)
-        self.assertEqual(fst.get_number_transitions(), 2)
-        self.assertEqual(len(fst.final_states), 0)
+        assert len(fst.states) == 2
+        assert len(fst.input_symbols) == 1
+        assert len(fst.output_symbols) == 1
+        assert fst.get_number_transitions() == 2
+        assert len(fst.final_states) == 0
 
         fst.add_final_state("q2")
-        self.assertEqual(len(fst.states), 3)
-        self.assertEqual(len(fst.input_symbols), 1)
-        self.assertEqual(len(fst.output_symbols), 1)
-        self.assertEqual(fst.get_number_transitions(), 2)
-        self.assertEqual(len(fst.final_states), 1)
+        assert len(fst.states) == 3
+        assert len(fst.input_symbols) == 1
+        assert len(fst.output_symbols) == 1
+        assert fst.get_number_transitions() == 2
+        assert len(fst.final_states) == 1
 
         fst.add_transition("q0", "a", "q1", ["d"])
-        self.assertEqual(len(fst.states), 3)
-        self.assertEqual(len(fst.input_symbols), 1)
-        self.assertEqual(len(fst.output_symbols), 2)
-        self.assertEqual(fst.get_number_transitions(), 3)
-        self.assertEqual(len(fst.final_states), 1)
+        assert len(fst.states) == 3
+        assert len(fst.input_symbols) == 1
+        assert len(fst.output_symbols) == 2
+        assert fst.get_number_transitions() == 3
+        assert len(fst.final_states) == 1
 
     def test_translate(self):
         """ Test a translation """
         fst = FST()
         fst.add_start_state("q0")
         translation = list(fst.translate(["a"]))
-        self.assertEqual(len(translation), 0)
+        assert len(translation) == 0
 
         fst.add_transition("q0", "a", "q1", ["b"])
         translation = list(fst.translate(["a"]))
-        self.assertEqual(len(translation), 0)
+        assert len(translation) == 0
 
         fst.add_final_state("q1")
         translation = list(fst.translate(["a"]))
-        self.assertEqual(len(translation), 1)
-        self.assertEqual(translation, [["b"]])
+        assert len(translation) == 1
+        assert translation == [["b"]]
 
         fst.add_transition("q1", "epsilon", "q1", ["c"])
         translation = list(fst.translate(["a"], max_length=10))
-        self.assertEqual(len(translation), 10)
-        self.assertIn(["b"], translation)
-        self.assertIn(["b", "c"], translation)
-        self.assertIn(["b"] + ["c"] * 9, translation)
+        assert len(translation) == 10
+        assert ["b"] in translation
+        assert ["b", "c"] in translation
+        assert ["b"] + ["c"] * 9 in translation
 
     def test_intersection_indexed_grammar(self):
         """ Test the intersection with indexed grammar """
@@ -95,7 +101,7 @@ class TestFST(unittest.TestCase):
         indexed_grammar = IndexedGrammar(rules)
         fst = FST()
         intersection = fst & indexed_grammar
-        self.assertTrue(intersection.is_empty())
+        assert intersection.is_empty()
 
         l_rules.append(ProductionRule("S", "D", "f"))
         l_rules.append(DuplicationRule("D", "A", "B"))
@@ -107,62 +113,62 @@ class TestFST(unittest.TestCase):
         rules = Rules(l_rules)
         indexed_grammar = IndexedGrammar(rules)
         intersection = fst.intersection(indexed_grammar)
-        self.assertTrue(intersection.is_empty())
+        assert intersection.is_empty()
 
         fst.add_start_state("q0")
         fst.add_final_state("final")
         fst.add_transition("q0", "a", "q1", ["a"])
         fst.add_transition("q1", "b", "final", ["b"])
         intersection = fst.intersection(indexed_grammar)
-        self.assertFalse(intersection.is_empty())
+        assert not intersection.is_empty()
 
-    def test_union(self):
+    def test_union(self, fst0, fst1):
         """ Tests the union"""
-        fst_union = self.fst0.union(self.fst1)
+        fst_union = fst0.union(fst1)
         self._make_test_fst_union(fst_union)
-        fst_union = self.fst0 | self.fst1
+        fst_union = fst0 | fst1
         self._make_test_fst_union(fst_union)
 
     def _make_test_fst_union(self, fst_union):
-        self.assertEqual(len(fst_union.start_states), 2)
-        self.assertEqual(len(fst_union.final_states), 2)
-        self.assertEqual(fst_union.get_number_transitions(), 2)
+        assert len(fst_union.start_states) == 2
+        assert len(fst_union.final_states) == 2
+        assert fst_union.get_number_transitions() == 2
         translation = list(fst_union.translate(["a"]))
-        self.assertEqual(translation, [["b"]])
+        assert translation == [["b"]]
         translation = list(fst_union.translate(["b"]))
-        self.assertEqual(translation, [["c"]])
+        assert translation == [["c"]]
         translation = list(fst_union.translate(["a", "b"]))
-        self.assertEqual(translation, [])
+        assert translation == []
 
-    def test_concatenate(self):
+    def test_concatenate(self, fst0, fst1):
         """ Tests the concatenation """
-        fst_concatenate = self.fst0 + self.fst1
+        fst_concatenate = fst0 + fst1
         translation = list(fst_concatenate.translate(["a", "b"]))
-        self.assertEqual(translation, [["b", "c"]])
+        assert translation == [["b", "c"]]
         translation = list(fst_concatenate.translate(["a"]))
-        self.assertEqual(translation, [])
+        assert translation == []
         translation = list(fst_concatenate.translate(["b"]))
-        self.assertEqual(translation, [])
+        assert translation == []
 
-    def test_concatenate2(self):
+    def test_concatenate2(self, fst0, fst1):
         """ Tests the concatenation """
-        fst_concatenate = self.fst0 + self.fst1 + self.fst1
+        fst_concatenate = fst0 + fst1 + fst1
         translation = list(fst_concatenate.translate(["a", "b", "b"]))
-        self.assertEqual(translation, [["b", "c", "c"]])
+        assert translation == [["b", "c", "c"]]
         translation = list(fst_concatenate.translate(["a"]))
-        self.assertEqual(translation, [])
+        assert translation == []
         translation = list(fst_concatenate.translate(["b"]))
-        self.assertEqual(translation, [])
+        assert translation == []
 
-    def test_kleene_start(self):
+    def test_kleene_start(self, fst0):
         """ Tests the kleene star on a fst"""
-        fst_star = self.fst0.kleene_star()
+        fst_star = fst0.kleene_star()
         translation = list(fst_star.translate(["a"]))
-        self.assertEqual(translation, [["b"]])
+        assert translation == [["b"]]
         translation = list(fst_star.translate(["a", "a"]))
-        self.assertEqual(translation, [["b", "b"]])
+        assert translation == [["b", "b"]]
         translation = list(fst_star.translate([]))
-        self.assertEqual(translation, [[]])
+        assert translation == [[]]
 
     def test_generate_empty_word_from_nothing(self):
         """ Generate empty word from nothing """
@@ -171,7 +177,7 @@ class TestFST(unittest.TestCase):
         fst.add_transition("q0", "epsilon", "q1", [])
         fst.add_final_state("q1")
         translation = list(fst.translate([]))
-        self.assertEqual(translation, [[]])
+        assert translation == [[]]
 
     def test_epsilon_loop(self):
         """ Test empty loop """
@@ -181,7 +187,7 @@ class TestFST(unittest.TestCase):
         fst.add_final_state("q1")
         fst.add_transition("q1", "epsilon", "q0", [])
         translation = list(fst.translate([]))
-        self.assertEqual(translation, [[]])
+        assert translation == [[]]
 
     def test_epsilon_loop2(self):
         """ Test empty loop bis """
@@ -193,7 +199,7 @@ class TestFST(unittest.TestCase):
              ("q1", "epsilon", "q0", [])])
         fst.add_final_state("q2")
         translation = list(fst.translate(["a"]))
-        self.assertEqual(translation, [["b"]])
+        assert translation == [["b"]]
 
     def test_paper(self):
         """ Test for the paper """
@@ -204,14 +210,12 @@ class TestFST(unittest.TestCase):
              (2, "alone", 3, ["seul"])])
         fst.add_start_state(0)
         fst.add_final_state(3)
-        self.assertEqual(
-            list(fst.translate(["I", "am", "alone"])),
+        assert list(fst.translate(["I", "am", "alone"])) == \
             [['Je', 'suis', 'seul'],
-             ['Je', 'suis', 'tout', 'seul']])
+             ['Je', 'suis', 'tout', 'seul']]
         fst = FST.from_networkx(fst.to_networkx())
-        self.assertEqual(
-            list(fst.translate(["I", "am", "alone"])),
+        assert list(fst.translate(["I", "am", "alone"])) == \
             [['Je', 'suis', 'seul'],
-             ['Je', 'suis', 'tout', 'seul']])
+             ['Je', 'suis', 'tout', 'seul']]
         fst.write_as_dot("fst.dot")
-        self.assertTrue(path.exists("fst.dot"))
+        assert path.exists("fst.dot")

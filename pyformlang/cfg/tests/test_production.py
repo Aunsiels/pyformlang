@@ -1,11 +1,9 @@
 """ Tests the productions """
 
-import unittest
-
 from pyformlang.cfg import Production, Variable, Terminal
 
 
-class TestProduction(unittest.TestCase):
+class TestProduction:
     """ Tests the production """
     # pylint: disable=missing-function-docstring
 
@@ -15,16 +13,16 @@ class TestProduction(unittest.TestCase):
         prod2 = Production(Variable("S0'"), [Terminal("S1"), Variable("a")])
         prod3 = Production(Variable("S0"), [Terminal("S2"), Variable("a")])
         prod4 = Production(Variable("S0"), [Terminal("S2"), Variable("b")])
-        self.assertEqual(prod0, prod1)
-        self.assertNotEqual(prod0, prod2)
-        self.assertNotEqual(prod0, prod3)
-        self.assertNotEqual(prod0, prod4)
-        self.assertEqual(str(prod0), str(prod1))
-        self.assertNotEqual(str(prod0), str(prod2))
-        self.assertNotEqual(str(prod0), str(prod3))
-        self.assertNotEqual(str(prod0), str(prod4))
-        self.assertEqual(hash(prod0), hash(prod1))
-        self.assertNotEqual(hash(prod0), hash(prod2))
-        self.assertNotEqual(hash(prod0), hash(prod3))
-        self.assertNotEqual(hash(prod0), hash(prod4))
-        self.assertIn(" -> ", str(prod0))
+        assert prod0 == prod1
+        assert prod0 != prod2
+        assert prod0 != prod3
+        assert prod0 != prod4
+        assert str(prod0) == str(prod1)
+        assert str(prod0) != str(prod2)
+        assert str(prod0) != str(prod3)
+        assert str(prod0) != str(prod4)
+        assert hash(prod0) == hash(prod1)
+        assert hash(prod0) != hash(prod2)
+        assert hash(prod0) != hash(prod3)
+        assert hash(prod0) != hash(prod4)
+        assert " -> " in str(prod0)

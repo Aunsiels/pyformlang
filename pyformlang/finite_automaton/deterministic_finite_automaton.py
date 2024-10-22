@@ -2,7 +2,7 @@
 Representation of a deterministic finite automaton
 """
 
-from typing import AbstractSet, Iterable
+from typing import AbstractSet, Iterable, Any
 
 import numpy as np
 
@@ -57,8 +57,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
     ----------
     states : set of :class:`~pyformlang.finite_automaton.State`, optional
         A finite set of states
-    input_symbols : set of :class:`~pyformlang.finite_automaton.Symbol`, \
-    optional
+    input_symbols : set of :class:`~pyformlang.finite_automaton.Symbol`, optional
         A finite set of input symbols
     transition_function : \
     :class:`~pyformlang.finite_automaton.TransitionFunction`, optional
@@ -119,7 +118,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         if start_state is not None:
             self._states.add(start_state)
 
-    def add_start_state(self, state: State) -> int:
+    def add_start_state(self, state: Any) -> int:
         """ Set an initial state
 
         Parameters
@@ -144,7 +143,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         self._states.add(state)
         return 1
 
-    def remove_start_state(self, state: State) -> int:
+    def remove_start_state(self, state: Any) -> int:
         """ remove an initial state
 
         Parameters
@@ -171,7 +170,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             return 1
         return 0
 
-    def accepts(self, word: Iterable[Symbol]) -> bool:
+    def accepts(self, word: Iterable[Any]) -> bool:
         """ Checks whether the dfa accepts a given word
 
         Parameters
@@ -241,7 +240,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         --------
 
         >>> dfa0 = DeterministicFiniteAutomaton()
-        >>> dfa1 = dfa.to_deterministic()
+        >>> dfa1 = dfa0.to_deterministic()
         >>> dfa0.is_equivalent_to(dfa1)
         True
 

@@ -410,7 +410,7 @@ class FST:
         Makes the concatenation of two fst
         Parameters
         ----------
-        other_fst : :class:`~pyformlang.fst.FST`
+        other : :class:`~pyformlang.fst.FST`
             The other FST
 
         Returns
@@ -423,7 +423,7 @@ class FST:
 
     def _get_state_renaming(self, other_fst):
         state_renaming = FSTStateRemaining()
-        state_renaming.add_states(self.states, 0)
+        state_renaming.add_states(list(self.states), 0)
         state_renaming.add_states(other_fst.states, 1)
         return state_renaming
 
@@ -438,7 +438,7 @@ class FST:
         """
         fst_star = FST()
         state_renaming = FSTStateRemaining()
-        state_renaming.add_states(self.states, 0)
+        state_renaming.add_states(list(self.states), 0)
         self._add_extremity_states_to(fst_star, state_renaming, 0)
         self._add_transitions_to(fst_star, state_renaming, 0)
         for final_state in self.final_states:

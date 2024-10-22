@@ -2,7 +2,7 @@
 Representation of a transition function
 """
 import copy
-from typing import List
+from typing import List, Any
 
 from pyformlang.finite_automaton.epsilon import Epsilon
 
@@ -38,8 +38,8 @@ class TransitionFunction:
     def __init__(self):
         self._transitions = {}
 
-    def add_transition(self, s_from: State, symb_by: Symbol,
-                       s_to: State) -> int:
+    def add_transition(self, s_from: Any, symb_by: Any,
+                       s_to: Any) -> int:
         """ Adds a new transition to the function
 
         Parameters
@@ -213,11 +213,6 @@ class DuplicateTransitionError(Exception):
         The wanted new destination state
     s_to_old : :class:`~pyformlang.finite_automaton.State`
         The old destination state
-
-    Attributes
-    ----------
-    message : str
-        An error message summarising the information
 
     """
 

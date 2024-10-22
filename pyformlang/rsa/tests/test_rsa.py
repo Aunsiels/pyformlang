@@ -1,7 +1,4 @@
 """ Tests for RSA """
-
-import unittest
-
 from pyformlang.finite_automaton.symbol import Symbol
 from pyformlang.regular_expression import Regex
 
@@ -9,7 +6,7 @@ from pyformlang.rsa.recursive_automaton import RecursiveAutomaton
 from pyformlang.rsa.box import Box
 
 
-class TestRSA(unittest.TestCase):
+class TestRSA:
     """ Test class for RSA """
     def test_creation(self):
         """ Test the creation of an RSA """
@@ -20,14 +17,14 @@ class TestRSA(unittest.TestCase):
         box = Box(dfa, "S")
         rsa_1 = RecursiveAutomaton(box, set())
 
-        self.assertEqual(rsa_1.get_number_boxes(), 1)
-        self.assertEqual(box, rsa_1.get_box_by_nonterminal("S"))
-        self.assertEqual(rsa_1.nonterminals, {Symbol("S")})
-        self.assertEqual(rsa_1.start_nonterminal, Symbol("S"))
+        assert rsa_1.get_number_boxes() == 1
+        assert box == rsa_1.get_box_by_nonterminal("S")
+        assert rsa_1.nonterminals == {Symbol("S")}
+        assert rsa_1.start_nonterminal == Symbol("S")
 
         rsa_2 = RecursiveAutomaton.from_regex(regex, "S")
 
-        self.assertEqual(rsa_2, rsa_1)
+        assert rsa_2 == rsa_1
 
     def test_from_regex(self):
         """ Test creation of an RSA from a regex"""
@@ -39,7 +36,7 @@ class TestRSA(unittest.TestCase):
         box = Box(dfa, "S")
         rsa_1 = RecursiveAutomaton(box, set())
 
-        self.assertEqual(rsa_2, rsa_1)
+        assert rsa_2 == rsa_1
 
     def test_is_equals_to(self):
         """ Test the equals of two RSAs"""
@@ -49,7 +46,7 @@ class TestRSA(unittest.TestCase):
         # S -> a+ b+
         rsa_2 = RecursiveAutomaton.from_regex(Regex("a a* b b*"), "S")
 
-        self.assertNotEqual(rsa_1, rsa_2)
+        assert rsa_1 != rsa_2
 
     def test_from_ebnf(self):
         """ Test reading RSA from ebnf"""
@@ -58,18 +55,18 @@ class TestRSA(unittest.TestCase):
         rsa2_g1 = RecursiveAutomaton.from_regex(
             Regex("a S b | a b"), "S")
 
-        self.assertEqual(rsa1_g1, rsa2_g1)
+        assert rsa1_g1 == rsa2_g1
 
         # g2: S -> a V b
         #     V -> c S d | c d
         rsa1_g2 = RecursiveAutomaton.from_ebnf("""
             S -> a V b
             V -> c S d | c d""")
-        self.assertEqual(rsa1_g2.get_number_boxes(), 2)
-        self.assertEqual(rsa1_g2.nonterminals, {Symbol("S"), Symbol("V")})
+        assert rsa1_g2.get_number_boxes() == 2
+        assert rsa1_g2.nonterminals == {Symbol("S"), Symbol("V")}
 
         dfa_s = Regex("a V b").to_epsilon_nfa().minimize()
-        self.assertEqual(rsa1_g2.get_box_by_nonterminal("S"), Box(dfa_s, "S"))
+        assert rsa1_g2.get_box_by_nonterminal("S") == Box(dfa_s, "S")
 
         dfa_v = Regex("c S d | c d").to_epsilon_nfa().minimize()
-        self.assertEqual(rsa1_g2.get_box_by_nonterminal("V"), Box(dfa_v, "V"))
+        assert rsa1_g2.get_box_by_nonterminal("V") == Box(dfa_v, "V")

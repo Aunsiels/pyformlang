@@ -4,13 +4,7 @@ from .cfg_object import CFGObject
 
 
 class Terminal(CFGObject):  # pylint: disable=too-few-public-methods
-    """ An terminal in a CFG
-
-    Parameters
-    -----------
-    value : any
-        The value of the terminal
-    """
+    """ A terminal in a CFG """
 
     def __eq__(self, other):
         return isinstance(other, Terminal) and self.value == other.value
