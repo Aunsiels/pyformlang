@@ -606,20 +606,23 @@ class FiniteAutomaton:
                                 for start_state in self.start_states)
         states_leading_to_final = self._get_states_leading_to_final()
         while states_to_visit:
-            last_state, current_state, current_word = states_to_visit.popleft()
+            last_state_before_epsilon, current_state, current_word = \
+                states_to_visit.popleft()
             if max_length is not None and len(current_word) > max_length:
                 continue
             transitions = self._transition_function.get_transitions_from(
                 current_state)
             for symbol, next_state in transitions:
-                if symbol == Epsilon() and next_state == last_state:
+                if symbol == Epsilon() \
+                        and next_state == last_state_before_epsilon:
                     continue    # avoiding epsilon cycles
                 if next_state in states_leading_to_final:
+                    temp_state = last_state_before_epsilon
                     temp_word = current_word.copy()
                     if symbol != Epsilon():
+                        temp_state = next_state
                         temp_word.append(symbol)
-                        last_state = next_state
-                    states_to_visit.append((last_state, next_state, temp_word))
+                    states_to_visit.append((temp_state, next_state, temp_word))
             if self.is_final_state(current_state):
                 yield current_word
 
@@ -652,7 +655,7 @@ class FiniteAutomaton:
         visited = set()
         states_to_process = deque(self.start_states)
         while states_to_process:
-            current_state = states_to_process.pop()
+            current_state = states_to_process.popleft()
             visited.add(current_state)
             for next_state in self._get_next_states_from(current_state):
                 if next_state not in visited:
