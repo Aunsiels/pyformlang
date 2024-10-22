@@ -1,6 +1,6 @@
 """Feature Context-Free Grammar"""
 import string
-from typing import Iterable, AbstractSet
+from typing import Iterable, AbstractSet, Union
 
 from pyformlang.cfg import CFG, Terminal, Epsilon, Variable
 from pyformlang.cfg.cfg import is_special_text, EPSILON_SYMBOLS, NotParsableException
@@ -68,11 +68,12 @@ class FCFG(CFG):
         next_var = state.production.body[state.positions[2]]
         for production in self.productions:
             if production.head == next_var:
-                new_state = State(production, (end_idx, end_idx, 0), production.features, ParseTree(production.head))
+                new_state = State(production, (end_idx, end_idx, 0),
+                                  production.features, ParseTree(production.head))
                 if processed.add(end_idx, new_state):
                     chart[end_idx].append(new_state)
 
-    def contains(self, word: Iterable[Terminal]) -> bool:
+    def contains(self, word: Iterable[Union[Terminal, str]]) -> bool:
         """ Gives the membership of a word to the grammar
 
         Parameters
@@ -87,7 +88,7 @@ class FCFG(CFG):
         """
         return self._get_final_state(word) is not None
 
-    def get_parse_tree(self, word: Iterable[Terminal]) -> ParseTree:
+    def get_parse_tree(self, word: Iterable[Union[Terminal, str]]) -> ParseTree:
         """ Gives the parse tree for a sentence, if possible
 
         Parameters

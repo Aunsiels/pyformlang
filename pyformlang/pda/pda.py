@@ -1,21 +1,19 @@
 """ We represent here a push-down automaton """
 import json
-from typing import AbstractSet, List, Iterable, Any
 from itertools import product
-import numpy as np
+from typing import AbstractSet, List, Iterable, Any
+
 import networkx as nx
+import numpy as np
 from networkx.drawing.nx_pydot import write_dot
 
-from pyformlang.pda.cfg_variable_converter import CFGVariableConverter
+from pyformlang import cfg
 from pyformlang import finite_automaton
 from pyformlang import regular_expression
-from pyformlang import cfg
-
-
-from .state import State
-from .symbol import Symbol
-from .stack_symbol import StackSymbol
+from pyformlang.pda.cfg_variable_converter import CFGVariableConverter
 from .epsilon import Epsilon
+from .stack_symbol import StackSymbol
+from .state import State
 from .transition_function import TransitionFunction
 from .utils import PDAObjectCreator
 from ..finite_automaton import FiniteAutomaton
@@ -60,13 +58,13 @@ class PDA:
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self,
-                 states: AbstractSet[State] = None,
-                 input_symbols: AbstractSet[Symbol] = None,
-                 stack_alphabet: AbstractSet[StackSymbol] = None,
+                 states: AbstractSet[Any] = None,
+                 input_symbols: AbstractSet[Any] = None,
+                 stack_alphabet: AbstractSet[Any] = None,
                  transition_function: TransitionFunction = None,
-                 start_state: State = None,
-                 start_stack_symbol: StackSymbol = None,
-                 final_states: AbstractSet[State] = None):
+                 start_state: Any = None,
+                 start_stack_symbol: Any = None,
+                 final_states: AbstractSet[Any] = None):
         # pylint: disable=too-many-arguments
         self._pda_obj_creator = PDAObjectCreator()
         if states is not None:
@@ -104,7 +102,7 @@ class PDA:
             self._states.add(state)
         self._cfg_variable_converter = None
 
-    def set_start_state(self, start_state: State):
+    def set_start_state(self, start_state: Any):
         """ Sets the start state to the automaton
 
         Parameters
@@ -116,7 +114,7 @@ class PDA:
         self._states.add(start_state)
         self._start_state = start_state
 
-    def set_start_stack_symbol(self, start_stack_symbol: StackSymbol):
+    def set_start_stack_symbol(self, start_stack_symbol: Any):
         """ Sets the start stack symbol to the automaton
 
         Parameters
@@ -129,7 +127,7 @@ class PDA:
         self._stack_alphabet.add(start_stack_symbol)
         self._start_stack_symbol = start_stack_symbol
 
-    def add_final_state(self, state: State):
+    def add_final_state(self, state: Any):
         """ Adds a final state to the automaton
 
         Parameters
@@ -216,11 +214,11 @@ class PDA:
                                 s_to, stack_to)
 
     def add_transition(self,
-                       s_from: State,
-                       input_symbol: Symbol,
-                       stack_from: StackSymbol,
-                       s_to: State,
-                       stack_to: List[StackSymbol]):
+                       s_from: Any,
+                       input_symbol: Any,
+                       stack_from: Any,
+                       s_to: Any,
+                       stack_to: Iterable[Any]):
         """ Add a transition to the PDA
 
         Parameters

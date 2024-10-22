@@ -1,15 +1,11 @@
 """
 Test the nondeterministic transition functions
 """
-
-
-import unittest
-
 from pyformlang.finite_automaton import State, Symbol, \
     NondeterministicTransitionFunction, Epsilon
 
 
-class TestNondeterministicTransitionFunction(unittest.TestCase):
+class TestNondeterministicTransitionFunction:
     """ Tests the nondeterministic transitions functions
     """
 
@@ -17,7 +13,7 @@ class TestNondeterministicTransitionFunction(unittest.TestCase):
         """ Tests the creation of nondeterministic transition functions
         """
         transition_function = NondeterministicTransitionFunction()
-        self.assertIsNotNone(transition_function)
+        assert transition_function is not None
 
     def test_add_transitions(self):
         """ Tests the addition of transitions
@@ -31,28 +27,28 @@ class TestNondeterministicTransitionFunction(unittest.TestCase):
         transition_function.add_transition(s_from, symb_by, s_to)
         transition_function.add_transition(s_from, symb_by, s_to_bis)
         transition_function.add_transition(s_to, symb_by, s_to)
-        self.assertEqual(transition_function.get_number_transitions(), 3)
+        assert transition_function.get_number_transitions() == 3
 
     def test_number_transitions(self):
         """ Tests the number of transitions
         """
         transition_function = NondeterministicTransitionFunction()
-        self.assertEqual(transition_function.get_number_transitions(), 0)
+        assert transition_function.get_number_transitions() == 0
         s_from = State(0)
         s_to = State(1)
         s_to_bis = State(2)
         symb_by = Symbol("a")
         symb_by2 = Symbol("b")
         transition_function.add_transition(s_from, symb_by, s_to)
-        self.assertEqual(transition_function.get_number_transitions(), 1)
+        assert transition_function.get_number_transitions() == 1
         transition_function.add_transition(s_from, symb_by, s_to)
-        self.assertEqual(transition_function.get_number_transitions(), 1)
+        assert transition_function.get_number_transitions() == 1
         transition_function.add_transition(s_from, symb_by2, s_to_bis)
-        self.assertEqual(transition_function.get_number_transitions(), 2)
+        assert transition_function.get_number_transitions() == 2
         transition_function.add_transition(s_to, symb_by, s_to_bis)
-        self.assertEqual(transition_function.get_number_transitions(), 3)
+        assert transition_function.get_number_transitions() == 3
         transition_function.add_transition(s_from, symb_by, s_from)
-        self.assertEqual(transition_function.get_number_transitions(), 4)
+        assert transition_function.get_number_transitions() == 4
 
     def test_remove_transitions(self):
         """ Tests the removal of transitions
@@ -62,22 +58,22 @@ class TestNondeterministicTransitionFunction(unittest.TestCase):
         s_to = State(1)
         symb_by = Symbol("a")
         transition_function.add_transition(s_from, symb_by, s_to)
-        self.assertEqual(transition_function.remove_transition(s_from,
+        assert transition_function.remove_transition(s_from,
                                                                symb_by,
-                                                               s_to), 1)
-        self.assertEqual(len(transition_function(s_to, symb_by)), 0)
-        self.assertEqual(transition_function.get_number_transitions(), 0)
-        self.assertEqual(len(transition_function(s_from, symb_by)), 0)
-        self.assertEqual(transition_function.remove_transition(s_from,
+                                                               s_to) == 1
+        assert len(transition_function(s_to, symb_by)) == 0
+        assert transition_function.get_number_transitions() == 0
+        assert len(transition_function(s_from, symb_by)) == 0
+        assert transition_function.remove_transition(s_from,
                                                                symb_by,
-                                                               s_to), 0)
+                                                               s_to) == 0
         transition_function.add_transition(s_from, symb_by, s_to)
         transition_function.add_transition(s_from, symb_by, s_from)
-        self.assertEqual(transition_function.remove_transition(s_from,
+        assert transition_function.remove_transition(s_from,
                                                                symb_by,
-                                                               s_to), 1)
-        self.assertEqual(transition_function.get_number_transitions(), 1)
-        self.assertEqual(len(transition_function(s_from, symb_by)), 1)
+                                                               s_to) == 1
+        assert transition_function.get_number_transitions() == 1
+        assert len(transition_function(s_from, symb_by)) == 1
 
     def test_call(self):
         """ Tests the call of a transition function
@@ -87,10 +83,10 @@ class TestNondeterministicTransitionFunction(unittest.TestCase):
         s_to = State(1)
         symb_by = Symbol("a")
         transition_function.add_transition(s_from, symb_by, s_to)
-        self.assertEqual(transition_function(s_from, symb_by), {s_to})
-        self.assertEqual(len(transition_function(s_to, symb_by)), 0)
+        assert transition_function(s_from, symb_by) == {s_to}
+        assert len(transition_function(s_to, symb_by)) == 0
         transition_function.add_transition(s_from, symb_by, s_from)
-        self.assertEqual(transition_function(s_from, symb_by), {s_to, s_from})
+        assert transition_function(s_from, symb_by) == {s_to, s_from}
 
     def test_get_transitions_from(self):
         """ Tests iteration of transitions from specified state """
@@ -106,8 +102,8 @@ class TestNondeterministicTransitionFunction(unittest.TestCase):
         transition_function.add_transition(states[1], symbol_c, states[3])
         transition_function.add_transition(states[1], epsilon, states[4])
         transitions = list(transition_function.get_transitions_from(states[1]))
-        self.assertTrue((symbol_b, states[2]) in transitions)
-        self.assertTrue((symbol_c, states[2]) in transitions)
-        self.assertTrue((symbol_c, states[3]) in transitions)
-        self.assertTrue((epsilon, states[4]) in transitions)
-        self.assertEqual(len(transitions), 4)
+        assert (symbol_b, states[2]) in transitions
+        assert (symbol_c, states[2]) in transitions
+        assert (symbol_c, states[3]) in transitions
+        assert (epsilon, states[4]) in transitions
+        assert len(transitions) == 4

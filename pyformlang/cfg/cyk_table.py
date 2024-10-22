@@ -12,7 +12,7 @@ class CYKTable:
     Parameters
     ----------
     cfg : A context-free grammar
-    word : tuple of Terminals
+    word : iterable of Terminals
         The word from which we construct the CYK table
     """
 

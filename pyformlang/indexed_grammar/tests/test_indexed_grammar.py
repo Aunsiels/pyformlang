@@ -1,9 +1,6 @@
 """
 Testing of indexed grammar, with manual rules
 """
-
-import unittest
-
 from pyformlang.indexed_grammar import Rules
 from pyformlang.indexed_grammar import ConsumptionRule
 from pyformlang.indexed_grammar import EndRule
@@ -13,7 +10,7 @@ from pyformlang.indexed_grammar import IndexedGrammar
 from pyformlang.regular_expression import Regex
 
 
-class TestIndexedGrammar(unittest.TestCase):
+class TestIndexedGrammar:
     """ Tests the indexed grammar """
 
     # pylint: disable=missing-function-docstring
@@ -26,8 +23,8 @@ class TestIndexedGrammar(unittest.TestCase):
         for i in range(9):
             rules = Rules(l_rules, i)
             i_grammar = IndexedGrammar(rules)
-            self.assertFalse(i_grammar.is_empty())
-            self.assertEqual(i_grammar.terminals, {"end", "b", "epsilon"})
+            assert not i_grammar.is_empty()
+            assert i_grammar.terminals == {"end", "b", "epsilon"}
 
     def test_simple_ig_1(self):
         # Write rules
@@ -61,7 +58,7 @@ class TestIndexedGrammar(unittest.TestCase):
 
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertFalse(i_grammar.is_empty())
+        assert not i_grammar.is_empty()
 
     def test_simple_ig_2(self):
         # Write rules
@@ -91,7 +88,7 @@ class TestIndexedGrammar(unittest.TestCase):
 
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertTrue(i_grammar.is_empty())
+        assert i_grammar.is_empty()
 
     def test_simple_ig_3(self):
         # Write rules
@@ -113,7 +110,7 @@ class TestIndexedGrammar(unittest.TestCase):
 
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertTrue(i_grammar.is_empty())
+        assert i_grammar.is_empty()
 
     def test_simple_ig_4(self):
         # Write rules
@@ -152,7 +149,7 @@ class TestIndexedGrammar(unittest.TestCase):
 
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertTrue(i_grammar.is_empty())
+        assert i_grammar.is_empty()
 
     def test_simple_ig_5(self):
         # Write rules
@@ -171,7 +168,7 @@ class TestIndexedGrammar(unittest.TestCase):
 
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertFalse(i_grammar.is_empty())
+        assert not i_grammar.is_empty()
 
     def test_simple_ig_regular_expression(self):
         # Test for regular expression functions
@@ -193,7 +190,7 @@ class TestIndexedGrammar(unittest.TestCase):
 
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertFalse(i_grammar.is_empty())
+        assert not i_grammar.is_empty()
 
     def test_simple_ig6(self):
         """ Test number 6 """
@@ -201,13 +198,13 @@ class TestIndexedGrammar(unittest.TestCase):
         l_rules.append(DuplicationRule("S", "S", "B"))
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertTrue(i_grammar.is_empty())
+        assert i_grammar.is_empty()
 
         l_rules = []
         l_rules.append(DuplicationRule("S", "B", "S"))
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertTrue(i_grammar.is_empty())
+        assert i_grammar.is_empty()
 
         l_rules = []
         l_rules.append(DuplicationRule("S", "A", "B"))
@@ -215,7 +212,7 @@ class TestIndexedGrammar(unittest.TestCase):
         l_rules.append(EndRule("B", "b"))
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertFalse(i_grammar.is_empty())
+        assert not i_grammar.is_empty()
 
     def test_simple_ig7(self):
         """ Test 7 """
@@ -227,7 +224,7 @@ class TestIndexedGrammar(unittest.TestCase):
         l_rules.append(EndRule("C", "c"))
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertFalse(i_grammar.is_empty())
+        assert not i_grammar.is_empty()
 
     def test_simple_ig8(self):
         """ Tests 8 """
@@ -243,7 +240,7 @@ class TestIndexedGrammar(unittest.TestCase):
         l_rules.append(EndRule("G", "G"))
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertFalse(i_grammar.is_empty())
+        assert not i_grammar.is_empty()
 
     def test_simple_ig9(self):
         """ Tests 9 {a^n b^n c^n}"""
@@ -266,7 +263,7 @@ class TestIndexedGrammar(unittest.TestCase):
         l_rules.append(ConsumptionRule("g", "C", "Cfinal"))
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules)
-        self.assertFalse(i_grammar.is_empty())
+        assert not i_grammar.is_empty()
 
     def test_start_symbol(self):
         """ Tests the change of the start symbol """
@@ -274,16 +271,16 @@ class TestIndexedGrammar(unittest.TestCase):
         l_rules.append(EndRule("S", "s"))
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules, "S2")
-        self.assertTrue(i_grammar.is_empty())
+        assert i_grammar.is_empty()
 
         i_grammar = IndexedGrammar(rules, "S")
-        self.assertFalse(i_grammar.is_empty())
+        assert not i_grammar.is_empty()
 
         l_rules = []
         l_rules.append(EndRule("S2", "s"))
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules, start_variable="S2")
-        self.assertFalse(i_grammar.is_empty())
+        assert not i_grammar.is_empty()
 
     def test_reachable(self):
         """ Tests the reachable symbols """
@@ -300,7 +297,7 @@ class TestIndexedGrammar(unittest.TestCase):
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules, start_variable="S")
         reachable = i_grammar.get_reachable_non_terminals()
-        self.assertEqual(reachable, {"S", "A", "B", "D", "G"})
+        assert reachable == {"S", "A", "B", "D", "G"}
 
     def test_generating(self):
         """ Tests the generating symbols """
@@ -317,7 +314,7 @@ class TestIndexedGrammar(unittest.TestCase):
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules, start_variable="S")
         generating = i_grammar.get_generating_non_terminals()
-        self.assertEqual(generating, {"D", "A", "E", "Q"})
+        assert generating == {"D", "A", "E", "Q"}
 
     def test_removal_useless(self):
         """ Tests the removal of useless symbols """
@@ -335,11 +332,11 @@ class TestIndexedGrammar(unittest.TestCase):
         rules = Rules(l_rules)
         i_grammar = IndexedGrammar(rules, start_variable="S")
         i_grammar2 = i_grammar.remove_useless_rules()
-        self.assertFalse(i_grammar.is_empty())
-        self.assertEqual(i_grammar2.non_terminals,
-                         i_grammar2.get_generating_non_terminals())
-        self.assertEqual(i_grammar2.non_terminals,
-                         i_grammar2.get_reachable_non_terminals())
+        assert not i_grammar.is_empty()
+        assert i_grammar2.non_terminals == \
+                         i_grammar2.get_generating_non_terminals()
+        assert i_grammar2.non_terminals == \
+                         i_grammar2.get_reachable_non_terminals()
 
     def test_intersection(self):
         """ Tests the intersection of indexed grammar with regex
@@ -353,7 +350,7 @@ class TestIndexedGrammar(unittest.TestCase):
         rules = Rules(l_rules, 6)
         indexed_grammar = IndexedGrammar(rules)
         i_inter = indexed_grammar.intersection(Regex("a.b"))
-        self.assertTrue(i_inter)
+        assert i_inter
 
 
 def get_example_rules():

@@ -506,7 +506,7 @@ class Regex(RegexReader):
 
         Examples
         --------
-        >>> regex.from_string("a b c")
+        >>> Regex.from_string("a b c")
 
         , which is equivalent to:
 

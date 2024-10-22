@@ -1,6 +1,6 @@
 """ A general finite automaton representation """
 
-from typing import List, Iterable, Set, Optional, Any
+from typing import List, Iterable, Set, Optional, Union, Any
 from collections import deque
 
 import networkx as nx
@@ -44,8 +44,8 @@ class FiniteAutomaton:
         self._start_state = set()
         self._final_states = set()
 
-    def add_transition(self, s_from: State, symb_by: Symbol,
-                       s_to: State) -> int:
+    def add_transition(self, s_from: Any, symb_by: Any,
+                       s_to: Any) -> int:
         """ Adds a transition to the nfa
 
         Parameters
@@ -194,7 +194,7 @@ class FiniteAutomaton:
         """The final states"""
         return self._final_states
 
-    def add_start_state(self, state: State) -> int:
+    def add_start_state(self, state: Any) -> int:
         """ Set an initial state
 
         Parameters
@@ -250,7 +250,7 @@ class FiniteAutomaton:
             return 1
         return 0
 
-    def add_final_state(self, state: State) -> int:
+    def add_final_state(self, state: Any) -> int:
         """ Adds a new final state
 
         Parameters
@@ -307,7 +307,7 @@ class FiniteAutomaton:
             return 1
         return 0
 
-    def __call__(self, state: State, symbol: Symbol = None) -> List[State]:
+    def __call__(self, state: Any, symbol: Any = None) -> List[State]:
         """ Gives the states obtained after calling a symbol on a state
         Calls the transition function
 
@@ -714,7 +714,7 @@ class FiniteAutomaton:
         return self._transition_function.to_dict()
 
 
-def to_state(given: Any) -> State:
+def to_state(given: Any) -> Union[State, None]:
     """ Transforms the input into a state
 
     Parameters
