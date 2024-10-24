@@ -661,7 +661,7 @@ class TestEpsilonNFA:
     def test_max_length_zero_not_accepting_empty_string(self):
         enfa = get_cyclic_enfa_example()
         accepted_words = list(enfa.get_accepted_words(0))
-        assert accepted_words == []
+        assert not accepted_words
 
 
 def get_digits_enfa():

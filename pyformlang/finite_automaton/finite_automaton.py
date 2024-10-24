@@ -602,29 +602,29 @@ class FiniteAutomaton:
         """
         if max_length is not None and max_length < 0:
             return []
-        states_to_visit = deque((start_state, start_state, [])
+        states_to_visit = deque((start_state, [])
                                 for start_state in self.start_states)
         states_leading_to_final = self._get_states_leading_to_final()
+        words_by_state = {state: set() for state in self.states}
+        yielded_words = set()
         while states_to_visit:
-            last_state_before_epsilon, current_state, current_word = \
-                states_to_visit.popleft()
+            current_state, current_word = states_to_visit.popleft()
             if max_length is not None and len(current_word) > max_length:
+                continue
+            word_to_add = tuple(current_word)
+            if not self.__try_add(words_by_state[current_state], word_to_add):
                 continue
             transitions = self._transition_function.get_transitions_from(
                 current_state)
             for symbol, next_state in transitions:
-                if symbol == Epsilon() \
-                        and next_state == last_state_before_epsilon:
-                    continue    # avoiding epsilon cycles
                 if next_state in states_leading_to_final:
-                    temp_state = last_state_before_epsilon
                     temp_word = current_word.copy()
                     if symbol != Epsilon():
-                        temp_state = next_state
                         temp_word.append(symbol)
-                    states_to_visit.append((temp_state, next_state, temp_word))
+                    states_to_visit.append((next_state, temp_word))
             if self.is_final_state(current_state):
-                yield current_word
+                if self.__try_add(yielded_words, word_to_add):
+                    yield current_word
 
     def _get_states_leading_to_final(self) -> Set[State]:
         """
@@ -712,6 +712,16 @@ class FiniteAutomaton:
 
         """
         return self._transition_function.to_dict()
+
+    @staticmethod
+    def __try_add(set_to_add_to: Set[Any], element_to_add: Any) -> bool:
+        """
+        Tries to add a given element to the given set.
+        Returns True if element was added, otherwise False.
+        """
+        initial_length = len(set_to_add_to)
+        set_to_add_to.add(element_to_add)
+        return len(set_to_add_to) != initial_length
 
 
 def to_state(given: Any) -> Union[State, None]:

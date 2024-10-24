@@ -126,6 +126,13 @@ class TestNondeterministicFiniteAutomaton:
         assert [Symbol("d"), Symbol("e"), Symbol("f")] in accepted_words
         assert len(accepted_words) == 5
 
+    def test_for_duplicate_generation(self):
+        nfa = get_nfa_example_with_duplicates()
+        accepted_words = list(nfa.get_accepted_words())
+        assert [Symbol("a"), Symbol("c")] in accepted_words
+        assert [Symbol("b"), Symbol("c")] in accepted_words
+        assert len(accepted_words) == 2
+
 
 def get_nfa_example_for_word_generation():
     """
@@ -156,5 +163,31 @@ def get_nfa_example_for_word_generation():
     nfa.add_final_state(states[3])
     nfa.add_final_state(states[4])
     nfa.add_final_state(states[6])
+    nfa.add_final_state(states[8])
+    return nfa
+
+
+def get_nfa_example_with_duplicates():
+    """ Gets NFA example with duplicate word chains """
+    nfa = NondeterministicFiniteAutomaton()
+    states = [State(x) for x in range(9)]
+    symbol_a = Symbol("a")
+    symbol_b = Symbol("b")
+    symbol_c = Symbol("c")
+    nfa.add_transitions([
+        (states[0], symbol_a, states[2]),
+        (states[1], symbol_a, states[2]),
+        (states[2], symbol_c, states[3]),
+        (states[2], symbol_c, states[4]),
+        (states[5], symbol_a, states[7]),
+        (states[6], symbol_b, states[7]),
+        (states[7], symbol_c, states[8]),
+    ])
+    nfa.add_start_state(states[0])
+    nfa.add_start_state(states[1])
+    nfa.add_start_state(states[5])
+    nfa.add_start_state(states[6])
+    nfa.add_final_state(states[3])
+    nfa.add_final_state(states[4])
     nfa.add_final_state(states[8])
     return nfa

@@ -288,6 +288,11 @@ class TestDeterministicFiniteAutomaton:
         assert [Symbol("b"), Symbol("d")] in accepted_words
         assert len(accepted_words) == 3
 
+    def test_dfa_generating_no_words(self):
+        dfa = get_dfa_example_without_accepted_words()
+        accepted_words = list(dfa.get_accepted_words())
+        assert not accepted_words
+
 
 def get_example0():
     """ Gives a dfa """
@@ -353,5 +358,20 @@ def get_dfa_example_for_word_generation():
     ])
     dfa.add_start_state(states[0])
     dfa.add_final_state(states[0])
+    dfa.add_final_state(states[3])
+    return dfa
+
+
+def get_dfa_example_without_accepted_words():
+    """ DFA example accepting no words """
+    dfa = DeterministicFiniteAutomaton()
+    states = [State(x) for x in range(4)]
+    symbol_a = Symbol("a")
+    symbol_b = Symbol("b")
+    dfa.add_transitions([
+        (states[0], symbol_a, states[1]),
+        (states[2], symbol_b, states[3]),
+    ])
+    dfa.add_start_state(states[0])
     dfa.add_final_state(states[3])
     return dfa
