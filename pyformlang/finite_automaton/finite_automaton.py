@@ -1,6 +1,7 @@
 """ A general finite automaton representation """
 
-from typing import List, Iterable, Any
+from typing import List, Iterable, Set, Optional, Union, Any
+from collections import deque
 
 import networkx as nx
 from networkx.drawing.nx_pydot import write_dot
@@ -42,10 +43,9 @@ class FiniteAutomaton:
         self._transition_function = None
         self._start_state = set()
         self._final_states = set()
-        self.__transitive_closure = None
 
-    def add_transition(self, s_from: State, symb_by: Symbol,
-                       s_to: State) -> int:
+    def add_transition(self, s_from: Any, symb_by: Any,
+                       s_to: Any) -> int:
         """ Adds a transition to the nfa
 
         Parameters
@@ -194,7 +194,7 @@ class FiniteAutomaton:
         """The final states"""
         return self._final_states
 
-    def add_start_state(self, state: State) -> int:
+    def add_start_state(self, state: Any) -> int:
         """ Set an initial state
 
         Parameters
@@ -250,7 +250,7 @@ class FiniteAutomaton:
             return 1
         return 0
 
-    def add_final_state(self, state: State) -> int:
+    def add_final_state(self, state: Any) -> int:
         """ Adds a new final state
 
         Parameters
@@ -307,7 +307,7 @@ class FiniteAutomaton:
             return 1
         return 0
 
-    def __call__(self, state: State, symbol: Symbol = None) -> List[State]:
+    def __call__(self, state: Any, symbol: Any = None) -> List[State]:
         """ Gives the states obtained after calling a symbol on a state
         Calls the transition function
 
@@ -595,52 +595,80 @@ class FiniteAutomaton:
         self_dfa = self.to_deterministic()
         return self_dfa.is_equivalent_to(other)
 
-    def get_accepted_words(self) -> Iterable[List[Symbol]]:
-        """ Gets words accepted by the finite automaton """
-        for start_state in self.start_states:
-            yield from self.get_words_accepted_from_state(start_state)
-
-    def get_words_accepted_from_state(self, initial_state: State) \
+    def get_accepted_words(self, max_length: Optional[int] = None) \
             -> Iterable[List[Symbol]]:
         """
-        Gets words that are accepted by finite \
-        automaton starting from the given state.
+        Gets words accepted by the finite automaton.
         """
-        queue = [(initial_state, [])]
-        self.__set_transitive_closure()
-        while len(queue) > 0:
-            (current_state, current_word) = queue.pop(0)
+        if max_length is not None and max_length < 0:
+            return []
+        states_to_visit = deque((start_state, [])
+                                for start_state in self.start_states)
+        states_leading_to_final = self._get_states_leading_to_final()
+        words_by_state = {state: set() for state in self.states}
+        yielded_words = set()
+        while states_to_visit:
+            current_state, current_word = states_to_visit.popleft()
+            if max_length is not None and len(current_word) > max_length:
+                continue
+            word_to_add = tuple(current_word)
+            if not self.__try_add(words_by_state[current_state], word_to_add):
+                continue
             transitions = self._transition_function.get_transitions_from(
                 current_state)
             for symbol, next_state in transitions:
-                if self.__exists_any_final_path_from(next_state):
+                if next_state in states_leading_to_final:
                     temp_word = current_word.copy()
                     if symbol != Epsilon():
                         temp_word.append(symbol)
-                    queue.append((next_state, temp_word))
+                    states_to_visit.append((next_state, temp_word))
             if self.is_final_state(current_state):
-                yield current_word
+                if self.__try_add(yielded_words, word_to_add):
+                    yield current_word
 
-    def __set_transitive_closure(self):
+    def _get_states_leading_to_final(self) -> Set[State]:
         """
-        Bulds MultiDiGraph transitive closure \
-        of FA and sets it to the private field.
+        Gets a set of states from which one
+        of the final states can be reached.
         """
-        self.__transitive_closure = nx.transitive_closure(
-            self.to_networkx())
+        leading_to_final = self.final_states.copy()
+        visited = set()
+        states_to_process = deque((None, start_state)
+                                  for start_state in self.start_states)
+        while states_to_process:
+            previous_state, current_state = states_to_process.pop()
+            if previous_state and current_state in leading_to_final:
+                leading_to_final.add(previous_state)
+                continue
+            if current_state in visited:
+                continue
+            visited.add(current_state)
+            next_states = self._get_next_states_from(current_state)
+            if next_states:
+                states_to_process.append((previous_state, current_state))
+                for next_state in next_states:
+                    states_to_process.append((current_state, next_state))
+        return leading_to_final
 
-    def __exists_any_final_path_from(self, source: State) -> bool:
-        """
-        Checks if there are any paths from \
-        given state to one of the final states.
-        """
-        return any(self.__exists_path(source, final)
-                   for final in self.final_states)
+    def _get_reachable_states(self) -> Set[State]:
+        """ Get all states which are reachable """
+        visited = set()
+        states_to_process = deque(self.start_states)
+        while states_to_process:
+            current_state = states_to_process.popleft()
+            visited.add(current_state)
+            for next_state in self._get_next_states_from(current_state):
+                if next_state not in visited:
+                    states_to_process.append(next_state)
+        return visited
 
-    def __exists_path(self, source: State, target: State) -> bool:
-        """ Checks if the target state can be reached from the source state """
-        return target == source or \
-            target in self.__transitive_closure[source].keys()
+    def _get_next_states_from(self, state_from: State) -> Set[State]:
+        """ Gets a set of states that are next to the given one """
+        next_states = set()
+        for _, next_state in \
+                self._transition_function.get_transitions_from(state_from):
+            next_states.add(next_state)
+        return next_states
 
     def to_deterministic(self):
         """ Turns the automaton into a deterministic one"""
@@ -685,8 +713,18 @@ class FiniteAutomaton:
         """
         return self._transition_function.to_dict()
 
+    @staticmethod
+    def __try_add(set_to_add_to: Set[Any], element_to_add: Any) -> bool:
+        """
+        Tries to add a given element to the given set.
+        Returns True if element was added, otherwise False.
+        """
+        initial_length = len(set_to_add_to)
+        set_to_add_to.add(element_to_add)
+        return len(set_to_add_to) != initial_length
 
-def to_state(given: Any) -> State:
+
+def to_state(given: Any) -> Union[State, None]:
     """ Transforms the input into a state
 
     Parameters

@@ -15,7 +15,7 @@ class ConsumptionRule(ReducedRule):
 
     Parameters
     ----------
-    f : any
+    f_param : any
         The consumed symbol
     left : any
         The non terminal on the left (here C)

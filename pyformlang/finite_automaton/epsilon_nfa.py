@@ -2,7 +2,7 @@
 Nondeterministic Automaton with epsilon transitions
 """
 
-from typing import Set, Iterable, AbstractSet
+from typing import Set, Iterable, AbstractSet, Any
 
 # pylint: disable=cyclic-import
 from pyformlang import finite_automaton
@@ -119,7 +119,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             next_states = next_states.union(next_states_temp)
         return next_states
 
-    def accepts(self, word: Iterable[Symbol]) -> bool:
+    def accepts(self, word: Iterable[Any]) -> bool:
         """ Checks whether the epsilon nfa accepts a given word
 
         Parameters
@@ -157,7 +157,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             current_states = self.eclose_iterable(next_states)
         return any(self.is_final_state(x) for x in current_states)
 
-    def eclose_iterable(self, states: Iterable[State]) -> Set[State]:
+    def eclose_iterable(self, states: Iterable[Any]) -> Set[State]:
         """ Compute the epsilon closure of a collection of states
 
         Parameters
@@ -187,7 +187,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             res = res.union(self.eclose(state))
         return res
 
-    def eclose(self, state: State) -> Set[State]:
+    def eclose(self, state: Any) -> Set[State]:
         """ Compute the epsilon closure of a state
 
         Parameters

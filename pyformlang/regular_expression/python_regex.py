@@ -70,7 +70,7 @@ class PythonRegex(regex.Regex):
 
     Parameters
     ----------
-    python_regex : str
+    python_regex : Union[str, Pattern[str]]
         The regex represented as a string or a compiled regex (
         re.compile(...))
 
