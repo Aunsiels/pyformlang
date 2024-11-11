@@ -4,8 +4,8 @@ Representation of a regular expression
 
 from typing import List, Iterable, Tuple, Optional, Any
 
-from pyformlang.finite_automaton import Epsilon as FAEpsilon
-from pyformlang.finite_automaton import EpsilonNFA, State, Symbol
+from pyformlang.finite_automaton import FiniteAutomaton, EpsilonNFA
+from pyformlang.finite_automaton import State, Symbol, Epsilon as FAEpsilon
 from pyformlang.cfg.cfg import CFG, Production
 from pyformlang.cfg.utils import to_variable
 
@@ -564,3 +564,254 @@ class Regex(RegexReader):
         """
         self._enfa = self._to_epsilon_nfa_internal(False)
         return self._enfa.accepts(word)
+
+    @classmethod
+    def from_finite_automaton(cls, automaton: FiniteAutomaton) -> "Regex":
+        """ Creates a regular expression from given finite automaton
+
+        Returns
+        ----------
+        regex : :class:`~pyformlang.regular_expression.Regex`
+            A regular expression equivalent to the current Epsilon NFA
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> regex = enfa.to_regex()
+        >>> regex.accepts(["abc"])
+        True
+
+        """
+        copies = [automaton.copy() for _ in automaton.final_states]
+        final_states = list(automaton.final_states)
+        for i in range(len(automaton.final_states)):
+            for j in range(len(automaton.final_states)):
+                if i != j:
+                    copies[j].remove_final_state(final_states[i])
+        regex_l = []
+        for copy in copies:
+            cls._remove_all_basic_states(copy)
+            regex_sub = cls._get_regex_simple(copy)
+            if regex_sub:
+                regex_l.append(regex_sub)
+        res = "+".join(regex_l)
+        return Regex(res)
+
+    @classmethod
+    def _get_regex_simple(cls, automaton: FiniteAutomaton) -> str:
+        """ Get the regex of an automaton when it only composed of a start and
+        a final state
+
+        CAUTION: For internal use only!
+
+        Returns
+        ----------
+        regex : str
+            A regex representing the automaton
+        """
+        if not automaton.final_states or not automaton.start_states:
+            return ""
+        if len(automaton.final_states) != 1 or len(automaton.start_states) != 1:
+            raise ValueError("The automaton is not simple enough!")
+        if automaton.start_states == automaton.final_states:
+            # We are suppose to have only one good symbol
+            for symbol in automaton.symbols:
+                out_states = automaton(list(automaton.start_states)[0], symbol)
+                if out_states:
+                    return "(" + str(symbol.value) + ")*"
+            return "epsilon"
+        start_to_start, start_to_end, end_to_start, end_to_end = \
+            cls._get_bi_transitions(automaton)
+        return cls.__get_regex_sub(start_to_start,
+                                    start_to_end,
+                                    end_to_start,
+                                    end_to_end)
+
+    @classmethod
+    def _get_bi_transitions(cls, automaton: FiniteAutomaton) \
+            -> Tuple[str, str, str, str]:
+        """ Internal method to compute the transition in the case of a \
+        simple automaton
+
+        Returns
+        start_to_start : str
+            The transition from the start state to the start state
+        start_to_end : str
+            The transition from the start state to the end state
+        end_to_start : str
+            The transition from the end state to the start state
+        end_to_end : str
+            The transition from the end state to the end state
+        ----------
+        """
+        start = list(automaton.start_states)[0]
+        end = list(automaton.final_states)[0]
+        start_to_start = "epsilon"
+        start_to_end = ""
+        end_to_end = "epsilon"
+        end_to_start = ""
+        for state in automaton.states:
+            for symbol in automaton.symbols.union({FAEpsilon()}):
+                for out_state in automaton(state, symbol):
+                    symbol_str = str(symbol.value)
+                    if not symbol_str.isalnum():
+                        symbol_str = "(" + symbol_str + ")"
+                    if state == start and out_state == start:
+                        start_to_start = symbol_str
+                    elif state == start and out_state == end:
+                        start_to_end = symbol_str
+                    elif state == end and out_state == start:
+                        end_to_start = symbol_str
+                    elif state == end and out_state == end:
+                        end_to_end = symbol_str
+        return start_to_start, start_to_end, end_to_start, end_to_end
+
+    @classmethod
+    def _remove_all_basic_states(cls, automaton: FiniteAutomaton) -> None:
+        """ Remove all states which are not the start state or a final state
+
+        CAREFUL: This method modifies the current automaton, for internal usage
+        only!
+
+        The function _create_or_transitions is supposed to be called before
+        calling this function
+        """
+        cls._create_or_transitions(automaton)
+        states = automaton.states.copy()
+        for state in states:
+            if (state not in automaton.start_states \
+                    and state not in automaton.final_states):
+                cls._remove_state(automaton, state)
+
+    @classmethod
+    def _remove_state(cls, automaton: FiniteAutomaton, state: State) -> None:
+        """ Removes a given state from the epsilon NFA
+
+        CAREFUL: This method modifies the current automaton, for internal usage
+        only!
+
+        The function _create_or_transitions is supposed to be called before
+        calling this function
+
+        Parameters
+        ----------
+        state : :class:`~pyformlang.finite_automaton.State`
+            The state to remove
+
+        """
+        # First compute all endings
+        out_transitions = {}
+        input_symbols = automaton.symbols.union({FAEpsilon()})
+        for symbol in input_symbols:
+            out_states = automaton(state, symbol).copy()
+            for out_state in out_states:
+                out_transitions[out_state] = str(symbol.value)
+                automaton.remove_transition(state, symbol, out_state)
+        if state in out_transitions:
+            to_itself = "(" + out_transitions[state] + ")*"
+            del out_transitions[state]
+            for out_state in list(out_transitions.keys()):
+                out_transitions[out_state] = to_itself + "." + \
+                                             out_transitions[out_state]
+        for in_state in automaton.states:
+            if in_state == state:
+                continue
+            for symbol in input_symbols:
+                out_states = automaton(in_state, symbol)
+                if state not in out_states:
+                    continue
+                symbol_str = "(" + str(symbol.value) + ")"
+                automaton.remove_transition(in_state, symbol, state)
+                for out_state, next_symb in out_transitions.items():
+                    new_symbol = Symbol(symbol_str + "." + next_symb)
+                    automaton.add_transition(in_state, new_symbol, out_state)
+        automaton.states.remove(state)
+        # We make sure the automaton has the good structure
+        cls._create_or_transitions(automaton)
+
+    @classmethod
+    def _create_or_transitions(cls, automaton: FiniteAutomaton) -> None:
+        """ Creates a OR transition instead of several connections
+
+        CAREFUL: This method modifies the automaton and is designed for \
+        internal use only!
+        """
+        for state in automaton.states:
+            new_transitions = {}
+            input_symbols = automaton.symbols.union({FAEpsilon()})
+            for symbol in input_symbols:
+                out_states = automaton(state, symbol)
+                out_states = out_states.copy()
+                symbol_str = str(symbol.value)
+                for out_state in out_states:
+                    automaton.remove_transition(state, symbol, out_state)
+                    base = new_transitions.setdefault(out_state, "")
+                    if "+" in symbol_str:
+                        symbol_str = "(" + symbol_str + ")"
+                    if base:
+                        new_transitions[out_state] = "((" + base + ")+(" + \
+                                                     symbol_str + "))"
+                    else:
+                        new_transitions[out_state] = symbol_str
+            for out_state, next_symb in new_transitions.items():
+                automaton.add_transition(state,
+                                         next_symb,
+                                         out_state)
+
+    @classmethod
+    def __get_regex_sub(cls,
+                        start_to_start: str,
+                        start_to_end: str,
+                        end_to_start: str,
+                        end_to_end: str) -> str:
+        """ Combines the transitions in the regex simple function """
+        if not start_to_end:
+            return ""
+        temp, part1 = cls.__get_temp(start_to_end, end_to_start, end_to_end)
+        part0 = "epsilon"
+        if start_to_start != "epsilon":
+            if temp:
+                part0 = "(" + start_to_start + "+" + temp + ")*"
+            else:
+                part0 = "(" + start_to_start + ")*"
+        elif temp != "epsilon" and temp:
+            part0 = "(" + temp + ")*"
+        return "(" + part0 + "." + part1 + ")"
+
+    @classmethod
+    def __get_temp(cls,
+                   start_to_end: str,
+                   end_to_start: str,
+                   end_to_end: str) -> Tuple[str, str]:
+        """
+        Gets a temp values in the computation
+        of the simple automaton regex.
+        """
+        temp = "epsilon"
+        if (start_to_end != "epsilon"
+                or end_to_end != "epsilon"
+                or end_to_start != "epsilon"):
+            temp = ""
+        if start_to_end != "epsilon":
+            temp = start_to_end
+        if end_to_end != "epsilon":
+            if temp:
+                temp += "." + end_to_end + "*"
+            else:
+                temp = end_to_end + "*"
+        part1 = temp
+        if not part1:
+            part1 = "epsilon"
+        if end_to_start != "epsilon":
+            if temp:
+                temp += "." + end_to_start
+            else:
+                temp = end_to_start
+        if not end_to_start:
+            temp = ""
+        return temp, part1

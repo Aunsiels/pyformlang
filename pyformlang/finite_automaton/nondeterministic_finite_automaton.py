@@ -120,6 +120,13 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
             raise InvalidEpsilonTransition
         return super().add_transition(s_from, symb_by, s_to)
 
+    def copy(self) -> "NondeterministicFiniteAutomaton":
+        """ Copies the current NFA instance """
+        return self._copy_to(NondeterministicFiniteAutomaton()) # type: ignore
+
+    def __copy__(self) -> "NondeterministicFiniteAutomaton":
+        return self.copy()
+
     @classmethod
     def from_epsilon_nfa(cls, enfa: EpsilonNFA) \
             -> "NondeterministicFiniteAutomaton":

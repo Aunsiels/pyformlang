@@ -247,18 +247,10 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         True
 
         """
-        dfa = DeterministicFiniteAutomaton()
-        if self.start_state:
-            dfa.add_start_state(self.start_state)
-        for final in self._final_states:
-            dfa.add_final_state(final)
-        for state in self._states:
-            for symbol in self._input_symbols:
-                state_to = self._transition_function.get_next_state(
-                    state, symbol)
-                if state_to is not None:
-                    dfa.add_transition(state, symbol, state_to)
-        return dfa
+        return self._copy_to(DeterministicFiniteAutomaton()) # type: ignore
+
+    def __copy__(self) -> "DeterministicFiniteAutomaton":
+        return self.copy()
 
     def get_next_state(self, s_from: Hashable, symb_by: Hashable) \
             -> Optional[State]:

@@ -651,6 +651,29 @@ class FiniteAutomaton:
         """
         return self._transition_function.to_dict()
 
+    def __copy__(self) -> "FiniteAutomaton":
+        return self.copy()
+
+    def copy(self) -> "FiniteAutomaton":
+        """ Copies the current Finite Automaton instance """
+        return self._copy_to(FiniteAutomaton())
+
+    def _copy_to(self, fa_to_copy_to: "FiniteAutomaton") -> "FiniteAutomaton":
+        """ Copies current automaton properties to the given one """
+        for start in self._start_states:
+            fa_to_copy_to.add_start_state(start)
+        for final in self._final_states:
+            fa_to_copy_to.add_final_state(final)
+        for state in self._states:
+            for symbol in self._input_symbols:
+                states = self._transition_function(state, symbol)
+                for state_to in states:
+                    fa_to_copy_to.add_transition(state, symbol, state_to)
+            states = self._transition_function(state, Epsilon())
+            for state_to in states:
+                fa_to_copy_to.add_transition(state, Epsilon(), state_to)
+        return fa_to_copy_to
+
     @staticmethod
     def __try_add(set_to_add_to: Set[Any], element_to_add: Any) -> bool:
         """
