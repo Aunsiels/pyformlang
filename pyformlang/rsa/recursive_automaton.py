@@ -4,8 +4,9 @@ Representation of a recursive automaton
 
 from typing import AbstractSet, Union
 
-from pyformlang.finite_automaton.finite_automaton import to_symbol
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.finite_automaton.symbol import Symbol
+from pyformlang.finite_automaton.utils import to_symbol
 from pyformlang.regular_expression import Regex
 from pyformlang.cfg import Epsilon
 
@@ -111,7 +112,7 @@ class RecursiveAutomaton:
             The new recursive automaton built from regular expression
         """
         start_nonterminal = to_symbol(start_nonterminal)
-        box = Box(regex.to_epsilon_nfa().minimize(), start_nonterminal)
+        box = Box(cls.__regex_to_minimal_dfa(regex), start_nonterminal)
         return RecursiveAutomaton(box, {box})
 
     @classmethod
@@ -153,9 +154,11 @@ class RecursiveAutomaton:
                 productions[head] = body
 
         for head, body in productions.items():
-            boxes.add(Box(Regex(body).to_epsilon_nfa().minimize(),
+            boxes.add(Box(cls.__regex_to_minimal_dfa(Regex(body)),
                           to_symbol(head)))
-        start_box = Box(Regex(productions[start_nonterminal.value]).to_epsilon_nfa().minimize(), start_nonterminal)
+        start_box_dfa = cls.__regex_to_minimal_dfa(
+            Regex(productions[start_nonterminal.value]))
+        start_box = Box(start_box_dfa, start_nonterminal)
         return RecursiveAutomaton(start_box, boxes)
 
     def is_equals_to(self, other):
@@ -179,3 +182,11 @@ class RecursiveAutomaton:
 
     def __eq__(self, other):
         return self.is_equals_to(other)
+
+    @classmethod
+    def __regex_to_minimal_dfa(cls, regex: Regex) \
+            -> DeterministicFiniteAutomaton:
+        """ Build minimal dfa from given regex """
+        enfa = regex.to_epsilon_nfa()
+        dfa = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa)
+        return dfa.minimize()

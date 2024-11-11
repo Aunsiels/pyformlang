@@ -5,8 +5,6 @@ Nondeterministic Automaton with epsilon transitions
 from typing import Iterable, Set, AbstractSet, Tuple, Hashable
 from networkx import MultiDiGraph
 
-from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
-from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.regular_expression import Regex
 
 from .state import State
@@ -15,7 +13,7 @@ from .epsilon import Epsilon
 from .nondeterministic_transition_function import \
     NondeterministicTransitionFunction
 from .finite_automaton import FiniteAutomaton
-from .utils import to_state, to_symbol, to_single_state
+from .utils import to_state, to_symbol
 from .regexable import Regexable
 
 
@@ -248,110 +246,6 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         return len(self._start_states) <= 1 \
             and self._transition_function.is_deterministic() \
             and all({x} == self.eclose(x) for x in self._states)
-
-    def remove_epsilon_transitions(self) -> NondeterministicFiniteAutomaton:
-        """ Removes the epsilon transitions from the automaton
-
-        Returns
-        ----------
-        dfa :  :class:`~pyformlang.finite_automaton. \
-            NondeterministicFiniteAutomaton`
-            A non-deterministic finite automaton equivalent to the current \
-            nfa, with no epsilon transition
-        """
-        nfa = NondeterministicFiniteAutomaton()
-        for state in self._start_states:
-            nfa.add_start_state(state)
-        for state in self._final_states:
-            nfa.add_final_state(state)
-        start_eclose = self.eclose_iterable(self._start_states)
-        for state in start_eclose:
-            nfa.add_start_state(state)
-        for state in self._states:
-            eclose = self.eclose(state)
-            for e_state in eclose:
-                if e_state in self._final_states:
-                    nfa.add_final_state(state)
-                for symb in self._input_symbols:
-                    for next_state in self._transition_function(e_state, symb):
-                        nfa.add_transition(state, symb, next_state)
-        return nfa
-
-    def _to_deterministic_internal(self, eclose: bool) \
-            -> DeterministicFiniteAutomaton:
-        """ Transforms the epsilon-nfa into a dfa
-
-        Parameters
-        ----------
-        eclose : bool
-            Whether to use the epsilon closure or not
-
-        Returns
-        ----------
-        dfa :  :class:`~pyformlang.finite_automaton\
-        .DeterministicFiniteAutomaton`
-            A dfa equivalent to the current nfa
-        """
-        dfa = DeterministicFiniteAutomaton()
-        # Add Eclose
-        if eclose:
-            start_eclose = self.eclose_iterable(self._start_states)
-        else:
-            start_eclose = self._start_states
-        start_state = to_single_state(start_eclose)
-        dfa.add_start_state(start_state)
-        to_process = [start_eclose]
-        processed = {start_state}
-        while to_process:
-            current = to_process.pop()
-            s_from = to_single_state(current)
-            for symb in self._input_symbols:
-                all_trans = [self._transition_function(x, symb)
-                             for x in current]
-                state = set()
-                for trans in all_trans:
-                    state = state.union(trans)
-                if not state:
-                    continue
-                # Eclose added
-                if eclose:
-                    state = self.eclose_iterable(state)
-                state_merged = to_single_state(state)
-                dfa.add_transition(s_from, symb, state_merged)
-                if state_merged not in processed:
-                    processed.add(state_merged)
-                    to_process.append(state)
-            for state in current:
-                if state in self._final_states:
-                    dfa.add_final_state(s_from)
-        return dfa
-
-    def to_deterministic(self) -> DeterministicFiniteAutomaton:
-        """ Transforms the epsilon-nfa into a dfa
-
-        Returns
-        ----------
-        dfa :  :class:`~pyformlang.finite_automaton\
-        .DeterministicFiniteAutomaton`
-            A dfa equivalent to the current nfa
-
-        Examples
-        --------
-
-        >>> enfa = EpsilonNFA()
-        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
-        (0, "epsilon", 2)])
-        >>> enfa.add_start_state(0)
-        >>> enfa.add_final_state(1)
-        >>> dfa = enfa.to_deterministic()
-        >>> dfa.is_deterministic()
-        True
-
-        >>> enfa.is_equivalent_to(dfa)
-        True
-
-        """
-        return self._to_deterministic_internal(True)
 
     def copy(self) -> "EpsilonNFA":
         """ Copies the current Epsilon NFA
@@ -886,30 +780,6 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         self._states.remove(state)
         # We make sure the automaton has the good structure
         self._create_or_transitions()
-
-    def minimize(self) -> DeterministicFiniteAutomaton:
-        """ Minimize the current epsilon NFA
-
-        Returns
-        ----------
-        dfa : :class:`~pyformlang.deterministic_finite_automaton\
-        .DeterministicFiniteAutomaton`
-            The minimal DFA
-
-        Examples
-        --------
-
-        >>> enfa = EpsilonNFA()
-        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
-        (0, "epsilon", 2)])
-        >>> enfa.add_start_state(0)
-        >>> enfa.add_final_state(1)
-        >>> dfa_minimal = enfa.minimize()
-        >>> dfa_minimal.is_equivalent(enfa)
-        True
-
-        """
-        return self.to_deterministic().minimize()
 
     def _create_or_transitions(self) -> None:
         """ Creates a OR transition instead of several connections

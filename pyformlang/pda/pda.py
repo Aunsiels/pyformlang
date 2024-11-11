@@ -17,7 +17,6 @@ from .state import State
 from .transition_function import TransitionFunction
 from .utils import PDAObjectCreator
 from ..finite_automaton import FiniteAutomaton
-from ..finite_automaton.finite_automaton import add_start_state_to_graph
 
 INPUT_SYMBOL = 1
 
@@ -582,7 +581,7 @@ class PDA:
                            peripheries=2 if state in self.final_states else 1,
                            label=state.value)
             if state == self._start_state:
-                add_start_state_to_graph(graph, state)
+                self.__add_start_state_to_graph(graph, state)
         if self._start_stack_symbol is not None:
             graph.add_node("INITIAL_STACK_HIDDEN",
                            label=json.dumps(self._start_stack_symbol.value),
@@ -660,6 +659,17 @@ class PDA:
 
         """
         write_dot(self.to_networkx(), filename)
+
+    @staticmethod
+    def __add_start_state_to_graph(graph: nx.MultiDiGraph, state: State) -> None:
+        """ Adds a starting node to a given graph """
+        graph.add_node("starting_" + str(state.value),
+                       label="",
+                       shape=None,
+                       height=.0,
+                       width=.0)
+        graph.add_edge("starting_" + str(state.value),
+                       state.value)
 
 
 def _prepend_input_symbol_to_the_bodies(bodies, transition):

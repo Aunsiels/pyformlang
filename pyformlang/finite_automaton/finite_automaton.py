@@ -3,12 +3,12 @@
 # pylint: disable=function-redefined
 
 from typing import Dict, List, Set, Tuple, Iterable, Optional, Hashable, Any
+from abc import abstractmethod
 from collections import deque
 from networkx import MultiDiGraph
 from networkx.drawing.nx_pydot import write_dot
 from fastcore.dispatch import typedispatch
 
-from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.fst import FST
 
 from .state import State
@@ -45,6 +45,32 @@ class FiniteAutomaton:
         self._transition_function = TransitionFunction()
         self._start_states: Set[State] = set()
         self._final_states: Set[State] = set()
+
+    @property
+    def states(self) -> Set[State]:
+        """ Gives the states
+
+        Returns
+        ----------
+        states : set of :class:`~pyformlang.finite_automaton.State`
+            The states
+        """
+        return self._states
+
+    @property
+    def symbols(self) -> Set[Symbol]:
+        """The symbols"""
+        return self._input_symbols
+
+    @property
+    def start_states(self) -> Set[State]:
+        """The start states"""
+        return self._start_states
+
+    @property
+    def final_states(self) -> Set[State]:
+        """The final states"""
+        return self._final_states
 
     def add_transition(self,
                        s_from: Hashable,
@@ -160,17 +186,6 @@ class FiniteAutomaton:
                                                            symb_by,
                                                            s_to)
 
-    @property
-    def states(self) -> Set[State]:
-        """ Gives the states
-
-        Returns
-        ----------
-        states : set of :class:`~pyformlang.finite_automaton.State`
-            The states
-        """
-        return self._states
-
     def get_number_transitions(self) -> int:
         """ Gives the number of transitions
 
@@ -190,16 +205,6 @@ class FiniteAutomaton:
 
         """
         return self._transition_function.get_number_transitions()
-
-    @property
-    def symbols(self) -> Set[Symbol]:
-        """The symbols"""
-        return self._input_symbols
-
-    @property
-    def final_states(self) -> Set[State]:
-        """The final states"""
-        return self._final_states
 
     def add_start_state(self, state: Hashable) -> int:
         """ Set an initial state
@@ -393,11 +398,6 @@ class FiniteAutomaton:
         state = to_state(state)
         return state in self._final_states
 
-    @property
-    def start_states(self) -> Set[State]:
-        """The start states"""
-        return self._start_states
-
     def add_symbol(self, symbol: Hashable) -> None:
         """ Add a symbol
 
@@ -542,36 +542,6 @@ class FiniteAutomaton:
         """
         write_dot(self.to_networkx(), filename)
 
-    def is_equivalent_to(self, other: "FiniteAutomaton") -> bool:
-        """
-        Checks if the current automaton is equivalent to a given one.
-
-        Parameters
-        ----------
-        other :
-            An other finite state automaton
-
-        Returns
-        -------
-        is_equivalent : bool
-            Whether the two automata are equivalent or not
-
-        Examples
-        --------
-
-        >>> enfa = EpsilonNFA()
-        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
-        (0, "epsilon", 2)])
-        >>> enfa.add_start_state(0)
-        >>> enfa.add_final_state(1)
-        >>> dfa = enfa.to_deterministic()
-        >>> dfa.is_deterministic()
-        True
-
-        """
-        self_dfa = self.to_deterministic()
-        return self_dfa.is_equivalent_to(other)
-
     def get_accepted_words(self, max_length: Optional[int] = None) \
             -> Iterable[List[Symbol]]:
         """
@@ -644,18 +614,10 @@ class FiniteAutomaton:
                     states_to_process.append(next_state)
         return visited
 
-    def to_deterministic(self) -> DeterministicFiniteAutomaton:
-        """ Turns the automaton into a deterministic one"""
-        raise NotImplementedError
-
+    @abstractmethod
     def is_deterministic(self) -> bool:
         """ Checks if the automaton is deterministic """
         raise NotImplementedError
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, FiniteAutomaton):
-            return False
-        return self.is_equivalent_to(other)
 
     def __len__(self) -> int:
         """Number of transitions"""

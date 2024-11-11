@@ -7,7 +7,6 @@ from typing import Iterable, Hashable
 from .epsilon import Epsilon
 from .epsilon_nfa import EpsilonNFA
 from .deterministic_transition_function import InvalidEpsilonTransition
-from .deterministic_finite_automaton import DeterministicFiniteAutomaton
 from .utils import to_symbol
 
 
@@ -113,29 +112,6 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         return len(self._start_states) <= 1 and \
             self._transition_function.is_deterministic()
 
-    def to_deterministic(self) -> DeterministicFiniteAutomaton:
-        """ Transforms the nfa into a dfa
-
-        Returns
-        ----------
-        dfa :  :class:`~pyformlang.deterministic_finite_automaton\
-        .DeterministicFiniteAutomaton`
-            A dfa equivalent to the current nfa
-
-        Examples
-        --------
-
-        >>> nfa = NondeterministicFiniteAutomaton()
-        >>> nfa.add_transitions([(0, "a", 1), (0, "a", 2)])
-        >>> nfa.add_start_state(0)
-        >>> nfa.add_final_state(1)
-        >>> dfa = nfa.to_deterministic()
-        >>> nfa.is_equivalent_to(dfa)
-        True
-
-        """
-        return self._to_deterministic_internal(False)
-
     def add_transition(self,
                        s_from: Hashable,
                        symb_by: Hashable,
@@ -143,3 +119,33 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         if symb_by == Epsilon():
             raise InvalidEpsilonTransition
         return super().add_transition(s_from, symb_by, s_to)
+
+    @classmethod
+    def from_epsilon_nfa(cls, enfa: EpsilonNFA) \
+            -> "NondeterministicFiniteAutomaton":
+        """ Builds nfa equivalent to the given enfa
+
+        Returns
+        ----------
+        dfa :  :class:`~pyformlang.finite_automaton. \
+            NondeterministicFiniteAutomaton`
+            A non-deterministic finite automaton equivalent to the current \
+            nfa, with no epsilon transition
+        """
+        nfa = NondeterministicFiniteAutomaton()
+        for state in enfa.start_states:
+            nfa.add_start_state(state)
+        for state in enfa.final_states:
+            nfa.add_final_state(state)
+        start_eclose = enfa.eclose_iterable(enfa.start_states)
+        for state in start_eclose:
+            nfa.add_start_state(state)
+        for state in enfa.states:
+            eclose = enfa.eclose(state)
+            for e_state in eclose:
+                if e_state in enfa.final_states:
+                    nfa.add_final_state(state)
+                for symb in enfa.symbols:
+                    for next_state in enfa(e_state, symb):
+                        nfa.add_transition(state, symb, next_state)
+        return nfa

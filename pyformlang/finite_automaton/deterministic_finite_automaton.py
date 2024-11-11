@@ -2,17 +2,17 @@
 Representation of a deterministic finite automaton
 """
 
-from typing import Dict, List, Iterable, AbstractSet, Optional, Hashable
+from typing import Dict, List, Iterable, AbstractSet, Optional, Hashable, Any
 from numpy import empty
 
 from .state import State
 from .symbol import Symbol
 from .deterministic_transition_function import DeterministicTransitionFunction
-from .finite_automaton import FiniteAutomaton
-from .utils import to_state, to_symbol, to_single_state
+from .epsilon_nfa import EpsilonNFA
 from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
 from .hopcroft_processing_list import HopcroftProcessingList
 from .partition import Partition
+from .utils import to_state, to_symbol, to_single_state
 
 
 class PreviousTransitions:
@@ -226,27 +226,6 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         """
         return True
 
-    def to_deterministic(self) -> "DeterministicFiniteAutomaton":
-        """ Transforms the current automaton into a dfa. Does nothing if the \
-        automaton is already deterministic.
-
-        Returns
-        ----------
-        dfa :  :class:`~pyformlang.deterministic_finite_automaton\
-        .DeterministicFiniteAutomaton`
-            A dfa equivalent to the current nfa
-
-        Examples
-        --------
-
-        >>> dfa0 = DeterministicFiniteAutomaton()
-        >>> dfa1 = dfa0.to_deterministic()
-        >>> dfa0.is_equivalent_to(dfa1)
-        True
-
-        """
-        return self
-
     def copy(self) -> "DeterministicFiniteAutomaton":
         """ Copies the current DFA
 
@@ -355,6 +334,67 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                         done.add((next_node, symbol))
         return dfa
 
+    @classmethod
+    def from_epsilon_nfa(cls, enfa: EpsilonNFA) \
+            -> "DeterministicFiniteAutomaton":
+        """ Builds dfa equivalent to the given enfa """
+        return cls._from_epsilon_nfa_internal(enfa, True)
+
+    @classmethod
+    def from_nfa(cls, nfa: NondeterministicFiniteAutomaton) \
+            -> "DeterministicFiniteAutomaton":
+        """ Builds dfa equivalent to the given nfa """
+        return cls._from_epsilon_nfa_internal(nfa, False)
+
+    @classmethod
+    def _from_epsilon_nfa_internal(cls, enfa: EpsilonNFA, eclose: bool) \
+            -> "DeterministicFiniteAutomaton":
+        """ Builds dfa equivalent to the given automaton
+
+        Parameters
+        ----------
+        eclose : bool
+            Whether to use the epsilon closure or not
+
+        Returns
+        ----------
+        dfa :  :class:`~pyformlang.finite_automaton\
+        .DeterministicFiniteAutomaton`
+            A dfa equivalent to the current nfa
+        """
+        dfa = DeterministicFiniteAutomaton()
+        # Add Eclose
+        if eclose:
+            start_eclose = enfa.eclose_iterable(enfa.start_states)
+        else:
+            start_eclose = enfa.start_states
+        start_state = to_single_state(start_eclose)
+        dfa.add_start_state(start_state)
+        to_process = [start_eclose]
+        processed = {start_state}
+        while to_process:
+            current = to_process.pop()
+            s_from = to_single_state(current)
+            for symbol in enfa.symbols:
+                all_trans = [enfa(x, symbol) for x in current]
+                state = set()
+                for trans in all_trans:
+                    state = state.union(trans)
+                if not state:
+                    continue
+                # Eclose added
+                if eclose:
+                    state = enfa.eclose_iterable(state)
+                state_merged = to_single_state(state)
+                dfa.add_transition(s_from, symbol, state_merged)
+                if state_merged not in processed:
+                    processed.add(state_merged)
+                    to_process.append(state)
+            for state in current:
+                if state in enfa.final_states:
+                    dfa.add_final_state(s_from)
+        return dfa
+
     def _get_partition(self) -> Partition:
         previous_transitions = self._get_previous_transitions()
         finals = []
@@ -396,7 +436,12 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                         processing_list.insert(new_class, symbol)
         return partition
 
-    def is_equivalent_to(self, other: FiniteAutomaton) -> bool:
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, EpsilonNFA):
+            return False
+        return self.is_equivalent_to(other)
+
+    def is_equivalent_to(self, other: EpsilonNFA) -> bool:
         """ Check whether two automata are equivalent
 
         Parameters
@@ -423,7 +468,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         """
         if not isinstance(other, DeterministicFiniteAutomaton):
-            other_dfa = other.to_deterministic()
+            other_dfa = DeterministicFiniteAutomaton.from_epsilon_nfa(other)
             return self.is_equivalent_to(other_dfa)
         self_minimal = self.minimize()
         other_minimal = other.minimize()
