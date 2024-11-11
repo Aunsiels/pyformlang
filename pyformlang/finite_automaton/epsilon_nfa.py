@@ -2,17 +2,15 @@
 Nondeterministic Automaton with epsilon transitions
 """
 
-# pylint: disable=too-many-arguments
-
 from typing import Iterable, Set, AbstractSet, Tuple, Any
 
 from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
 from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.regular_expression import Regex
 
-from .epsilon import Epsilon
 from .state import State
 from .symbol import Symbol
+from .epsilon import Epsilon
 from .nondeterministic_transition_function import \
     NondeterministicTransitionFunction
 
@@ -71,7 +69,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             states: AbstractSet[Any] = None,
             input_symbols: AbstractSet[Any] = None,
             transition_function: NondeterministicTransitionFunction = None,
-            start_state: AbstractSet[Any] = None,
+            start_states: AbstractSet[Any] = None,
             final_states: AbstractSet[Any] = None) -> None:
         super().__init__()
         if states is not None:
@@ -80,20 +78,18 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
         if input_symbols is not None:
             input_symbols = {to_symbol(x) for x in input_symbols}
         self._input_symbols = input_symbols or set()
-        if transition_function is not None:
-            self._transition_function = transition_function
-        if start_state is not None:
-            start_state = {to_state(x) for x in start_state}
-        self._start_states = start_state or set()
+        self._transition_function = transition_function \
+            or NondeterministicTransitionFunction()
+        if start_states is not None:
+            start_states = {to_state(x) for x in start_states}
+        self._start_states = start_states or set()
         if final_states is not None:
             final_states = {to_state(x) for x in final_states}
         self._final_states = final_states or set()
         for state in self._final_states:
-            if state is not None and state not in self._states:
-                self._states.add(state)
+            self._states.add(state)
         for state in self._start_states:
-            if state is not None and state not in self._states:
-                self._states.add(state)
+            self._states.add(state)
 
     def _get_next_states_iterable(self,
                                   current_states: Iterable[State],
@@ -253,8 +249,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
             and self._transition_function.is_deterministic() \
             and all({x} == self.eclose(x) for x in self._states)
 
-    def remove_epsilon_transitions(self) \
-            -> NondeterministicFiniteAutomaton:
+    def remove_epsilon_transitions(self) -> NondeterministicFiniteAutomaton:
         """ Removes the epsilon transitions from the automaton
 
         Returns
@@ -332,8 +327,7 @@ class EpsilonNFA(Regexable, FiniteAutomaton):
                     dfa.add_final_state(s_from)
         return dfa
 
-    def to_deterministic(self) \
-            -> DeterministicFiniteAutomaton:
+    def to_deterministic(self) -> DeterministicFiniteAutomaton:
         """ Transforms the epsilon-nfa into a dfa
 
         Returns

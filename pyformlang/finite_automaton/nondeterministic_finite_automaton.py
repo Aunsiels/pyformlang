@@ -4,12 +4,11 @@ Representation of a nondeterministic finite automaton
 
 from typing import Iterable, Any
 
-from pyformlang.finite_automaton import \
-    Epsilon, DeterministicFiniteAutomaton
-
+from .epsilon import Epsilon
 from .epsilon_nfa import EpsilonNFA
 from .finite_automaton import to_symbol
-from .transition_function import InvalidEpsilonTransition
+from .deterministic_transition_function import InvalidEpsilonTransition
+from .deterministic_finite_automaton import DeterministicFiniteAutomaton
 
 
 class NondeterministicFiniteAutomaton(EpsilonNFA):

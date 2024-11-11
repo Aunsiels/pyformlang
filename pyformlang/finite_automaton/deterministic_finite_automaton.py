@@ -2,28 +2,18 @@
 Representation of a deterministic finite automaton
 """
 
-# pylint: disable=too-many-arguments
-
-from typing import \
-    Dict, List, Iterable, Set, \
-    AbstractSet, Optional, Any
+from typing import Dict, List, Iterable, AbstractSet, Optional, Any
 
 from numpy import empty
 
-from typing import AbstractSet, Iterable, Any
-
-import numpy as np
-
-# pylint: disable=cyclic-import
-from .epsilon_nfa import to_single_state
-from .finite_automaton import to_state, to_symbol
-from .hopcroft_processing_list import HopcroftProcessingList
-from .finite_automaton import FiniteAutomaton
-from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
-from .partition import Partition
 from .state import State
 from .symbol import Symbol
-from .transition_function import TransitionFunction
+from .deterministic_transition_function import DeterministicTransitionFunction
+from .finite_automaton import FiniteAutomaton, to_state, to_symbol
+from .epsilon_nfa import to_single_state
+from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
+from .hopcroft_processing_list import HopcroftProcessingList
+from .partition import Partition
 
 
 class PreviousTransitions:
@@ -40,7 +30,7 @@ class PreviousTransitions:
         for i, symbol in enumerate(symbols):
             self._to_index_symbol[symbol] = i
         self._conversion = empty((len(states) + 1, len(symbols)),
-                                    dtype=object)
+                                 dtype=object)
 
     def add(self,
             next0: Optional[State],
@@ -117,12 +107,12 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
     def __init__(self,
                  states: AbstractSet[Any] = None,
                  input_symbols: AbstractSet[Any] = None,
-                 transition_function: TransitionFunction = None,
+                 transition_function: DeterministicTransitionFunction = None,
                  start_state: Any = None,
                  final_states: AbstractSet[Any] = None) -> None:
         super().__init__(states, input_symbols, None, None, final_states)
-        self._transition_function: TransitionFunction = \
-            transition_function or TransitionFunction()
+        self._transition_function = transition_function \
+            or DeterministicTransitionFunction()
         if start_state is not None:
             start_state = to_state(start_state)
             self._start_states = {start_state}
@@ -130,7 +120,11 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         else:
             self._start_states = set()
 
-    def add_start_state(self, state: Any) -> int:
+    @property
+    def start_state(self) -> Optional[State]:
+        """ Gets the start state """
+        return list(self._start_states)[0] if self._start_states else None
+
     def add_start_state(self, state: Any) -> int:
         """ Set an initial state
 
@@ -157,7 +151,6 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         return 1
 
     def remove_start_state(self, state: Any) -> int:
-    def remove_start_state(self, state: Any) -> int:
         """ remove an initial state
 
         Parameters
@@ -180,11 +173,10 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         """
         state = to_state(state)
         if self._start_states == {state}:
-            self._start_states.remove(state)
+            self._start_states = set()
             return 1
         return 0
 
-    def accepts(self, word: Iterable[Any]) -> bool:
     def accepts(self, word: Iterable[Any]) -> bool:
         """ Checks whether the dfa accepts a given word
 
@@ -210,14 +202,12 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         """
         word = [to_symbol(x) for x in word]
-        current_state = None
-        if self._start_states:
-            current_state = list(self._start_states)[0]
+        current_state = self.start_state
         for symbol in word:
             if current_state is None:
                 return False
-            current_state = self._transition_function.get_state(current_state,
-                                                                symbol)
+            current_state = self._transition_function.get_next_state(
+                current_state, symbol)
         return current_state is not None and self.is_final_state(current_state)
 
     def is_deterministic(self) -> bool:
@@ -281,23 +271,28 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
 
         """
         dfa = DeterministicFiniteAutomaton()
-        if self._start_states:
-            dfa.add_start_state(list(self._start_states)[0])
+        if self.start_state:
+            dfa.add_start_state(self.start_state)
         for final in self._final_states:
             dfa.add_final_state(final)
         for state in self._states:
             for symbol in self._input_symbols:
-                state_to = self._transition_function.get_state(state, symbol)
+                state_to = self._transition_function.get_next_state(
+                    state, symbol)
                 if state_to is not None:
                     dfa.add_transition(state, symbol, state_to)
         return dfa
+
+    def get_next_state(self, s_from: State, symb_by: Symbol) -> Optional[State]:
+        """ Make a call of deterministic transition function """
+        return self._transition_function.get_next_state(s_from, symb_by)
 
     def _get_previous_transitions(self) -> PreviousTransitions:
         previous_transitions = PreviousTransitions(self._states,
                                                    self._input_symbols)
         for state in self._states:
             for symbol in self._input_symbols:
-                next0 = self._transition_function.get_state(state, symbol)
+                next0 = self._transition_function.get_next_state(state, symbol)
                 previous_transitions.add(next0, symbol, state)
         for symbol in self._input_symbols:
             previous_transitions.add(None, symbol, None)
@@ -350,7 +345,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             done = set()
             new_state = to_new_states[state]
             for symbol in self._input_symbols:
-                next_node = self._transition_function.get_state(state, symbol)
+                next_node = self._transition_function.get_next_state(
+                    state, symbol)
                 if next_node and next_node in states:
                     next_node = to_new_states[next_node]
                     if (next_node, symbol) not in done:
@@ -431,11 +427,6 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         self_minimal = self.minimize()
         other_minimal = other.minimize()
         return self._is_equivalent_to_minimal(self_minimal, other_minimal)
-
-    @property
-    def start_state(self) -> Optional[State]:
-        """ The start state """
-        return list(self._start_states)[0] if self._start_states else None
 
     @staticmethod
     def _is_equivalent_to_minimal(

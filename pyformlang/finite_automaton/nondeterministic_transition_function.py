@@ -4,15 +4,16 @@ A nondeterministic transition function
 
 # pylint: disable=function-redefined
 
-import copy
 from typing import Dict, Set, Iterable, Tuple
+from copy import deepcopy
 from fastcore.dispatch import typedispatch
 
 from .state import State
 from .symbol import Symbol
+from .transition_function import TransitionFunction
 
 
-class NondeterministicTransitionFunction:
+class NondeterministicTransitionFunction(TransitionFunction):
     """ A nondeterministic transition function in a finite automaton.
 
     The difference with a deterministic transition is that the return value is
@@ -28,10 +29,12 @@ class NondeterministicTransitionFunction:
 
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._transitions: Dict[State, Dict[Symbol, Set[State]]] = {}
 
-    def add_transition(self, s_from: State, symb_by: Symbol,
+    def add_transition(self,
+                       s_from: State,
+                       symb_by: Symbol,
                        s_to: State) -> int:
         """ Adds a new transition to the function
 
@@ -67,9 +70,11 @@ class NondeterministicTransitionFunction:
             self._transitions[s_from][symb_by] = {s_to}
         return 1
 
-    def remove_transition(self, s_from: State, symb_by: Symbol,
+    def remove_transition(self,
+                          s_from: State,
+                          symb_by: Symbol,
                           s_to: State) -> int:
-        """ Removes a transition to the function
+        """ Removes a transition from the function
 
         Parameters
         ----------
@@ -124,19 +129,14 @@ class NondeterministicTransitionFunction:
                 counter += len(s_to)
         return counter
 
-    def __len__(self) -> int:
-        return self.get_number_transitions()
-
     @typedispatch
-    def __call__(self, s_from: State) \
-            -> Iterable[Tuple[Symbol, Set[State]]]:
+    def __call__(self, s_from: State) -> Iterable[Tuple[Symbol, Set[State]]]:
         """ Calls the transition function as a real function """
         if s_from in self._transitions:
             yield from self._transitions[s_from].items()
 
     @typedispatch
-    def __call__(self, s_from: State, symb_by: Symbol) \
-            -> Set[State]:
+    def __call__(self, s_from: State, symb_by: Symbol) -> Set[State]:
         """ Calls the transition function as a real function
 
         Parameters
@@ -157,11 +157,11 @@ class NondeterministicTransitionFunction:
                 return self._transitions[s_from][symb_by]
         return set()
 
-    def get_transitions_from(self, state_from: State) \
+    def get_transitions_from(self, s_from: State) \
             -> Iterable[Tuple[Symbol, State]]:
         """ Gets transitions from the given state """
-        if state_from in self._transitions:
-            for symb_by, states_to in self._transitions[state_from].items():
+        if s_from in self._transitions:
+            for symb_by, states_to in self._transitions[s_from].items():
                 for state_to in states_to:
                     yield symb_by, state_to
 
@@ -176,11 +176,8 @@ class NondeterministicTransitionFunction:
             A generator of edges
         """
         for s_from in self._transitions:
-            for (symb_by, s_to) in self.get_transitions_from(s_from):
-                yield (s_from, symb_by, s_to)
-
-    def __iter__(self) -> Iterable[Tuple[State, Symbol, State]]:
-        yield from self.get_edges()
+            for symb_by, s_to in self.get_transitions_from(s_from):
+                yield s_from, symb_by, s_to
 
     def to_dict(self) -> Dict[State, Dict[Symbol, Set[State]]]:
         """
@@ -194,7 +191,7 @@ class NondeterministicTransitionFunction:
         transition_dict : dict
             The transitions as a dictionary.
         """
-        return copy.deepcopy(self._transitions)
+        return deepcopy(self._transitions)
 
     def is_deterministic(self) -> bool:
         """ Whether the transition function is deterministic

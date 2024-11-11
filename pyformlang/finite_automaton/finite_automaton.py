@@ -2,23 +2,19 @@
 
 # pylint: disable=function-redefined
 
-from typing import \
-    Dict, List, Set, Tuple, \
-    Iterable, Union, Optional, Any
-
-from fastcore.dispatch import typedispatch
-from networkx import MultiDiGraph, transitive_closure
+from typing import Dict, List, Set, Tuple, Iterable, Optional, Any
+from collections import deque
+from networkx import MultiDiGraph
 from networkx.drawing.nx_pydot import write_dot
+from fastcore.dispatch import typedispatch
 
 from pyformlang.finite_automaton import EpsilonNFA
 from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.fst import FST
 
-from .epsilon import Epsilon
 from .state import State
 from .symbol import Symbol
-from .nondeterministic_transition_function import \
-    NondeterministicTransitionFunction
+from .epsilon import Epsilon
 from .transition_function import TransitionFunction
 
 
@@ -46,15 +42,11 @@ class FiniteAutomaton:
     def __init__(self) -> None:
         self._states: Set[State] = set()
         self._input_symbols: Set[Symbol] = set()
-        self._transition_function: Union[NondeterministicTransitionFunction,
-                                         TransitionFunction] \
-                = NondeterministicTransitionFunction()
+        self._transition_function = TransitionFunction()
         self._start_states: Set[State] = set()
         self._final_states: Set[State] = set()
-        self.__transitive_closure: Optional[MultiDiGraph] = None
 
-    def add_transition(self, s_from: Any, symb_by: Any,
-                       s_to: Any) -> int:
+    def add_transition(self, s_from: Any, symb_by: Any, s_to: Any) -> int:
         """ Adds a transition to the nfa
 
         Parameters
@@ -129,8 +121,7 @@ class FiniteAutomaton:
             temp = self.add_transition(s_from, symb_by, s_to)
         return temp
 
-    def remove_transition(self, s_from: Any, symb_by: Any,
-                          s_to: Any) -> int:
+    def remove_transition(self, s_from: Any, symb_by: Any, s_to: Any) -> int:
         """ Remove a transition of the nfa
 
         Parameters
@@ -318,18 +309,16 @@ class FiniteAutomaton:
         return 0
 
     @typedispatch
-    def __call__(self, state: Any) \
-            -> Iterable[Tuple[Symbol, Set[State]]]:
+    def __call__(self, s_from: Any) -> Iterable[Tuple[Symbol, Set[State]]]:
         """
         Gives FA transitions from given state.
         Calls the transition function
         """
-        state = to_state(state)
-        return self._transition_function(state)
+        s_from = to_state(s_from)
+        return self._transition_function(s_from)
 
     @typedispatch
-    def __call__(self, state: Any, symbol: Any) \
-            -> Set[State]:
+    def __call__(self, s_from: Any, symb_by: Any)  -> Set[State]:
         """ Gives the states obtained after calling a symbol on a state
         Calls the transition function
 
@@ -355,9 +344,19 @@ class FiniteAutomaton:
         [1]
 
         """
-        state = to_state(state)
-        symbol = to_symbol(symbol)
-        return self._transition_function(state, symbol)
+        s_from = to_state(s_from)
+        symb_by = to_symbol(symb_by)
+        return self._transition_function(s_from, symb_by)
+
+    def get_transitions_from(self, s_from: State) \
+            -> Iterable[Tuple[Symbol, State]]:
+        """ Gets transitions from the given state """
+        return self._transition_function.get_transitions_from(s_from)
+
+    def get_next_states_from(self, s_from: Any) -> Set[State]:
+        """ Gets a set of states that are next to the given one """
+        s_from = to_state(s_from)
+        return self._transition_function.get_next_states_from(s_from)
 
     def is_final_state(self, state: Any) -> bool:
         """ Checks if a state is final
@@ -654,8 +653,8 @@ class FiniteAutomaton:
         """
         leading_to_final = self.final_states.copy()
         visited = set()
-        states_to_process = deque((None, start_state)
-                                  for start_state in self.start_states)
+        states_to_process: deque[Any] = \
+            deque((None, start_state)  for start_state in self.start_states)
         delayed_states = deque()
         while states_to_process:
             previous_state, current_state = states_to_process.pop()
@@ -666,7 +665,7 @@ class FiniteAutomaton:
                 delayed_states.append((previous_state, current_state))
                 continue
             visited.add(current_state)
-            next_states = self._get_next_states_from(current_state)
+            next_states = self.get_next_states_from(current_state)
             if next_states:
                 states_to_process.append((previous_state, current_state))
                 for next_state in next_states:
@@ -683,18 +682,10 @@ class FiniteAutomaton:
         while states_to_process:
             current_state = states_to_process.popleft()
             visited.add(current_state)
-            for next_state in self._get_next_states_from(current_state):
+            for next_state in self.get_next_states_from(current_state):
                 if next_state not in visited:
                     states_to_process.append(next_state)
         return visited
-
-    def _get_next_states_from(self, state_from: State) -> Set[State]:
-        """ Gets a set of states that are next to the given one """
-        next_states = set()
-        for _, next_state in \
-                self._transition_function.get_transitions_from(state_from):
-            next_states.add(next_state)
-        return next_states
 
     def to_deterministic(self) -> DeterministicFiniteAutomaton:
         """ Turns the automaton into a deterministic one"""
@@ -705,9 +696,9 @@ class FiniteAutomaton:
         raise NotImplementedError
 
     def __eq__(self, other: Any) -> bool:
-        if isinstance(other, FiniteAutomaton):
-            return self.is_equivalent_to(other)
-        return False
+        if not isinstance(other, FiniteAutomaton):
+            return False
+        return self.is_equivalent_to(other)
 
     def __len__(self) -> int:
         """Number of transitions"""
@@ -752,7 +743,7 @@ class FiniteAutomaton:
         return len(set_to_add_to) != initial_length
 
 
-def to_state(given: Any) -> Union[State, None]:
+def to_state(given: Any) -> State:
     """ Transforms the input into a state
 
     Parameters
