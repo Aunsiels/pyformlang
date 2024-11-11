@@ -7,10 +7,9 @@ from re import compile as comp, Pattern
 from string import printable
 from unicodedata import lookup
 
-from pyformlang.regular_expression import MisformedRegexError
-from pyformlang.regular_expression.regex import Regex
-from pyformlang.regular_expression.regex_reader import \
-    WRONG_PARENTHESIS_MESSAGE
+from .regex_objects import MisformedRegexError
+from .regex_reader import WRONG_PARENTHESIS_MESSAGE
+from .regex import Regex
 
 PRINTABLES = list(printable)
 

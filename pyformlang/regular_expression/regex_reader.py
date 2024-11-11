@@ -5,10 +5,8 @@ A class to read regex
 from typing import List, Optional, Any
 from re import sub
 
-from pyformlang.regular_expression.regex_objects import \
-    to_node, Node, Operator, \
-    Symbol, Concatenation, Union, \
-    KleeneStar, MisformedRegexError, SPECIAL_SYMBOLS
+from .regex_objects import to_node, Node, Operator, Symbol, \
+    Concatenation, Union, KleeneStar, MisformedRegexError, SPECIAL_SYMBOLS
 
 MISFORMED_MESSAGE = "The regex is misformed here."
 

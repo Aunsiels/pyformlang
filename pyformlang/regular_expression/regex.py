@@ -2,16 +2,16 @@
 Representation of a regular expression
 """
 
-from typing import List, Iterable, Tuple, Any
+from typing import List, Iterable, Tuple, Optional, Any
 
 from pyformlang.finite_automaton import Epsilon as FAEpsilon
 from pyformlang.finite_automaton import EpsilonNFA, State, Symbol
 from pyformlang.cfg.cfg import CFG, Production
 from pyformlang.cfg.utils import to_variable
-from pyformlang.regular_expression.regex_reader import RegexReader
-from pyformlang.regular_expression.python_regex import PythonRegex
-from pyformlang.regular_expression.regex_objects import \
-    Epsilon as RegexEpsilon, Empty, Concatenation, Union, KleeneStar
+
+from .regex_reader import RegexReader
+from .regex_objects import Epsilon as RegexEpsilon, Node, \
+    Empty, Concatenation, Union, KleeneStar
 
 
 class Regex(RegexReader):
@@ -88,9 +88,10 @@ class Regex(RegexReader):
 
     def __init__(self, regex: str) -> None:
         super().__init__(regex)
+        self.head: Node = Empty() # type: ignore
         self.sons: List[Regex] = [] # type: ignore
         self._counter = 0
-        self._enfa = EpsilonNFA()
+        self._enfa: Optional[EpsilonNFA] = None
 
     def get_number_symbols(self) -> int:
         """ Gives the number of symbols in the regex
@@ -150,28 +151,35 @@ class Regex(RegexReader):
         >>> regex.to_epsilon_nfa()
 
         """
+        return self._to_epsilon_nfa_internal(True)
+
+    def _to_epsilon_nfa_internal(self, copy: bool) -> EpsilonNFA:
+        """
+        Transforms the regular expression into an epsilon NFA.
+        Copy enfa in case of external usage.
+        """
+        if self._enfa is not None:
+            return self._enfa.copy() if copy else self._enfa
         self._enfa = EpsilonNFA()
-        s_initial = self._set_and_get_initial_state_in_enfa()
-        s_final = self._set_and_get_final_state_in_enfa()
-        self._process_to_enfa(s_initial, s_final)
-        return self._enfa
+        s_initial = self._set_and_get_initial_state_in_enfa(self._enfa)
+        s_final = self._set_and_get_final_state_in_enfa(self._enfa)
+        self._process_to_enfa(self._enfa, s_initial, s_final)
+        return self._to_epsilon_nfa_internal(copy)
 
-    def _set_and_get_final_state_in_enfa(self) -> State:
+    def _set_and_get_final_state_in_enfa(self, enfa: EpsilonNFA) -> State:
         s_final = self._get_next_state_enfa()
-        self._enfa.add_final_state(s_final)
+        enfa.add_final_state(s_final)
         return s_final
 
-    def _get_next_state_enfa(self) -> State:
-        s_final = State(self._counter)
-        self._counter += 1
-        return s_final
-
-    def _set_and_get_initial_state_in_enfa(self) -> State:
+    def _set_and_get_initial_state_in_enfa(self, enfa: EpsilonNFA) -> State:
         s_initial = self._get_next_state_enfa()
-        self._enfa.add_start_state(s_initial)
+        enfa.add_start_state(s_initial)
         return s_initial
 
-    def _process_to_enfa(self, s_from: State, s_to: State) -> None:
+    def _process_to_enfa(self,
+                         enfa: EpsilonNFA,
+                         s_from: State,
+                         s_to: State) -> None:
         """ Internal function to add a regex to a given epsilon NFA
 
         Parameters
@@ -182,76 +190,89 @@ class Regex(RegexReader):
             The destination state
         """
         if self.sons:
-            self._process_to_enfa_when_sons(s_from, s_to)
+            self._process_to_enfa_when_sons(enfa, s_from, s_to)
         else:
-            self._process_to_enfa_when_no_son(s_from, s_to)
+            self._process_to_enfa_when_no_son(enfa, s_from, s_to)
 
-    def _process_to_enfa_when_no_son(self, s_from: State, s_to: State) -> None:
+    def _process_to_enfa_when_sons(self,
+                                   enfa: EpsilonNFA,
+                                   s_from: State,
+                                   s_to: State) -> None:
+        if isinstance(self.head, Concatenation):
+            self._process_to_enfa_concatenation(enfa, s_from, s_to)
+        elif isinstance(self.head, Union):
+            self._process_to_enfa_union(enfa, s_from, s_to)
+        elif isinstance(self.head, KleeneStar):
+            self._process_to_enfa_kleene_star(enfa, s_from, s_to)
+
+    def _process_to_enfa_when_no_son(self,
+                                     enfa: EpsilonNFA,
+                                     s_from: State,
+                                     s_to: State) -> None:
         if isinstance(self.head, RegexEpsilon):
-            self._add_epsilon_transition_in_enfa_between(s_from, s_to)
+            enfa.add_transition(s_from, FAEpsilon(), s_to)
         elif not isinstance(self.head, Empty):
             symbol = Symbol(self.head.value)
-            self._enfa.add_transition(s_from, symbol, s_to)
+            enfa.add_transition(s_from, symbol, s_to)
 
-    def _process_to_enfa_when_sons(self, s_from: State, s_to: State) -> None:
-        if isinstance(
-                self.head, Concatenation):
-            self._process_to_enfa_concatenation(s_from, s_to)
-        elif isinstance(self.head, Union):
-            self._process_to_enfa_union(s_from, s_to)
-        elif isinstance(
-                self.head, KleeneStar):
-            self._process_to_enfa_kleene_star(s_from, s_to)
+    def _process_to_enfa_union(self,
+                               enfa: EpsilonNFA,
+                               s_from: State,
+                               s_to: State) -> None:
+        son_number = 0
+        self._create_union_branch_in_enfa(enfa, s_from, s_to, son_number)
+        son_number = 1
+        self._create_union_branch_in_enfa(enfa, s_from, s_to, son_number)
 
-    def _process_to_enfa_kleene_star(self, s_from: State, s_to: State) -> None:
+    def _process_to_enfa_kleene_star(self,
+                                     enfa: EpsilonNFA,
+                                     s_from: State,
+                                     s_to: State) -> None:
         # pylint: disable=protected-access
         state_first = self._get_next_state_enfa()
         state_second = self._get_next_state_enfa()
-        self._add_epsilon_transition_in_enfa_between(state_second, state_first)
-        self._add_epsilon_transition_in_enfa_between(s_from, s_to)
-        self._add_epsilon_transition_in_enfa_between(s_from, state_first)
-        self._add_epsilon_transition_in_enfa_between(state_second, s_to)
-        self._process_to_enfa_son(state_first, state_second, 0)
-
-    def _process_to_enfa_union(self, s_from: State, s_to: State) -> None:
-        son_number = 0
-        self._create_union_branch_in_enfa(s_from, s_to, son_number)
-        son_number = 1
-        self._create_union_branch_in_enfa(s_from, s_to, son_number)
+        enfa.add_transition(state_second, FAEpsilon(), state_first)
+        enfa.add_transition(s_from, FAEpsilon(), s_to)
+        enfa.add_transition(s_from, FAEpsilon(), state_first)
+        enfa.add_transition(state_second, FAEpsilon(), s_to)
+        self._process_to_enfa_son(enfa, state_first, state_second, 0)
 
     def _create_union_branch_in_enfa(self,
+                                     enfa: EpsilonNFA,
                                      s_from: State,
                                      s_to: State,
                                      son_number: int) -> None:
         state0 = self._get_next_state_enfa()
         state2 = self._get_next_state_enfa()
-        self._add_epsilon_transition_in_enfa_between(s_from, state0)
-        self._add_epsilon_transition_in_enfa_between(state2, s_to)
-        self._process_to_enfa_son(state0, state2, son_number)
+        enfa.add_transition(s_from, FAEpsilon(), state0)
+        enfa.add_transition(state2, FAEpsilon(), s_to)
+        self._process_to_enfa_son(enfa, state0, state2, son_number)
 
     def _process_to_enfa_concatenation(self,
+                                       enfa: EpsilonNFA,
                                        s_from: State,
                                        s_to: State) -> None:
         state0 = self._get_next_state_enfa()
         state1 = self._get_next_state_enfa()
-        self._add_epsilon_transition_in_enfa_between(state0, state1)
-        self._process_to_enfa_son(s_from, state0, 0)
-        self._process_to_enfa_son(state1, s_to, 1)
-
-    def _add_epsilon_transition_in_enfa_between(self,
-                                                state0: State,
-                                                state1: State) -> None:
-        self._enfa.add_transition(state0, FAEpsilon(), state1)
+        enfa.add_transition(state0, FAEpsilon(), state1)
+        self._process_to_enfa_son(enfa, s_from, state0, 0)
+        self._process_to_enfa_son(enfa, state1, s_to, 1)
 
     def _process_to_enfa_son(self,
+                             enfa: EpsilonNFA,
                              s_from: State,
                              s_to: State,
                              index_son: int) -> None:
         # pylint: disable=protected-access
         self.sons[index_son]._counter = self._counter
-        self.sons[index_son]._enfa = self._enfa
-        self.sons[index_son]._process_to_enfa(s_from, s_to)
+        self.sons[index_son]._enfa = enfa
+        self.sons[index_son]._process_to_enfa(enfa, s_from, s_to)
         self._counter = self.sons[index_son]._counter
+
+    def _get_next_state_enfa(self) -> State:
+        s_final = State(self._counter)
+        self._counter += 1
+        return s_final
 
     def get_tree_str(self, depth: int = 0) -> str:
         """ Get a string representation of the tree behind the regex
@@ -516,7 +537,7 @@ class Regex(RegexReader):
         """
         return Regex(regex_str)
 
-    def accepts(self, word: Iterable[Any]) -> bool:
+    def accepts(self, word: Iterable[str]) -> bool:
         """
         Check if a word matches (completely) the regex
 
@@ -541,34 +562,5 @@ class Regex(RegexReader):
         True
 
         """
-        if self._enfa is None:
-            self._enfa = self.to_epsilon_nfa()
+        self._enfa = self._to_epsilon_nfa_internal(False)
         return self._enfa.accepts(word)
-
-    @classmethod
-    def from_python_regex(cls, regex: str) -> PythonRegex:
-        """
-        Creates a regex from a string using the python way to write it.
-
-        Careful:
-        Not everything is implemented, check PythonRegex class \
-        documentation for more details.
-
-        It is equivalent to calling PythonRegex constructor directly.
-
-        Parameters
-        ----------
-        regex : str
-            The regex given as a string or compile regex
-
-        Returns
-        -------
-        python_regex : :class:`~pyformlang.regular_expression.PythonRegex`
-            The regex
-
-        Examples
-        --------
-        >>> Regex.from_python_regex("a+[cd]")
-
-        """
-        return PythonRegex(regex)
