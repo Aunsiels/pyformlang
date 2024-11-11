@@ -2,13 +2,13 @@
 Representation of a nondeterministic finite automaton
 """
 
-from typing import Iterable, Any
+from typing import Iterable, Hashable
 
 from .epsilon import Epsilon
 from .epsilon_nfa import EpsilonNFA
-from .finite_automaton import to_symbol
 from .deterministic_transition_function import InvalidEpsilonTransition
 from .deterministic_finite_automaton import DeterministicFiniteAutomaton
+from .utils import to_symbol
 
 
 class NondeterministicFiniteAutomaton(EpsilonNFA):
@@ -60,7 +60,7 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
 
     """
 
-    def accepts(self, word: Iterable[Any]) -> bool:
+    def accepts(self, word: Iterable[Hashable]) -> bool:
         """ Checks whether the nfa accepts a given word
 
         Parameters
@@ -137,9 +137,9 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         return self._to_deterministic_internal(False)
 
     def add_transition(self,
-                       s_from: Any,
-                       symb_by: Any,
-                       s_to: Any) -> int:
+                       s_from: Hashable,
+                       symb_by: Hashable,
+                       s_to: Hashable) -> int:
         if symb_by == Epsilon():
             raise InvalidEpsilonTransition
         return super().add_transition(s_from, symb_by, s_to)

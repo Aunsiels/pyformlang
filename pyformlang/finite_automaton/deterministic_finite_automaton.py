@@ -2,15 +2,14 @@
 Representation of a deterministic finite automaton
 """
 
-from typing import Dict, List, Iterable, AbstractSet, Optional, Any
-
+from typing import Dict, List, Iterable, AbstractSet, Optional, Hashable
 from numpy import empty
 
 from .state import State
 from .symbol import Symbol
 from .deterministic_transition_function import DeterministicTransitionFunction
-from .finite_automaton import FiniteAutomaton, to_state, to_symbol
-from .epsilon_nfa import to_single_state
+from .finite_automaton import FiniteAutomaton
+from .utils import to_state, to_symbol, to_single_state
 from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
 from .hopcroft_processing_list import HopcroftProcessingList
 from .partition import Partition
@@ -20,8 +19,8 @@ class PreviousTransitions:
     """For internal usage"""
 
     def __init__(self,
-                 states: AbstractSet[Any],
-                 symbols: AbstractSet[Any]) -> None:
+                 states: AbstractSet[State],
+                 symbols: AbstractSet[Symbol]) -> None:
         self._to_index_state: Dict[Optional[State], int] = {}
         self._to_index_state[None] = 0
         for i, state in enumerate(states):
@@ -105,27 +104,26 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
     """
 
     def __init__(self,
-                 states: AbstractSet[Any] = None,
-                 input_symbols: AbstractSet[Any] = None,
+                 states: AbstractSet[Hashable] = None,
+                 input_symbols: AbstractSet[Hashable] = None,
                  transition_function: DeterministicTransitionFunction = None,
-                 start_state: Any = None,
-                 final_states: AbstractSet[Any] = None) -> None:
-        super().__init__(states, input_symbols, None, None, final_states)
+                 start_state: Hashable = None,
+                 final_states: AbstractSet[Hashable] = None) -> None:
+        start_states = {start_state} if start_state is not None else None
+        super().__init__(states,
+                         input_symbols,
+                         None,
+                         start_states,
+                         final_states)
         self._transition_function = transition_function \
             or DeterministicTransitionFunction()
-        if start_state is not None:
-            start_state = to_state(start_state)
-            self._start_states = {start_state}
-            self._states.add(start_state)
-        else:
-            self._start_states = set()
 
     @property
     def start_state(self) -> Optional[State]:
         """ Gets the start state """
         return list(self._start_states)[0] if self._start_states else None
 
-    def add_start_state(self, state: Any) -> int:
+    def add_start_state(self, state: Hashable) -> int:
         """ Set an initial state
 
         Parameters
@@ -150,7 +148,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         self._states.add(state)
         return 1
 
-    def remove_start_state(self, state: Any) -> int:
+    def remove_start_state(self, state: Hashable) -> int:
         """ remove an initial state
 
         Parameters
@@ -177,7 +175,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             return 1
         return 0
 
-    def accepts(self, word: Iterable[Any]) -> bool:
+    def accepts(self, word: Iterable[Hashable]) -> bool:
         """ Checks whether the dfa accepts a given word
 
         Parameters
@@ -283,8 +281,11 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                     dfa.add_transition(state, symbol, state_to)
         return dfa
 
-    def get_next_state(self, s_from: State, symb_by: Symbol) -> Optional[State]:
+    def get_next_state(self, s_from: Hashable, symb_by: Hashable) \
+            -> Optional[State]:
         """ Make a call of deterministic transition function """
+        s_from = to_state(s_from)
+        symb_by = to_symbol(symb_by)
         return self._transition_function.get_next_state(s_from, symb_by)
 
     def _get_previous_transitions(self) -> PreviousTransitions:

@@ -2,13 +2,12 @@
 
 # pylint: disable=function-redefined
 
-from typing import Dict, List, Set, Tuple, Iterable, Optional, Any
+from typing import Dict, List, Set, Tuple, Iterable, Optional, Hashable, Any
 from collections import deque
 from networkx import MultiDiGraph
 from networkx.drawing.nx_pydot import write_dot
 from fastcore.dispatch import typedispatch
 
-from pyformlang.finite_automaton import EpsilonNFA
 from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.fst import FST
 
@@ -16,6 +15,7 @@ from .state import State
 from .symbol import Symbol
 from .epsilon import Epsilon
 from .transition_function import TransitionFunction
+from .utils import to_state, to_symbol
 
 
 class FiniteAutomaton:
@@ -46,7 +46,10 @@ class FiniteAutomaton:
         self._start_states: Set[State] = set()
         self._final_states: Set[State] = set()
 
-    def add_transition(self, s_from: Any, symb_by: Any, s_to: Any) -> int:
+    def add_transition(self,
+                       s_from: Hashable,
+                       symb_by: Hashable,
+                       s_to: Hashable) -> int:
         """ Adds a transition to the nfa
 
         Parameters
@@ -86,8 +89,8 @@ class FiniteAutomaton:
             self._input_symbols.add(symb_by)
         return temp
 
-    def add_transitions(self, \
-            transitions_list: Iterable[Tuple[Any, Any, Any]]) -> int:
+    def add_transitions(self, transitions_list: \
+            Iterable[Tuple[Hashable, Hashable, Hashable]]) -> int:
         """
         Adds several transitions to the automaton
 
@@ -121,7 +124,10 @@ class FiniteAutomaton:
             temp = self.add_transition(s_from, symb_by, s_to)
         return temp
 
-    def remove_transition(self, s_from: Any, symb_by: Any, s_to: Any) -> int:
+    def remove_transition(self,
+                          s_from: Hashable,
+                          symb_by: Hashable,
+                          s_to: Hashable) -> int:
         """ Remove a transition of the nfa
 
         Parameters
@@ -195,7 +201,7 @@ class FiniteAutomaton:
         """The final states"""
         return self._final_states
 
-    def add_start_state(self, state: Any) -> int:
+    def add_start_state(self, state: Hashable) -> int:
         """ Set an initial state
 
         Parameters
@@ -222,7 +228,7 @@ class FiniteAutomaton:
         self._states.add(state)
         return 1
 
-    def remove_start_state(self, state: Any) -> int:
+    def remove_start_state(self, state: Hashable) -> int:
         """ remove an initial state
 
         Parameters
@@ -251,7 +257,7 @@ class FiniteAutomaton:
             return 1
         return 0
 
-    def add_final_state(self, state: Any) -> int:
+    def add_final_state(self, state: Hashable) -> int:
         """ Adds a new final state
 
         Parameters
@@ -279,7 +285,7 @@ class FiniteAutomaton:
         self._states.add(state)
         return 1
 
-    def remove_final_state(self, state: Any) -> int:
+    def remove_final_state(self, state: Hashable) -> int:
         """ Remove a final state
 
         Parameters
@@ -309,7 +315,7 @@ class FiniteAutomaton:
         return 0
 
     @typedispatch
-    def __call__(self, s_from: Any) -> Iterable[Tuple[Symbol, Set[State]]]:
+    def __call__(self, s_from: Hashable) -> Iterable[Tuple[Symbol, Set[State]]]:
         """
         Gives FA transitions from given state.
         Calls the transition function
@@ -318,7 +324,7 @@ class FiniteAutomaton:
         return self._transition_function(s_from)
 
     @typedispatch
-    def __call__(self, s_from: Any, symb_by: Any)  -> Set[State]:
+    def __call__(self, s_from: Hashable, symb_by: Hashable)  -> Set[State]:
         """ Gives the states obtained after calling a symbol on a state
         Calls the transition function
 
@@ -348,17 +354,18 @@ class FiniteAutomaton:
         symb_by = to_symbol(symb_by)
         return self._transition_function(s_from, symb_by)
 
-    def get_transitions_from(self, s_from: State) \
+    def get_transitions_from(self, s_from: Hashable) \
             -> Iterable[Tuple[Symbol, State]]:
         """ Gets transitions from the given state """
+        s_from = to_state(s_from)
         return self._transition_function.get_transitions_from(s_from)
 
-    def get_next_states_from(self, s_from: Any) -> Set[State]:
+    def get_next_states_from(self, s_from: Hashable) -> Set[State]:
         """ Gets a set of states that are next to the given one """
         s_from = to_state(s_from)
         return self._transition_function.get_next_states_from(s_from)
 
-    def is_final_state(self, state: Any) -> bool:
+    def is_final_state(self, state: Hashable) -> bool:
         """ Checks if a state is final
 
         Parameters
@@ -391,7 +398,7 @@ class FiniteAutomaton:
         """The start states"""
         return self._start_states
 
-    def add_symbol(self, symbol: Any) -> None:
+    def add_symbol(self, symbol: Hashable) -> None:
         """ Add a symbol
 
         Parameters
@@ -506,63 +513,13 @@ class FiniteAutomaton:
                            peripheries=2 if state in self.final_states else 1,
                            label=state.value)
             if state in self.start_states:
-                add_start_state_to_graph(graph, state)
+                self.__add_start_state_to_graph(graph, state)
         for s_from, symbol, s_to in self._transition_function.get_edges():
             label_ = symbol.value
             if label_ == 'epsilon':
                 label_ = 'ɛ'
             graph.add_edge(s_from.value, s_to.value, label=label_)
         return graph
-
-    @classmethod
-    def from_networkx(cls, graph: MultiDiGraph) \
-            -> EpsilonNFA:
-        """
-        Import a networkx graph into an finite state automaton. \
-        The imported graph requires to have the good format, i.e. to come \
-        from the function to_networkx
-
-        Parameters
-        ----------
-        graph :
-            The graph representation of the automaton
-
-        Returns
-        -------
-        enfa :
-            A epsilon nondeterministic finite automaton read from the graph
-
-        TODO
-        -------
-        * We lose the type of the node value if going through a dot file
-        * Explain the format
-
-        Examples
-        --------
-
-        >>> enfa = EpsilonNFA()
-        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
-        (0, "epsilon", 2)])
-        >>> enfa.add_start_state(0)
-        >>> enfa.add_final_state(1)
-        >>> graph = enfa.to_networkx()
-        >>> enfa_from_nx = EpsilonNFA.from_networkx(graph)
-
-        """
-        enfa = EpsilonNFA()
-        for s_from in graph:
-            for s_to in graph[s_from]:
-                for transition in graph[s_from][s_to].values():
-                    if "label" in transition:
-                        enfa.add_transition(s_from,
-                                            transition["label"],
-                                            s_to)
-        for node in graph.nodes:
-            if graph.nodes[node].get("is_start", False):
-                enfa.add_start_state(node)
-            if graph.nodes[node].get("is_final", False):
-                enfa.add_final_state(node)
-        return enfa
 
     def write_as_dot(self, filename: str) -> None:
         """
@@ -742,41 +699,13 @@ class FiniteAutomaton:
         set_to_add_to.add(element_to_add)
         return len(set_to_add_to) != initial_length
 
-
-def to_state(given: Any) -> State:
-    """ Transforms the input into a state
-
-    Parameters
-    ----------
-    given : any
-        What we want to transform
-    """
-    if isinstance(given, State):
-        return given
-    return State(given)
-
-
-def to_symbol(given: Any) -> Symbol:
-    """ Transforms the input into a symbol
-
-    Parameters
-    ----------
-    given : any
-        What we want to transform
-    """
-    if isinstance(given, Symbol):
-        return given
-    if given in ("epsilon", "ɛ"):
-        return Epsilon()
-    return Symbol(given)
-
-
-def add_start_state_to_graph(graph: MultiDiGraph, state: State) -> None:
-    """ Adds a starting node to a given graph """
-    graph.add_node("starting_" + str(state.value),
-                   label="",
-                   shape=None,
-                   height=.0,
-                   width=.0)
-    graph.add_edge("starting_" + str(state.value),
-                   state.value)
+    @staticmethod
+    def __add_start_state_to_graph(graph: MultiDiGraph, state: State) -> None:
+        """ Adds a starting node to a given graph """
+        graph.add_node("starting_" + str(state.value),
+                       label="",
+                       shape=None,
+                       height=.0,
+                       width=.0)
+        graph.add_edge("starting_" + str(state.value),
+                       state.value)

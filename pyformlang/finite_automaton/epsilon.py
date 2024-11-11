@@ -23,6 +23,4 @@ class Epsilon(Symbol):  # pylint: disable=too-few-public-methods
         return hash("EPSILON TRANSITION")
 
     def __eq__(self, other: Any) -> bool:
-        if isinstance(other, Epsilon):
-            return True
-        return False
+        return isinstance(other, Epsilon)
