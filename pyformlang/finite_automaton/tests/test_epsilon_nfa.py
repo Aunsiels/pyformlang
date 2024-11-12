@@ -2,7 +2,6 @@
 Tests for epsilon NFA
 """
 
-import pytest
 import copy
 import networkx
 
@@ -15,7 +14,7 @@ from pyformlang.finite_automaton import State, Symbol, Epsilon
 class TestEpsilonNFA:
     """ Tests epsilon NFA """
 
-    # pylint: disable=missing-function-docstring, protected-access
+    # pylint: disable=missing-function-docstring
     # pylint: disable=too-many-statements, too-many-public-methods
 
     def test_eclose(self):
@@ -36,9 +35,8 @@ class TestEpsilonNFA:
         assert len(enfa.eclose(states[2])) == 3
         assert len(enfa.eclose(states[5])) == 2
         assert len(enfa.eclose(states[6])) == 1
-        assert len(list(enfa._transition_function.get_edges())) == 7
-        assert enfa.remove_transition(states[1], epsilon, states[4]) == \
-                         1
+        assert len(list(iter(enfa))) == 7
+        assert enfa.remove_transition(states[1], epsilon, states[4]) == 1
         assert not enfa.is_deterministic()
 
     def test_accept(self):
@@ -49,7 +47,7 @@ class TestEpsilonNFA:
         """ Tests the copy of enda """
         self._perform_tests_digits(True)
 
-    def _perform_tests_digits(self, should_copy=False):
+    def _perform_tests_digits(self, should_copy: bool = False):
         enfa, digits, epsilon, plus, minus, point = get_digits_enfa()
         if should_copy:
             enfa = copy.copy(enfa)
@@ -89,168 +87,14 @@ class TestEpsilonNFA:
         assert not dfa.accepts([point])
         assert not dfa.accepts([plus])
 
-    def test_remove_state(self):
-        " Tests the remove of state """
-        enfa = EpsilonNFA()
-        state0 = State(0)
-        state1 = State(1)
-        state2 = State(2)
-        symb02 = Symbol("a+b")
-        symb01 = Symbol("c*")
-        symb11 = Symbol("b+(c.d)")
-        symb12 = Symbol("a.b.c")
-        enfa.add_start_state(state0)
-        enfa.add_final_state(state2)
-        enfa.add_transition(state0, symb01, state1)
-        enfa.add_transition(state0, symb02, state2)
-        enfa.add_transition(state1, symb11, state1)
-        enfa.add_transition(state1, symb12, state2)
-        enfa._remove_all_basic_states()
-        assert enfa.get_number_transitions() == 1
-        assert len(enfa.states) == 2
-
-    def test_to_regex(self):
-        """ Tests the transformation to regex """
-        enfa = EpsilonNFA()
-        state0 = State(0)
-        state1 = State(1)
-        state2 = State(2)
-        symb_e = Symbol("e")
-        symb_f = Symbol("f")
-        symb_g = Symbol("g")
-        enfa.add_start_state(state0)
-        enfa.add_final_state(state2)
-        enfa.add_transition(state0, symb_e, state1)
-        enfa.add_transition(state1, symb_f, state2)
-        enfa.add_transition(state0, symb_g, state2)
-        regex = enfa.to_regex()
-        enfa2 = regex.to_epsilon_nfa()
-        assert enfa2.accepts([symb_e, symb_f])
-        assert enfa2.accepts([symb_g])
-        assert not enfa2.accepts([])
-        assert not enfa2.accepts([symb_e])
-        assert not enfa2.accepts([symb_f])
-        enfa.add_final_state(state0)
-        with pytest.raises(ValueError) as _:
-            enfa._get_regex_simple()
-        regex = enfa.to_regex()
-        enfa3 = regex.to_epsilon_nfa()
-        assert enfa3.accepts([symb_e, symb_f])
-        assert enfa3.accepts([symb_g])
-        assert enfa3.accepts([])
-        assert not enfa3.accepts([symb_e])
-        assert not enfa3.accepts([symb_f])
-        enfa.remove_start_state(state0)
-        regex = enfa.to_regex()
-        enfa3 = regex.to_epsilon_nfa()
-        assert not enfa3.accepts([symb_e, symb_f])
-        assert not enfa3.accepts([symb_g])
-        assert not enfa3.accepts([])
-        assert not enfa3.accepts([symb_e])
-        assert not enfa3.accepts([symb_f])
-        enfa.add_start_state(state0)
-        enfa.add_transition(state0, symb_f, state0)
-        regex = enfa.to_regex()
-        enfa3 = regex.to_epsilon_nfa()
-        assert enfa3.accepts([symb_e, symb_f])
-        assert enfa3.accepts([symb_f, symb_e, symb_f])
-        assert enfa3.accepts([symb_g])
-        assert enfa3.accepts([symb_f, symb_f, symb_g])
-        assert enfa3.accepts([])
-        assert not enfa3.accepts([symb_e])
-        assert enfa3.accepts([symb_f])
-
-    def test_to_regex2(self):
-        """ Tests the transformation to regex """
-        enfa = EpsilonNFA()
-        state0 = State(0)
-        state1 = State(1)
-        symb_a = Symbol("0")
-        symb_b = Symbol("1")
-        enfa.add_start_state(state0)
-        enfa.add_final_state(state1)
-        enfa.add_transition(state0, symb_a, state0)
-        enfa.add_transition(state0, symb_a, state1)
-        enfa.add_transition(state1, symb_b, state0)
-        enfa.add_transition(state1, symb_b, state1)
-        regex = enfa.to_regex()
-        enfa2 = regex.to_epsilon_nfa()
-        assert enfa2.accepts([symb_a])
-        assert enfa2.accepts([symb_a, symb_a])
-        assert enfa2.accepts([symb_a, symb_a, symb_b])
-        assert enfa2.accepts([symb_a, symb_a, symb_b, symb_b])
-        assert enfa2.accepts([symb_a, symb_a,
-                                       symb_b, symb_b, symb_a])
-        assert enfa2.accepts([symb_a, symb_a, symb_b,
-                                       symb_b, symb_a, symb_b])
-        assert not enfa2.accepts([symb_b])
-
-    def test_to_regex3(self):
-        """ Tests the transformation to regex """
-        enfa = EpsilonNFA()
-        state0 = State(0)
-        state1 = State(1)
-        symb_a = Symbol("0")
-        symb_b = Symbol("1")
-        enfa.add_start_state(state0)
-        enfa.add_final_state(state1)
-        enfa.add_transition(state0, symb_a, state0)
-        enfa.add_transition(state1, symb_b, state0)
-        enfa.add_transition(state1, symb_b, state1)
-        regex = enfa.to_regex()
-        enfa2 = regex.to_epsilon_nfa()
-        assert not enfa2.accepts([symb_a])
-        assert not enfa2.accepts([symb_a, symb_a])
-        assert not enfa2.accepts([symb_a, symb_a, symb_b])
-        assert not enfa2.accepts([symb_a, symb_a,
-                                        symb_b, symb_b, symb_a])
-        assert not enfa2.accepts([symb_a, symb_a, symb_b,
-                                        symb_b, symb_a, symb_b])
-        assert not enfa2.accepts([symb_b])
-        epsilon = Epsilon()
-        enfa.add_transition(state0, epsilon, state1)
-        regex = enfa.to_regex()
-        enfa2 = regex.to_epsilon_nfa()
-        assert enfa.accepts([])
-        assert enfa.accepts([symb_a])
-        assert enfa2.accepts([symb_a])
-        assert enfa2.accepts([symb_a, symb_a])
-        assert enfa2.accepts([symb_a, symb_a, symb_b, symb_b])
-        assert enfa2.accepts([symb_a, symb_a, symb_b, symb_b,
-                                       symb_a, symb_b])
-        assert enfa2.accepts([symb_b])
-        assert enfa2.accepts([])
-        enfa.remove_transition(state0, symb_a, state0)
-        regex = enfa.to_regex()
-        enfa2 = regex.to_epsilon_nfa()
-        assert not enfa2.accepts([symb_a])
-        assert not enfa2.accepts([symb_a, symb_a])
-        assert not enfa2.accepts([symb_a, symb_a, symb_b])
-        assert not enfa2.accepts([symb_a, symb_a, symb_b,
-                                        symb_b, symb_a])
-        assert not enfa2.accepts([symb_a, symb_a, symb_b, symb_b,
-                                        symb_a, symb_b])
-        assert enfa2.accepts([symb_b])
-        assert enfa2.accepts([])
-        enfa.remove_transition(state1, symb_b, state1)
-        regex = enfa.to_regex()
-        enfa2 = regex.to_epsilon_nfa()
-        assert enfa2.accepts([symb_b, symb_b])
-        enfa.add_transition(state0, symb_a, state0)
-        regex = enfa.to_regex()
-        enfa2 = regex.to_epsilon_nfa()
-        assert enfa2.accepts([symb_a, symb_b])
-
     def test_union(self):
         """ Tests the union of two epsilon NFA """
-        with pytest.raises(NotImplementedError) as _:
-            Regexable().to_regex()
         enfa0 = get_enfa_example0()
         enfa1 = get_enfa_example1()
         symb_a = Symbol("a")
         symb_b = Symbol("b")
         symb_c = Symbol("c")
-        enfa = enfa0.union(enfa1)
+        enfa = enfa0.get_union(enfa1)
         assert enfa.accepts([symb_b])
         assert enfa.accepts([symb_a, symb_b])
         assert enfa.accepts([symb_c])
@@ -591,24 +435,6 @@ class TestEpsilonNFA:
     def test_call(self):
         enfa = get_enfa_example1()
         assert len(enfa(2)) == 1
-
-    def test_example_doc(self):
-        enfa = EpsilonNFA()
-        state0 = State(0)
-        state1 = State(1)
-        symb_a = Symbol("0")
-        symb_b = Symbol("1")
-        enfa.add_start_state(state0)
-        enfa.add_final_state(state1)
-        enfa.add_transition(state0, symb_a, state0)
-        enfa.add_transition(state1, symb_b, state0)
-        enfa.add_transition(state1, symb_b, state1)
-
-        # Turn a finite automaton into a regex...
-        regex = enfa.to_regex()
-        # And turn it back into an epsilon non deterministic automaton
-        enfa2 = regex.to_epsilon_nfa()
-        assert enfa == enfa2
 
     def test_remove_epsilon_transitions(self):
         enfa = EpsilonNFA()

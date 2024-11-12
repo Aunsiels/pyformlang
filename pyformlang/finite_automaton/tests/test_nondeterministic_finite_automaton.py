@@ -159,13 +159,24 @@ class TestNondeterministicFiniteAutomaton:
         assert ["d", "b", "e", "b", "c"] in accepted_words
         assert len(accepted_words) == 5
 
+    def test_copy(self):
+        nfa = get_nfa_example_with_duplicates().copy()
+        assert len(nfa.states) == 9
+        assert len(nfa.symbols) == 3
+        assert len(nfa.start_states) == 4
+        assert len(nfa.final_states) == 3
+        assert nfa.get_number_transitions() == 9
+        assert nfa.accepts([Symbol("a"), Symbol("b")])
+        assert nfa.accepts([Symbol("b"), Symbol("c")])
+        assert not nfa.is_deterministic()
+
 
 def get_nfa_example_for_word_generation():
     """
     Gets Nondeterministic Finite Automaton \
     example for the word generation test.
     """
-    nfa = NondeterministicFiniteAutomaton(start_state={0, 4},
+    nfa = NondeterministicFiniteAutomaton(start_states={0, 4},
                                           final_states={3, 4, 6, 8})
     nfa.add_transitions([
         (0, "a", 1),
@@ -183,7 +194,7 @@ def get_nfa_example_for_word_generation():
 
 def get_nfa_example_with_duplicates():
     """ Gets NFA example with duplicate word chains """
-    nfa = NondeterministicFiniteAutomaton(start_state={0, 1, 5, 6},
+    nfa = NondeterministicFiniteAutomaton(start_states={0, 1, 5, 6},
                                           final_states={3, 4, 8})
     nfa.add_transitions([
         (0, "a", 2),
@@ -199,7 +210,7 @@ def get_nfa_example_with_duplicates():
 
 def get_cyclic_nfa_example():
     """ Gets NFA example with several cycles on path to final """
-    nfa = NondeterministicFiniteAutomaton(start_state={0, 5},
+    nfa = NondeterministicFiniteAutomaton(start_states={0, 5},
                                           final_states={4})
     nfa.add_transitions([
         (0, "a", 1),
@@ -216,7 +227,7 @@ def get_cyclic_nfa_example():
 
 def get_nfa_example_with_final_state_at_start():
     """ Gets NFA example with final state at start """
-    nfa = NondeterministicFiniteAutomaton(start_state={0, 5},
+    nfa = NondeterministicFiniteAutomaton(start_states={0, 5},
                                           final_states={0})
     nfa.add_transitions([
         (0, "a", 1),
@@ -231,7 +242,7 @@ def get_nfa_example_with_final_state_at_start():
 
 def get_nfa_example_with_start_state_at_the_end():
     """ Gets NFA example with start state at the end """
-    nfa = NondeterministicFiniteAutomaton(start_state={0, 3, 4},
+    nfa = NondeterministicFiniteAutomaton(start_states={0, 3, 4},
                                           final_states={3})
     nfa.add_transitions([
         (0, "a", 1),

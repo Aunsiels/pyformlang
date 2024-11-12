@@ -4,10 +4,9 @@ Tests for the deterministic finite automata
 
 import pytest
 
+from pyformlang.finite_automaton import EpsilonNFA
 from pyformlang.finite_automaton import DeterministicFiniteAutomaton
-from pyformlang.finite_automaton import State
-from pyformlang.finite_automaton import Symbol
-from pyformlang.finite_automaton import Epsilon
+from pyformlang.finite_automaton import State, Symbol, Epsilon
 from pyformlang.finite_automaton import DeterministicTransitionFunction
 from pyformlang.finite_automaton.deterministic_transition_function import \
     InvalidEpsilonTransition
@@ -79,29 +78,9 @@ class TestDeterministicFiniteAutomaton:
         """ Tests the acceptance of dfa
         """
         dfa = get_example0()
-        self._perform_tests_example0(dfa)
+        perform_tests_example0(dfa)
         dfa = get_example0_bis()
-        self._perform_tests_example0(dfa)
-
-    def _perform_tests_example0(self, dfa):
-        """ Tests for DFA from example 0 """
-        symb_a = Symbol("a")
-        symb_b = Symbol("b")
-        symb_c = Symbol("c")
-        symb_d = Symbol("d")
-        state0 = State(0)
-        state1 = State(1)
-        assert dfa.accepts([symb_a, symb_b, symb_c])
-        assert dfa.accepts([symb_a, symb_b, symb_b, symb_b, symb_c])
-        assert dfa.accepts([symb_a, symb_b, symb_d])
-        assert dfa.accepts([symb_a, symb_d])
-        assert not dfa.accepts([symb_a, symb_c, symb_d])
-        assert not dfa.accepts([symb_d, symb_c, symb_d])
-        assert not dfa.accepts([])
-        assert dfa.remove_start_state(state1) == 0
-        assert dfa.accepts([symb_a, symb_b, symb_c])
-        assert dfa.remove_start_state(state0) == 1
-        assert not dfa.accepts([symb_a, symb_b, symb_c])
+        perform_tests_example0(dfa)
 
         dfa.add_start_state(0)
         assert dfa.accepts(["a", "b", "c"])
@@ -119,13 +98,7 @@ class TestDeterministicFiniteAutomaton:
     def test_copy(self):
         """ Test the copy of a DFA """
         dfa = get_example0().copy()
-        self._perform_tests_example0(dfa)
-
-    def test_regex(self):
-        """ Tests the regex transformation """
-        dfa = get_example0()
-        dfa = dfa.to_regex().to_epsilon_nfa()
-        self._perform_tests_example0(dfa)
+        perform_tests_example0(dfa)
 
     def test_complement(self):
         """ Tests the complement operation """
@@ -277,11 +250,6 @@ class TestDeterministicFiniteAutomaton:
         dfa2.add_final_state(State("D"))
         assert dfa2 != dfa1
 
-    def test_regex_dfa(self):
-        dfa1 = get_dfa_example()
-        dfa_regex = dfa1.to_regex().to_epsilon_nfa()
-        assert dfa1 == dfa_regex
-
     def test_word_generation(self):
         dfa = get_dfa_example_for_word_generation()
         accepted_words = list(dfa.get_accepted_words())
@@ -401,3 +369,24 @@ def get_dfa_example_without_accepted_words():
     dfa.add_start_state(states[0])
     dfa.add_final_state(states[3])
     return dfa
+
+
+def perform_tests_example0(enfa: EpsilonNFA):
+    """ Tests for DFA from example 0 """
+    symb_a = Symbol("a")
+    symb_b = Symbol("b")
+    symb_c = Symbol("c")
+    symb_d = Symbol("d")
+    state0 = State(0)
+    state1 = State(1)
+    assert enfa.accepts([symb_a, symb_b, symb_c])
+    assert enfa.accepts([symb_a, symb_b, symb_b, symb_b, symb_c])
+    assert enfa.accepts([symb_a, symb_b, symb_d])
+    assert enfa.accepts([symb_a, symb_d])
+    assert not enfa.accepts([symb_a, symb_c, symb_d])
+    assert not enfa.accepts([symb_d, symb_c, symb_d])
+    assert not enfa.accepts([])
+    assert enfa.remove_start_state(state1) == 0
+    assert enfa.accepts([symb_a, symb_b, symb_c])
+    assert enfa.remove_start_state(state0) == 1
+    assert not enfa.accepts([symb_a, symb_b, symb_c])

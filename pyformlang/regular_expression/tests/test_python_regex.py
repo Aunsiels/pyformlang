@@ -1,6 +1,7 @@
 """
 Testing python regex parsing
 """
+
 import re
 
 from pyformlang.regular_expression.python_regex import PythonRegex
