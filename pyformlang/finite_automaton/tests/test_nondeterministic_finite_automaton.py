@@ -1,13 +1,14 @@
 """
 Tests for nondeterministic finite automata
 """
-from pyformlang.finite_automaton import NondeterministicFiniteAutomaton,\
-    Epsilon
-from pyformlang.finite_automaton import State
-from pyformlang.finite_automaton import Symbol
-from pyformlang.finite_automaton.transition_function import \
-    InvalidEpsilonTransition
+
 import pytest
+
+from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton
+from pyformlang.finite_automaton import State, Symbol, Epsilon
+from pyformlang.finite_automaton.deterministic_transition_function import \
+    InvalidEpsilonTransition
 
 
 class TestNondeterministicFiniteAutomaton:
@@ -23,7 +24,7 @@ class TestNondeterministicFiniteAutomaton:
         nfa = NondeterministicFiniteAutomaton()
         assert nfa is not None
         states = [State(x) for x in range(10)]
-        nfa = NondeterministicFiniteAutomaton(start_state=set(states))
+        nfa = NondeterministicFiniteAutomaton(start_states=set(states))
         assert nfa is not None
 
     def test_remove_initial(self):
@@ -79,7 +80,7 @@ class TestNondeterministicFiniteAutomaton:
         assert not nfa.is_deterministic()
         assert nfa.accepts([symb_c])
         nfa.remove_start_state(state1)
-        dfa = nfa.to_deterministic()
+        dfa = DeterministicFiniteAutomaton.from_nfa(nfa)
         assert dfa.is_deterministic()
         assert dfa.accepts([symb_a, symb_b, symb_c])
         assert dfa.accepts([symb_a, symb_b, symb_b, symb_b, symb_c])
@@ -105,7 +106,7 @@ class TestNondeterministicFiniteAutomaton:
         nfa.add_transition(state0, symb0, state1)
         nfa.add_transition(state0, symb1, state0)
         nfa.add_transition(state1, symb1, state2)
-        dfa = nfa.to_deterministic()
+        dfa = DeterministicFiniteAutomaton.from_nfa(nfa)
         assert len(dfa.states) == 3
         assert dfa.get_number_transitions() == 6
 

@@ -2,7 +2,8 @@
 
 # pylint: disable=function-redefined
 
-from typing import Dict, List, Set, Tuple, Iterable, Optional, Hashable, Any
+from typing import Dict, List, Set, Tuple, \
+    Iterable, Iterator, Optional, Hashable, Any, TypeVar
 from abc import abstractmethod
 from collections import deque
 from networkx import MultiDiGraph
@@ -17,8 +18,10 @@ from .epsilon import Epsilon
 from .transition_function import TransitionFunction
 from .utils import to_state, to_symbol
 
+fa_type = TypeVar("fa_type", bound="FiniteAutomaton")
 
-class FiniteAutomaton:
+
+class FiniteAutomaton(Iterable[Tuple[State, Symbol, State]]):
     """ Represents a general finite automaton
 
     Attributes
@@ -40,11 +43,11 @@ class FiniteAutomaton:
     """
 
     def __init__(self) -> None:
-        self._states: Set[State] = set()
-        self._input_symbols: Set[Symbol] = set()
-        self._transition_function = TransitionFunction()
-        self._start_states: Set[State] = set()
-        self._final_states: Set[State] = set()
+        self._states: Set[State]
+        self._input_symbols: Set[Symbol]
+        self._transition_function: TransitionFunction
+        self._start_states: Set[State]
+        self._final_states: Set[State]
 
     @property
     def states(self) -> Set[State]:
@@ -359,6 +362,15 @@ class FiniteAutomaton:
         symb_by = to_symbol(symb_by)
         return self._transition_function(s_from, symb_by)
 
+    def __contains__(self,
+                     transition: Tuple[Hashable, Hashable, Hashable]) -> bool:
+        """ Whether the given transition is present in finite automaton """
+        s_from, symb_by, s_to = transition
+        s_from = to_state(s_from)
+        symb_by = to_symbol(symb_by)
+        s_to = to_state(s_to)
+        return (s_from, symb_by, s_to) in self._transition_function
+
     def get_transitions_from(self, s_from: Hashable) \
             -> Iterable[Tuple[Symbol, State]]:
         """ Gets transitions from the given state """
@@ -441,7 +453,7 @@ class FiniteAutomaton:
             fst.add_start_state(start_state.value)
         for final_state in self._final_states:
             fst.add_final_state(final_state.value)
-        for s_from, symb_by, s_to in self._transition_function.get_edges():
+        for s_from, symb_by, s_to in self._transition_function:
             fst.add_transition(s_from.value,
                                symb_by.value,
                                s_to.value,
@@ -614,17 +626,12 @@ class FiniteAutomaton:
                     states_to_process.append(next_state)
         return visited
 
-    @abstractmethod
-    def is_deterministic(self) -> bool:
-        """ Checks if the automaton is deterministic """
-        raise NotImplementedError
-
     def __len__(self) -> int:
         """Number of transitions"""
         return len(self._transition_function)
 
-    def __iter__(self) -> Iterable[Tuple[State, Symbol, State]]:
-        yield from self._transition_function.__iter__()
+    def __iter__(self) -> Iterator[Tuple[State, Symbol, State]]:
+        yield from self._transition_function
 
     def to_dict(self) -> Dict[State, Dict[Symbol, Set[State]]]:
         """
@@ -651,14 +658,15 @@ class FiniteAutomaton:
         """
         return self._transition_function.to_dict()
 
-    def __copy__(self) -> "FiniteAutomaton":
+    @abstractmethod
+    def copy(self: fa_type) -> fa_type:
+        """ Copies the current Finite Automaton instance """
+        raise NotImplementedError
+
+    def __copy__(self: fa_type) -> fa_type:
         return self.copy()
 
-    def copy(self) -> "FiniteAutomaton":
-        """ Copies the current Finite Automaton instance """
-        return self._copy_to(FiniteAutomaton())
-
-    def _copy_to(self, fa_to_copy_to: "FiniteAutomaton") -> "FiniteAutomaton":
+    def _copy_to(self, fa_to_copy_to: fa_type) -> fa_type:
         """ Copies current automaton properties to the given one """
         for start in self._start_states:
             fa_to_copy_to.add_start_state(start)
@@ -673,6 +681,11 @@ class FiniteAutomaton:
             for state_to in states:
                 fa_to_copy_to.add_transition(state, Epsilon(), state_to)
         return fa_to_copy_to
+
+    @abstractmethod
+    def is_deterministic(self) -> bool:
+        """ Checks if the automaton is deterministic """
+        raise NotImplementedError
 
     @staticmethod
     def __try_add(set_to_add_to: Set[Any], element_to_add: Any) -> bool:

@@ -122,10 +122,7 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
 
     def copy(self) -> "NondeterministicFiniteAutomaton":
         """ Copies the current NFA instance """
-        return self._copy_to(NondeterministicFiniteAutomaton()) # type: ignore
-
-    def __copy__(self) -> "NondeterministicFiniteAutomaton":
-        return self.copy()
+        return self._copy_to(NondeterministicFiniteAutomaton())
 
     @classmethod
     def from_epsilon_nfa(cls, enfa: EpsilonNFA) \

@@ -115,8 +115,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                          None,
                          start_states,
                          final_states)
-        self._transition_function = transition_function \
-            or DeterministicTransitionFunction()
+        self._transition_function: DeterministicTransitionFunction = \
+            transition_function or DeterministicTransitionFunction()
 
     @property
     def start_state(self) -> Optional[State]:
@@ -247,10 +247,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         True
 
         """
-        return self._copy_to(DeterministicFiniteAutomaton()) # type: ignore
-
-    def __copy__(self) -> "DeterministicFiniteAutomaton":
-        return self.copy()
+        return self._copy_to(DeterministicFiniteAutomaton())
 
     def get_next_state(self, s_from: Hashable, symb_by: Hashable) \
             -> Optional[State]:
@@ -429,11 +426,11 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         return partition
 
     def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, EpsilonNFA):
+        if not isinstance(other, DeterministicFiniteAutomaton):
             return False
         return self.is_equivalent_to(other)
 
-    def is_equivalent_to(self, other: EpsilonNFA) -> bool:
+    def is_equivalent_to(self, other: "DeterministicFiniteAutomaton") -> bool:
         """ Check whether two automata are equivalent
 
         Parameters
@@ -459,9 +456,6 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         True
 
         """
-        if not isinstance(other, DeterministicFiniteAutomaton):
-            other_dfa = DeterministicFiniteAutomaton.from_epsilon_nfa(other)
-            return self.is_equivalent_to(other_dfa)
         self_minimal = self.minimize()
         other_minimal = other.minimize()
         return self._is_equivalent_to_minimal(self_minimal, other_minimal)

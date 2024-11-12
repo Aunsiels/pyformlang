@@ -4,14 +4,14 @@ General transition function representation
 
 # pylint: disable=function-redefined
 
-from typing import Dict, Set, Tuple, Iterable
+from typing import Dict, Set, Tuple, Iterable, Iterator
 from abc import abstractmethod
 from fastcore.dispatch import typedispatch
 
 from .state import State
 from .symbol import Symbol
 
-class TransitionFunction:
+class TransitionFunction(Iterable[Tuple[State, Symbol, State]]):
     """ General transition function representation """
 
     @abstractmethod
@@ -56,6 +56,11 @@ class TransitionFunction:
         """
         raise NotImplementedError
 
+    def __contains__(self, transition: Tuple[State, Symbol, State]) -> bool:
+        """ Whether the given transition is present in the function """
+        s_from, symb_by, s_to = transition
+        return s_to in self(s_from, symb_by)
+
     @abstractmethod
     def get_transitions_from(self, s_from: State) \
             -> Iterable[Tuple[Symbol, State]]:
@@ -74,7 +79,7 @@ class TransitionFunction:
         """ Gets the edges """
         raise NotImplementedError
 
-    def __iter__(self) -> Iterable[Tuple[State, Symbol, State]]:
+    def __iter__(self) -> Iterator[Tuple[State, Symbol, State]]:
         yield from self.get_edges()
 
     @abstractmethod

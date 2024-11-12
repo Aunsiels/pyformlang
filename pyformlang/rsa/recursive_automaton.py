@@ -112,7 +112,7 @@ class RecursiveAutomaton:
             The new recursive automaton built from regular expression
         """
         start_nonterminal = to_symbol(start_nonterminal)
-        box = Box(cls.__regex_to_minimal_dfa(regex), start_nonterminal)
+        box = Box(regex.to_minimal_dfa(), start_nonterminal)
         return RecursiveAutomaton(box, {box})
 
     @classmethod
@@ -154,10 +154,9 @@ class RecursiveAutomaton:
                 productions[head] = body
 
         for head, body in productions.items():
-            boxes.add(Box(cls.__regex_to_minimal_dfa(Regex(body)),
-                          to_symbol(head)))
-        start_box_dfa = cls.__regex_to_minimal_dfa(
-            Regex(productions[start_nonterminal.value]))
+            boxes.add(Box(Regex(body).to_minimal_dfa(), to_symbol(head)))
+        start_box_dfa = Regex(productions[start_nonterminal.value]) \
+            .to_minimal_dfa()
         start_box = Box(start_box_dfa, start_nonterminal)
         return RecursiveAutomaton(start_box, boxes)
 
@@ -182,11 +181,3 @@ class RecursiveAutomaton:
 
     def __eq__(self, other):
         return self.is_equals_to(other)
-
-    @classmethod
-    def __regex_to_minimal_dfa(cls, regex: Regex) \
-            -> DeterministicFiniteAutomaton:
-        """ Build minimal dfa from given regex """
-        enfa = regex.to_epsilon_nfa()
-        dfa = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa)
-        return dfa.minimize()

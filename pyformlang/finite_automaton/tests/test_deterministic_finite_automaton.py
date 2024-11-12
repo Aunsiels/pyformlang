@@ -1,13 +1,16 @@
 """
 Tests for the deterministic finite automata
 """
-from pyformlang.finite_automaton import DeterministicFiniteAutomaton, Epsilon
+
+import pytest
+
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.finite_automaton import State
 from pyformlang.finite_automaton import Symbol
-from pyformlang.finite_automaton import TransitionFunction
-from pyformlang.finite_automaton.transition_function import \
+from pyformlang.finite_automaton import Epsilon
+from pyformlang.finite_automaton import DeterministicTransitionFunction
+from pyformlang.finite_automaton.deterministic_transition_function import \
     InvalidEpsilonTransition
-import pytest
 
 
 class TestDeterministicFiniteAutomaton:
@@ -24,7 +27,7 @@ class TestDeterministicFiniteAutomaton:
         symb0 = Symbol("a")
         states = {state0, state1}
         input_symbols = {symb0}
-        transition_function = TransitionFunction()
+        transition_function = DeterministicTransitionFunction()
         transition_function.add_transition(state0, symb0, state1)
         start_state = state0
         final_states = {state1}
@@ -41,7 +44,6 @@ class TestDeterministicFiniteAutomaton:
         dfa = DeterministicFiniteAutomaton(start_state=state1,
                                            final_states={state0, state1})
         assert dfa is not None
-        assert dfa is dfa.to_deterministic()
 
     def test_add_transition(self):
         """ Tests the addition of transitions

@@ -1,13 +1,15 @@
 """
 Tests for epsilon NFA
 """
-import copy
 
+import pytest
+import copy
 import networkx
 
-from pyformlang.finite_automaton import EpsilonNFA, State, Symbol, Epsilon
-from ..regexable import Regexable
-import pytest
+from pyformlang.finite_automaton import EpsilonNFA
+from pyformlang.finite_automaton import NondeterministicFiniteAutomaton
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton
+from pyformlang.finite_automaton import State, Symbol, Epsilon
 
 
 class TestEpsilonNFA:
@@ -73,7 +75,7 @@ class TestEpsilonNFA:
     def test_deterministic(self):
         """ Tests the transformation to a dfa"""
         enfa, digits, _, plus, minus, point = get_digits_enfa()
-        dfa = enfa.to_deterministic()
+        dfa = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa)
         assert dfa.is_deterministic()
         assert len(dfa.states) == 6
         assert dfa.get_number_transitions() == 65
@@ -382,7 +384,7 @@ class TestEpsilonNFA:
         enfa = get_enfa_example0_bis()
         symb_a = Symbol("a")
         symb_b = Symbol("b")
-        enfa = enfa.minimize()
+        enfa = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa).minimize()
         assert enfa.is_deterministic()
         assert len(enfa.states) == 2
         assert enfa.accepts([symb_a, symb_b])
@@ -390,7 +392,7 @@ class TestEpsilonNFA:
         assert enfa.accepts([symb_b])
         assert not enfa.accepts([symb_a])
         enfa = get_example_non_minimal()
-        enfa = enfa.minimize()
+        enfa = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa).minimize()
         assert enfa.is_deterministic()
         assert len(enfa.states) == 3
         assert enfa.accepts([symb_a, symb_b])
@@ -398,7 +400,7 @@ class TestEpsilonNFA:
         assert not enfa.accepts([symb_b])
         assert not enfa.accepts([symb_a])
         enfa = EpsilonNFA()
-        enfa = enfa.minimize()
+        enfa = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa).minimize()
         assert enfa.is_deterministic()
         assert len(enfa.states) == 1
         assert not enfa.accepts([])
@@ -546,7 +548,9 @@ class TestEpsilonNFA:
         enfa1.add_final_state(state1)
         enfa1.add_transition(state0, symb_a, state1)
         enfa1.add_transition(state1, symb_a, state1)
-        assert enfa0.is_equivalent_to(enfa1)
+        dfa0 = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa0)
+        dfa1 = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa1)
+        assert dfa0.is_equivalent_to(dfa1)
 
     def test_non_equivalent(self):
         enfa0 = EpsilonNFA()
@@ -562,7 +566,9 @@ class TestEpsilonNFA:
         enfa1.add_final_state(state1)
         enfa1.add_transition(state0, symb_a, state1)
         enfa1.add_transition(state1, symb_a, state0)
-        assert not enfa0.is_equivalent_to(enfa1)
+        dfa0 = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa0)
+        dfa1 = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa1)
+        assert not dfa0.is_equivalent_to(dfa1)
 
     def test_get_as_dict(self):
         enfa0 = EpsilonNFA()
@@ -616,11 +622,13 @@ class TestEpsilonNFA:
         enfa.add_start_state("a")
         enfa.add_final_state("b")
         assert len(enfa.start_states) == 1
-        nfa = enfa.remove_epsilon_transitions()
+        nfa = NondeterministicFiniteAutomaton.from_epsilon_nfa(enfa)
         assert len(nfa.start_states) == 3
         assert len(nfa.final_states) == 2
         assert nfa.get_number_transitions() == 3
-        assert nfa.is_equivalent_to(enfa)
+        dfa0 = DeterministicFiniteAutomaton.from_nfa(nfa)
+        dfa1 = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa)
+        assert dfa0.is_equivalent_to(dfa1)
 
     def test_word_generation(self):
         enfa = get_enfa_example_for_word_generation()

@@ -11,6 +11,12 @@ class TestPythonRegex:
 
     # pylint: disable=missing-function-docstring, too-many-public-methods
 
+    def test_simple(self):
+        regex = PythonRegex("abc")
+        assert regex.accepts(["a", "b", "c"])
+        assert not regex.accepts(["a", "b", "b"])
+        assert not regex.accepts(["a", "b"])
+
     def test_with_brackets(self):
         regex = PythonRegex("a[bc]")
         assert regex.accepts(["a", "b"])

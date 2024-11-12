@@ -265,10 +265,7 @@ class EpsilonNFA(FiniteAutomaton):
         True
 
         """
-        return self._copy_to(EpsilonNFA()) # type: ignore
-
-    def __copy__(self) -> "EpsilonNFA":
-        return self.copy()
+        return self._copy_to(EpsilonNFA())
 
     @classmethod
     def from_networkx(cls, graph: MultiDiGraph) -> "EpsilonNFA":

@@ -5,6 +5,7 @@ Representation of a regular expression
 from typing import List, Iterable, Tuple, Optional, Any
 
 from pyformlang.finite_automaton import FiniteAutomaton, EpsilonNFA
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.finite_automaton import State, Symbol, Epsilon as FAEpsilon
 from pyformlang.cfg.cfg import CFG, Production
 from pyformlang.cfg.utils import to_variable
@@ -135,6 +136,12 @@ class Regex(RegexReader):
         if self.sons:
             return 1 + sum(son.get_number_operators() for son in self.sons)
         return 0
+
+    def to_minimal_dfa(self) -> "DeterministicFiniteAutomaton":
+        """ Builds minimal dfa from current regex """
+        enfa = self.to_epsilon_nfa()
+        dfa = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa)
+        return dfa.minimize()
 
     def to_epsilon_nfa(self) -> EpsilonNFA:
         """ Transforms the regular expression into an epsilon NFA

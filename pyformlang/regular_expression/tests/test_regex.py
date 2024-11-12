@@ -163,27 +163,14 @@ class TestRegex:
         regex0 = Regex("a*.(b|c)epsilon")
         regex_str = str(regex0)
         regex1 = Regex(regex_str)
-        dfa0 = regex0.to_epsilon_nfa().to_deterministic().minimize()
-        dfa1 = regex1.to_epsilon_nfa().to_deterministic().minimize()
+        dfa0 = regex0.to_minimal_dfa()
+        dfa1 = regex1.to_minimal_dfa()
         assert dfa0 == dfa1
 
     def test_accepts(self):
         regex = Regex("a|b|c")
         assert regex.accepts(["a"])
         assert not regex.accepts(["a", "b"])
-
-    def test_from_python_simple(self):
-        regex = PythonRegex("abc")
-        assert regex.accepts(["a", "b", "c"])
-        assert not regex.accepts(["a", "b", "b"])
-        assert not regex.accepts(["a", "b"])
-
-    def test_from_python_brackets(self):
-        regex = PythonRegex("a[bc]")
-        assert regex.accepts(["a", "b"])
-        assert regex.accepts(["a", "c"])
-        assert not regex.accepts(["a", "b", "c"])
-        assert not regex.accepts(["a", "a"])
 
     def test_space(self):
         regex = Regex("\\ ")
