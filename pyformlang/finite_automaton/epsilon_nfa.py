@@ -345,7 +345,7 @@ class EpsilonNFA(FiniteAutomaton):
 
         """
         enfa = self.copy()
-        trash = State("TrashNode")
+        trash = self.__get_new_state("Trash")
         enfa.add_final_state(trash)
         for state in self._states:
             if state in self._final_states:
@@ -451,8 +451,44 @@ class EpsilonNFA(FiniteAutomaton):
         """
         return self.get_intersection(other)
 
+    def get_union(self, other: "EpsilonNFA") -> "EpsilonNFA":
+        """ Computes the union with given Epsilon NFA """
+        union = other.copy()
+        self._copy_to(union)
+        return union
+
+    def __or__(self, other: "EpsilonNFA") -> "EpsilonNFA":
+        """ Computes the union with given Epsilon NFA """
+        return self.get_union(other)
+
+    def concatenate(self, other: "EpsilonNFA") -> "EpsilonNFA":
+        """ Computes the concatenation of two Epsilon NFAs """
+        concatenation = EpsilonNFA()
+        for s_from, symb_by, s_to in self:
+            concatenation.add_transition((0, s_from.value),
+                                         symb_by,
+                                         (0, s_to.value))
+            if s_from in self.start_states:
+                concatenation.add_start_state((0, s_from.value))
+        for s_from, symb_by, s_to in other:
+            concatenation.add_transition((1, s_from.value),
+                                         symb_by,
+                                         (1, s_to.value))
+            if other.is_final_state(s_to):
+                concatenation.add_final_state((1, s_to.value))
+        for self_final in self.final_states:
+            for other_start in other.start_states:
+                concatenation.add_transition((0, self_final.value),
+                                             Epsilon(),
+                                             (1, other_start.value))
+        return concatenation
+
+    def __add__(self, other: "EpsilonNFA") -> "EpsilonNFA":
+        """ Computes the concatenation of two Epsilon NFAs """
+        return self.concatenate(other)
+
     def get_difference(self, other: "EpsilonNFA") -> "EpsilonNFA":
-        """ Compute the difference with another Epsilon NFA
+        """ Computes the difference with another Epsilon NFA
 
         Equivalent to:
 
@@ -557,6 +593,18 @@ class EpsilonNFA(FiniteAutomaton):
         """
         return self.reverse()
 
+    def kleene_star(self) -> "EpsilonNFA":
+        """ Compute the kleene closure of current EpsilonNFA"""
+        kleene_closure = self.copy()
+        new_start = self.__get_new_state("Start")
+        for old_start in self.start_states:
+            kleene_closure.add_transition(new_start, Epsilon(), old_start)
+        kleene_closure.start_states.clear()
+        kleene_closure.add_start_state(new_start)
+        for final_state in self.final_states:
+            kleene_closure.add_transition(final_state, Epsilon(), new_start)
+        return kleene_closure
+
     def is_empty(self) -> bool:
         """ Checks if the language represented by the FSM is empty or not
 
@@ -599,6 +647,16 @@ class EpsilonNFA(FiniteAutomaton):
 
     def __bool__(self) -> bool:
         return not self.is_empty()
+
+    def __get_new_state(self, prefix: str) -> State:
+        """
+        Get a state that wasn't previously in automaton
+        starting with given string.
+        """
+        existing_values = set(state.value for state in self.states)
+        while prefix in existing_values:
+            prefix += '`'
+        return State(prefix)
 
     @staticmethod
     def __combine_state_pair(state0: State, state1: State) -> State:
