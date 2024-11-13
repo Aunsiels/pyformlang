@@ -467,12 +467,11 @@ class PDA:
             When intersecting with something else than a regex or a finite
             automaton
         """
-        start_state_other = other.start_states
-        if len(start_state_other) == 0:
+        start_state_other = other.start_state
+        if not start_state_other:
             return PDA()
         pda_state_converter = _PDAStateConverter(self._states, other.states)
-        start_state_other = list(start_state_other)[0]
-        final_state_other = other.final_states
+        final_states_other = other.final_states
         start = pda_state_converter.to_pda_combined_state(self._start_state,
                                                           start_state_other)
         pda = PDA(start_state=start,
@@ -484,40 +483,37 @@ class PDA:
         while to_process:
             state_in, state_dfa = to_process.pop()
             if (state_in in self._final_states and state_dfa in
-                    final_state_other):
+                    final_states_other):
                 pda.add_final_state(
                     pda_state_converter.to_pda_combined_state(state_in,
                                                               state_dfa))
             for symbol in symbols:
                 if symbol == Epsilon():
                     symbol_dfa = finite_automaton.Epsilon()
+                    next_state_dfa = state_dfa
                 else:
                     symbol_dfa = finite_automaton.Symbol(symbol.value)
-                if symbol == Epsilon():
-                    next_states_dfa = [state_dfa]
-                else:
-                    next_states_dfa = other(state_dfa, symbol_dfa)
-                if len(next_states_dfa) == 0:
+                    next_state_dfa = other.get_next_state(state_dfa, symbol_dfa)
+                if not next_state_dfa:
                     continue
                 for stack_symbol in self._stack_alphabet:
                     next_states_self = self._transition_function(state_in,
                                                                  symbol,
                                                                  stack_symbol)
                     for next_state, next_stack in next_states_self:
-                        for next_state_dfa in next_states_dfa:
-                            pda.add_transition(
-                                pda_state_converter.to_pda_combined_state(
-                                    state_in,
-                                    state_dfa),
-                                symbol,
-                                stack_symbol,
-                                pda_state_converter.to_pda_combined_state(
-                                    next_state,
-                                    next_state_dfa),
-                                next_stack)
-                            if (next_state, next_state_dfa) not in processed:
-                                to_process.append((next_state, next_state_dfa))
-                                processed.add((next_state, next_state_dfa))
+                        pda.add_transition(
+                            pda_state_converter.to_pda_combined_state(
+                                state_in,
+                                state_dfa),
+                            symbol,
+                            stack_symbol,
+                            pda_state_converter.to_pda_combined_state(
+                                next_state,
+                                next_state_dfa),
+                            next_stack)
+                        if (next_state, next_state_dfa) not in processed:
+                            to_process.append((next_state, next_state_dfa))
+                            processed.add((next_state, next_state_dfa))
         return pda
 
     def __and__(self, other: DeterministicFiniteAutomaton) -> "PDA":

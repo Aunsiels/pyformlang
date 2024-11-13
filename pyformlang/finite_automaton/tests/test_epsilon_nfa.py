@@ -87,7 +87,7 @@ class TestEpsilonNFA:
         assert not dfa.accepts([point])
         assert not dfa.accepts([plus])
 
-    def test_union(self):
+    def test_union0(self):
         """ Tests the union of two epsilon NFA """
         enfa0 = get_enfa_example0()
         enfa1 = get_enfa_example1()
@@ -101,7 +101,25 @@ class TestEpsilonNFA:
         assert not enfa.accepts([symb_a])
         assert not enfa.accepts([])
 
-    def test_concatenate(self):
+    def test_union1(self):
+        """
+        Tests the union of three ENFAs.
+        Union is (a*b)|(ab+)|c
+        """
+        enfa0 = get_enfa_example0()
+        enfa1 = get_enfa_example1()
+        enfa2 = get_enfa_example2()
+        enfa = enfa0 | enfa2
+        enfa |= enfa1
+        accepted_words = list(enfa.get_accepted_words(3))
+        assert ["b"] in accepted_words
+        assert ["a", "b"] in accepted_words
+        assert ["a", "a", "b"] in accepted_words
+        assert ["a", "b", "b"] in accepted_words
+        assert ["c"] in accepted_words
+        assert len(accepted_words) == 5
+
+    def test_concatenate0(self):
         """ Tests the concatenation of two epsilon NFA """
         enfa0 = get_enfa_example0()
         enfa1 = get_enfa_example1()
@@ -116,7 +134,23 @@ class TestEpsilonNFA:
         assert not enfa.accepts([symb_b])
         assert not enfa.accepts([])
 
-    def test_kleene(self):
+    def test_concatenate1(self):
+        """
+        Tests the concatenation of three ENFAs.
+        Concatenation is a*bc((ab+)|c)
+        """
+        enfa0 = get_enfa_example0()
+        enfa1 = get_enfa_example1()
+        enfa2 = get_enfa_example2()
+        enfa = enfa0 + enfa1
+        enfa += enfa2
+        accepted_words = list(enfa.get_accepted_words(4))
+        assert ["b", "c", "c"] in accepted_words
+        assert ["a", "b", "c", "c"] in accepted_words
+        assert ["b", "c", "a", "b"] in accepted_words
+        assert len(accepted_words) == 3
+
+    def test_kleene0(self):
         """ Tests the kleene star of an epsilon NFA """
         enfa0 = get_enfa_example0()
         symb_a = Symbol("a")
@@ -129,6 +163,23 @@ class TestEpsilonNFA:
         assert enfa.accepts([symb_b, symb_b])
         assert not enfa.accepts([symb_a])
         assert not enfa.accepts([symb_a, symb_b, symb_a])
+
+    def test_kleene1(self):
+        """
+        Tests the kleene star of an ENFA.
+        Expression is ((ab+)|c)*
+        """
+        enfa = get_enfa_example2()
+        enfa = enfa.kleene_star()
+        accepted_words = list(enfa.get_accepted_words(3))
+        assert [] in accepted_words
+        assert ["a", "b"] in accepted_words
+        assert ["a", "b", "b"] in accepted_words
+        assert ["a", "b", "c"] in accepted_words
+        assert ["c", "a", "b"] in accepted_words
+        for i in range(3):
+            assert ["c"] * (i + 1) in accepted_words
+        assert len(accepted_words) == 8
 
     def test_complement(self):
         """ Tests the complement operation """
@@ -544,7 +595,7 @@ def get_enfa_example0():
 
 
 def get_enfa_example1():
-    """ Gives and example ENFA
+    """ Gives an example ENFA
     Accepts c
     """
     enfa1 = EpsilonNFA()
@@ -555,6 +606,21 @@ def get_enfa_example1():
     enfa1.add_final_state(state3)
     enfa1.add_transition(state2, symb_c, state3)
     return enfa1
+
+
+def get_enfa_example2():
+    """ Gives an example ENFA
+    Accepts (ab+)|c
+    """
+    enfa = EpsilonNFA(start_states={0, 3},
+                      final_states={2, 4})
+    enfa.add_transitions([
+        (0, "a", 1),
+        (1, "b", 2),
+        (2, "b", 2),
+        (3, "c", 4),
+    ])
+    return enfa
 
 
 def get_enfa_example0_bis():
