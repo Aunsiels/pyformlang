@@ -3,7 +3,8 @@ from os import path
 
 from pyformlang.pda import PDA, State, StackSymbol, Symbol, Epsilon
 from pyformlang.cfg import Terminal
-from pyformlang import finite_automaton
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton
+from pyformlang.finite_automaton import State as FAState, Symbol as FASymbol
 from pyformlang.pda.utils import PDAObjectCreator
 from pyformlang.regular_expression import Regex
 
@@ -285,11 +286,11 @@ class TestPDA:
         pda.add_transition(state_q, state_e, state_z, state_q, [])
         pda.add_transition(state_q, Epsilon(), state_x0, state_r, [])
 
-        state_s = finite_automaton.State("s")
-        state_t = finite_automaton.State("t")
-        i_dfa = finite_automaton.Symbol("i")
-        e_dfa = finite_automaton.Symbol("e")
-        dfa = finite_automaton.DeterministicFiniteAutomaton(
+        state_s = FAState("s")
+        state_t = FAState("t")
+        i_dfa = FASymbol("i")
+        e_dfa = FASymbol("e")
+        dfa = DeterministicFiniteAutomaton(
             states={state_s, state_t},
             input_symbols={i_dfa, e_dfa},
             start_state=state_s,
@@ -312,16 +313,15 @@ class TestPDA:
 
         assert cfg.contains([i_cfg, i_cfg, e_cfg, e_cfg, e_cfg])
 
-        new_pda = pda.intersection(
-            finite_automaton.DeterministicFiniteAutomaton())
+        new_pda = pda.intersection(DeterministicFiniteAutomaton())
         assert new_pda.get_number_transitions() == 0
 
-        new_pda = pda.intersection(Regex(""))
+        new_pda = pda.intersection(Regex("").to_minimal_dfa())
         pda_es = new_pda.to_empty_stack()
         cfg = pda_es.to_cfg()
         assert not cfg
 
-        new_pda = pda & Regex("z|y").to_epsilon_nfa()
+        new_pda = pda & Regex("z|y").to_minimal_dfa()
         pda_es = new_pda.to_empty_stack()
         cfg = pda_es.to_cfg()
         assert not cfg

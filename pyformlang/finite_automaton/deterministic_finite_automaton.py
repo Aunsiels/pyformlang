@@ -474,16 +474,16 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                     (not self_minimal.is_final_state(current_self)
                      and other_minimal.is_final_state(current_other)):
                 return False
-            next_self = self_minimal(current_self)
-            next_other = other_minimal(current_other)
+            next_self = list(self_minimal.get_transitions_from(current_self))
+            next_other = list(other_minimal.get_transitions_from(current_other))
             if len(next_self) != len(next_other):
                 return False
             if len(next_self) == 0:
                 continue
-            for next_temp, other_temp in zip(sorted(list(next_self),
-                                                    key=lambda x: x[0].value),
-                                             sorted(list(next_other),
-                                                    key=lambda x: x[0].value)):
+            for next_temp, other_temp in zip(sorted(next_self,
+                                                    key=lambda x: hash(x[0])),
+                                             sorted(next_other,
+                                                    key=lambda x: hash(x[0]))):
                 next_symbol_self, next_state_self = next_temp
                 next_symbol_other, next_state_other = other_temp
                 if next_symbol_other != next_symbol_self:

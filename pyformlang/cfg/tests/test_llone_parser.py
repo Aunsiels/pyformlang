@@ -250,7 +250,7 @@ class TestLLOneParser:
             N -> gorilla | sky | carrots
         """)
         regex = Regex("georges touches (a|an) (sky|gorilla) !")
-        cfg_inter = cfg.intersection(regex)
+        cfg_inter = cfg.intersection(regex.to_minimal_dfa())
         assert not cfg_inter.is_empty()
         assert cfg_inter.is_finite()
         assert not cfg_inter.contains(["georges", "sees", "a", "gorilla", "."])
