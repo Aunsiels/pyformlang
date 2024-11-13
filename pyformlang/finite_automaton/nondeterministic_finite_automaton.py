@@ -6,7 +6,6 @@ from typing import Iterable, Hashable
 
 from .epsilon import Epsilon
 from .epsilon_nfa import EpsilonNFA
-from .deterministic_transition_function import InvalidEpsilonTransition
 from .utils import to_symbol
 
 
@@ -116,6 +115,7 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
                        s_from: Hashable,
                        symb_by: Hashable,
                        s_to: Hashable) -> int:
+        symb_by = to_symbol(symb_by)
         if symb_by == Epsilon():
             raise InvalidEpsilonTransition
         return super().add_transition(s_from, symb_by, s_to)
@@ -153,3 +153,8 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
                     for next_state in enfa(e_state, symb):
                         nfa.add_transition(state, symb, next_state)
         return nfa
+
+
+class InvalidEpsilonTransition(Exception):
+    """Exception raised when an epsilon transition is created in
+    nondeterministic automaton"""

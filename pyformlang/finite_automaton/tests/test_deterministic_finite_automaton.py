@@ -8,8 +8,7 @@ from pyformlang.finite_automaton import EpsilonNFA
 from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 from pyformlang.finite_automaton import State, Symbol, Epsilon
 from pyformlang.finite_automaton import DeterministicTransitionFunction
-from pyformlang.finite_automaton.deterministic_transition_function import \
-    InvalidEpsilonTransition
+from pyformlang.finite_automaton import InvalidEpsilonTransition
 
 
 class TestDeterministicFiniteAutomaton:

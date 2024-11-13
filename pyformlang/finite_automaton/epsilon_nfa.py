@@ -86,10 +86,10 @@ class EpsilonNFA(FiniteAutomaton):
         for state in self._start_states:
             self._states.add(state)
 
-    def _get_next_states_iterable(self,
-                                  current_states: Iterable[State],
-                                  symbol: Symbol) \
-            -> Set[State]:
+    def _get_next_states_iterable(
+            self,
+            current_states: Iterable[State],
+            symbol: Symbol) -> Set[State]:
         """ Gives the set of next states, starting from a set of states
 
         Parameters
@@ -453,8 +453,19 @@ class EpsilonNFA(FiniteAutomaton):
 
     def get_union(self, other: "EpsilonNFA") -> "EpsilonNFA":
         """ Computes the union with given Epsilon NFA """
-        union = other.copy()
-        self._copy_to(union)
+        union = EpsilonNFA()
+        self.__copy_transitions_marked(self, union, 0)
+        self.__copy_transitions_marked(other, union, 1)
+        new_start = State("Start")
+        union.add_start_state(new_start)
+        for self_start in self.start_states:
+            union.add_transition(new_start, Epsilon(), (0, self_start.value))
+        for other_start in other.start_states:
+            union.add_transition(new_start, Epsilon(), (1, other_start.value))
+        for self_final in self.final_states:
+            union.add_final_state((0, self_final.value))
+        for other_final in other.final_states:
+            union.add_final_state((1, other_final.value))
         return union
 
     def __or__(self, other: "EpsilonNFA") -> "EpsilonNFA":
@@ -464,18 +475,12 @@ class EpsilonNFA(FiniteAutomaton):
     def concatenate(self, other: "EpsilonNFA") -> "EpsilonNFA":
         """ Computes the concatenation of two Epsilon NFAs """
         concatenation = EpsilonNFA()
-        for s_from, symb_by, s_to in self:
-            concatenation.add_transition((0, s_from.value),
-                                         symb_by,
-                                         (0, s_to.value))
-            if s_from in self.start_states:
-                concatenation.add_start_state((0, s_from.value))
-        for s_from, symb_by, s_to in other:
-            concatenation.add_transition((1, s_from.value),
-                                         symb_by,
-                                         (1, s_to.value))
-            if other.is_final_state(s_to):
-                concatenation.add_final_state((1, s_to.value))
+        self.__copy_transitions_marked(self, concatenation, 0)
+        self.__copy_transitions_marked(other, concatenation, 1)
+        for self_start in self.start_states:
+            concatenation.add_start_state((0, self_start.value))
+        for other_final in other.final_states:
+            concatenation.add_final_state((1, other_final.value))
         for self_final in self.final_states:
             for other_start in other.start_states:
                 concatenation.add_transition((0, self_final.value),
@@ -595,12 +600,12 @@ class EpsilonNFA(FiniteAutomaton):
 
     def kleene_star(self) -> "EpsilonNFA":
         """ Compute the kleene closure of current EpsilonNFA"""
-        kleene_closure = self.copy()
         new_start = self.__get_new_state("Start")
+        kleene_closure = EpsilonNFA(start_states={new_start},
+                                    final_states={new_start})
+        kleene_closure.add_transitions(iter(self))
         for old_start in self.start_states:
             kleene_closure.add_transition(new_start, Epsilon(), old_start)
-        kleene_closure.start_states.clear()
-        kleene_closure.add_start_state(new_start)
         for final_state in self.final_states:
             kleene_closure.add_transition(final_state, Epsilon(), new_start)
         return kleene_closure
@@ -657,6 +662,16 @@ class EpsilonNFA(FiniteAutomaton):
         while prefix in existing_values:
             prefix += '`'
         return State(prefix)
+
+    @staticmethod
+    def __copy_transitions_marked(fa_to_add_from: FiniteAutomaton,
+                                  fa_to_add_to: FiniteAutomaton,
+                                  mark: int) -> None:
+        """ Copy transitions from one FA to another with each state marked """
+        for s_from, symb_by, s_to in fa_to_add_from:
+            fa_to_add_to.add_transition((mark, s_from.value),
+                                        symb_by,
+                                        (mark, s_to.value))
 
     @staticmethod
     def __combine_state_pair(state0: State, state1: State) -> State:

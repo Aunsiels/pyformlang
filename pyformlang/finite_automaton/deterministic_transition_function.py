@@ -11,6 +11,7 @@ from .symbol import Symbol
 from .epsilon import Epsilon
 from .nondeterministic_transition_function import \
     NondeterministicTransitionFunction
+from .nondeterministic_finite_automaton import InvalidEpsilonTransition
 
 class DeterministicTransitionFunction(NondeterministicTransitionFunction):
     """A deterministic transition function in a finite automaton
@@ -83,11 +84,6 @@ class DeterministicTransitionFunction(NondeterministicTransitionFunction):
     def is_deterministic(self) -> bool:
         """ Whether the transition function is deterministic """
         return True
-
-
-class InvalidEpsilonTransition(Exception):
-    """Exception raised when an epsilon transition is created in
-    deterministic automaton"""
 
 
 class DuplicateTransitionError(Exception):

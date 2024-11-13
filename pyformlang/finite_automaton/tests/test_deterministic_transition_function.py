@@ -4,8 +4,9 @@ Test the transition functions
 
 import pytest
 
+from pyformlang.finite_automaton import DeterministicTransitionFunction
+from pyformlang.finite_automaton import State, Symbol, Epsilon
 from pyformlang.finite_automaton import \
-    State, Symbol, Epsilon, DeterministicTransitionFunction, \
     DuplicateTransitionError, InvalidEpsilonTransition
 
 
