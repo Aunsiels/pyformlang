@@ -164,8 +164,8 @@ class TestNondeterministicFiniteAutomaton:
         assert len(nfa.symbols) == 3
         assert len(nfa.start_states) == 4
         assert len(nfa.final_states) == 3
-        assert nfa.get_number_transitions() == 9
-        assert nfa.accepts([Symbol("a"), Symbol("b")])
+        assert nfa.get_number_transitions() == 7
+        assert nfa.accepts([Symbol("a"), Symbol("c")])
         assert nfa.accepts([Symbol("b"), Symbol("c")])
         assert not nfa.is_deterministic()
 

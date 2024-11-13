@@ -2,7 +2,8 @@
 Representation of some objects used in regex.
 """
 
-from typing import List, Iterable, Any
+from typing import List, Iterable
+from abc import abstractmethod
 
 from pyformlang.cfg import Production
 from pyformlang.cfg.utils import to_variable, to_terminal
@@ -17,11 +18,11 @@ class Node:  # pylint: disable=too-few-public-methods
         The value of the node
     """
 
-    def __init__(self, value: Any) -> None:
+    def __init__(self, value: str) -> None:
         self._value = value
 
     @property
-    def value(self) -> Any:
+    def value(self) -> str:
         """ Give the value of the node
 
         Returns
@@ -31,6 +32,7 @@ class Node:  # pylint: disable=too-few-public-methods
         """
         return self._value
 
+    @abstractmethod
     def get_str_repr(self, sons_repr: Iterable[str]) -> str:
         """
         The string representation of the node
@@ -48,7 +50,8 @@ class Node:  # pylint: disable=too-few-public-methods
         """
         raise NotImplementedError
 
-    def get_cfg_rules(self, current_symbol: Any, sons: Iterable[Any]) \
+    @abstractmethod
+    def get_cfg_rules(self, current_symbol: str, sons: Iterable[str]) \
             -> List[Production]:
         """ Gets the rules for a context-free grammar to represent the \
         operator"""
@@ -103,7 +106,7 @@ class Operator(Node):  # pylint: disable=too-few-public-methods
         """ Get the string representation """
         raise NotImplementedError
 
-    def get_cfg_rules(self, current_symbol: Any, sons: Iterable[Any]) \
+    def get_cfg_rules(self, current_symbol: str, sons: Iterable[str]) \
             -> List[Production]:
         """ Gets the rules for a context-free grammar to represent the \
         operator"""
@@ -122,7 +125,7 @@ class Symbol(Node):  # pylint: disable=too-few-public-methods
     def get_str_repr(self, sons_repr: Iterable[str]) -> str:
         return str(self.value)
 
-    def get_cfg_rules(self, current_symbol: Any, sons: Iterable[Any]) \
+    def get_cfg_rules(self, current_symbol: str, sons: Iterable[str]) \
             -> List[Production]:
         """ Gets the rules for a context-free grammar to represent the \
         operator"""
@@ -141,7 +144,7 @@ class Concatenation(Operator):  # pylint: disable=too-few-public-methods
     def get_str_repr(self, sons_repr: Iterable[str]) -> str:
         return "(" + ".".join(sons_repr) + ")"
 
-    def get_cfg_rules(self, current_symbol: Any, sons: Iterable[Any]) \
+    def get_cfg_rules(self, current_symbol: str, sons: Iterable[str]) \
             -> List[Production]:
         return [Production(
             to_variable(current_symbol),
@@ -158,7 +161,7 @@ class Union(Operator):  # pylint: disable=too-few-public-methods
     def get_str_repr(self, sons_repr: Iterable[str]) -> str:
         return "(" + "|".join(sons_repr) + ")"
 
-    def get_cfg_rules(self, current_symbol: Any, sons: Iterable[Any]) \
+    def get_cfg_rules(self, current_symbol: str, sons: Iterable[str]) \
             -> List[Production]:
         return [Production(
             to_variable(current_symbol),
@@ -175,7 +178,7 @@ class KleeneStar(Operator):  # pylint: disable=too-few-public-methods
     def get_str_repr(self, sons_repr: Iterable[str]) -> str:
         return "(" + ".".join(sons_repr) + ")*"
 
-    def get_cfg_rules(self, current_symbol: Any, sons: Iterable[Any]) \
+    def get_cfg_rules(self, current_symbol: str, sons: Iterable[str]) \
             -> List[Production]:
         return [
             Production(
@@ -199,7 +202,7 @@ class Epsilon(Symbol):  # pylint: disable=too-few-public-methods
     def get_str_repr(self, sons_repr: Iterable[str]) -> str:
         return "$"
 
-    def get_cfg_rules(self, current_symbol: Any, sons: Iterable[str]) \
+    def get_cfg_rules(self, current_symbol: str, sons: Iterable[str]) \
             -> List[Production]:
         return [Production(to_variable(current_symbol), [])]
 
@@ -214,7 +217,7 @@ class Empty(Symbol):  # pylint: disable=too-few-public-methods
     def __init__(self) -> None:
         super().__init__("Empty")
 
-    def get_cfg_rules(self, current_symbol: Any, sons: Iterable[Any]) \
+    def get_cfg_rules(self, current_symbol: str, sons: Iterable[str]) \
             -> List[Production]:
         return []
 

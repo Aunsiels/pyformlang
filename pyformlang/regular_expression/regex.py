@@ -2,7 +2,7 @@
 Representation of a regular expression
 """
 
-from typing import List, Iterable, Tuple, Optional, Any
+from typing import List, Iterable, Tuple, Optional
 
 from pyformlang.finite_automaton import FiniteAutomaton, EpsilonNFA
 from pyformlang.finite_automaton import DeterministicFiniteAutomaton
@@ -11,7 +11,7 @@ from pyformlang.cfg.cfg import CFG, Production
 from pyformlang.cfg.utils import to_variable
 
 from .regex_reader import RegexReader
-from .regex_objects import Epsilon as RegexEpsilon, Node, \
+from .regex_objects import Epsilon as RegexEpsilon, \
     Empty, Concatenation, Union, KleeneStar
 
 
@@ -88,9 +88,8 @@ class Regex(RegexReader):
     """
 
     def __init__(self, regex: str) -> None:
-        super().__init__(regex)
-        self.head: Node = Empty() # type: ignore
         self.sons: List[Regex] = [] # type: ignore
+        super().__init__(regex)
         self._counter = 0
         self._enfa: Optional[EpsilonNFA] = None
 
@@ -337,7 +336,7 @@ class Regex(RegexReader):
                           productions=set(productions))
         return cfg_res
 
-    def _get_production(self, current_symbol: Any, count: int = 0) \
+    def _get_production(self, current_symbol: str, count: int = 0) \
             -> Tuple[List[Production], int]:
         next_symbols = []
         next_productions = []

@@ -434,7 +434,7 @@ class TestEpsilonNFA:
 
     def test_call(self):
         enfa = get_enfa_example1()
-        assert len(enfa(2)) == 1
+        assert len(list(enfa(2))) == 1
 
     def test_remove_epsilon_transitions(self):
         enfa = EpsilonNFA()

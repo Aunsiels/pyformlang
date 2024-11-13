@@ -10,7 +10,7 @@ from pyformlang.finite_automaton import \
     DuplicateTransitionError, InvalidEpsilonTransition
 
 
-class TestTransitionFunction:
+class TestDeterministicTransitionFunction:
     """ Tests the transitions functions
     """
 
@@ -69,8 +69,8 @@ class TestTransitionFunction:
                                                      symb_by,
                                                      s_to) == 1
         assert transition_function.get_number_transitions() == 0
-        assert transition_function(s_to, symb_by) == []
-        assert transition_function(s_from, symb_by) == []
+        assert transition_function(s_to, symb_by) == set()
+        assert transition_function(s_from, symb_by) == set()
         assert transition_function.remove_transition(s_from,
                                                      symb_by,
                                                      s_to) == 0

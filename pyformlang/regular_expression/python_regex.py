@@ -3,7 +3,7 @@ A class to read Python format regex
 """
 
 from typing import List, Tuple, Union
-from re import compile as comp, Pattern
+from re import compile as compile_regex, Pattern
 from string import printable
 from unicodedata import lookup
 
@@ -100,7 +100,7 @@ class PythonRegex(Regex):
 
     def __init__(self, python_regex: Union[str, Pattern[str]]) -> None:
         if isinstance(python_regex, str):
-            comp(python_regex)  # Check if it is valid
+            compile_regex(python_regex)  # Check if it is valid
         else:
             python_regex = python_regex.pattern
 

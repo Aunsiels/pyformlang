@@ -2,10 +2,10 @@
 A class to read regex
 """
 
-from typing import List, Optional, Any
+from typing import List, Optional
 from re import sub
 
-from .regex_objects import to_node, Node, Operator, Symbol, \
+from .regex_objects import to_node, Node, Operator, Symbol, Empty, \
     Concatenation, Union, KleeneStar, MisformedRegexError, SPECIAL_SYMBOLS
 
 MISFORMED_MESSAGE = "The regex is misformed here."
@@ -21,7 +21,7 @@ class RegexReader:
 
     def __init__(self, regex: str) -> None:
         self._current_node: Optional[Node] = None
-        self.head: Optional[Node] = None
+        self.head: Node = Empty()
         self.sons: List[RegexReader] = []
         self._end_current_group = 0
         regex = _pre_process_regex(regex)
@@ -39,8 +39,7 @@ class RegexReader:
         self._compute_precedence()
         self._remove_useless_extreme_parenthesis_from_components()
 
-    def _remove_useless_extreme_parenthesis_from_componants(
-            self) -> None:
+    def _remove_useless_extreme_parenthesis_from_componants(self) -> None:
         if self._is_surrounded_by_parenthesis():
             self._components = self._components[1:-1]
             self._remove_useless_extreme_parenthesis_from_components()
@@ -102,8 +101,8 @@ class RegexReader:
             self._compute_precedent_when_not_kleene_nor_union()
 
     def _set_next_end_group_and_node(self) -> None:
-        if isinstance(self._current_node, Operator) and not isinstance(
-                self._current_node, KleeneStar):
+        if isinstance(self._current_node, Operator) and \
+                not isinstance(self._current_node, KleeneStar):
             self._end_current_group += 1
         self._set_end_first_group_in_components(self._end_current_group)
         if self._end_current_group < len(self._components):
@@ -168,7 +167,7 @@ class RegexReader:
         sub_regex = " ".join(self._components[idx_from:idx_to])
         return self.from_string(sub_regex)
 
-    def _check_is_valid_single_first_symbol(self, first_symbol: Any) -> None:
+    def _check_is_valid_single_first_symbol(self, first_symbol: Node) -> None:
         if not isinstance(first_symbol, Symbol):
             raise MisformedRegexError(MISFORMED_MESSAGE, self._regex)
 
