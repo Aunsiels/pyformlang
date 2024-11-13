@@ -2,8 +2,8 @@
 A class to read Python format regex
 """
 
-from typing import List, Tuple, Union
-from re import compile as compile_regex, Pattern
+from typing import List, Tuple, Union, Pattern
+from re import compile as compile_regex
 from string import printable
 from unicodedata import lookup
 
