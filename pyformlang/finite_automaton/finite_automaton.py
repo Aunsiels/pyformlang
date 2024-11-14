@@ -533,6 +533,16 @@ class FiniteAutomaton(Iterable[Tuple[State, Symbol, State]]):
             graph.add_edge(s_from.value, s_to.value, label=label_)
         return graph
 
+    @classmethod
+    @abstractmethod
+    def from_networkx(cls, graph: MultiDiGraph) -> "FiniteAutomaton":
+        """
+        Import a networkx graph into an finite state automaton. \
+        The imported graph requires to have the good format, i.e. to come \
+        from the function to_networkx
+        """
+        raise NotImplementedError
+
     def write_as_dot(self, filename: str) -> None:
         """
         Write the automaton in dot format into a file
@@ -573,8 +583,7 @@ class FiniteAutomaton(Iterable[Tuple[State, Symbol, State]]):
             word_to_add = tuple(current_word)
             if not self.__try_add(words_by_state[current_state], word_to_add):
                 continue
-            transitions = self._transition_function.get_transitions_from(
-                current_state)
+            transitions = self.get_transitions_from(current_state)
             for symbol, next_state in transitions:
                 if next_state in states_leading_to_final:
                     temp_word = current_word.copy()
@@ -593,7 +602,7 @@ class FiniteAutomaton(Iterable[Tuple[State, Symbol, State]]):
         leading_to_final = self.final_states.copy()
         visited = set()
         states_to_process: deque[Any] = \
-            deque((None, start_state)  for start_state in self.start_states)
+            deque((None, start_state) for start_state in self.start_states)
         delayed_states = deque()
         while states_to_process:
             previous_state, current_state = states_to_process.pop()

@@ -368,7 +368,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                 all_trans = [enfa(x, symbol) for x in current]
                 state = set()
                 for trans in all_trans:
-                    state = state.union(trans)
+                    state.update(trans)
                 if not state:
                     continue
                 # Eclose added

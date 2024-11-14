@@ -107,9 +107,7 @@ class EpsilonNFA(FiniteAutomaton):
         """
         next_states = set()
         for current_state in current_states:
-            next_states_temp = self._transition_function(current_state,
-                                                         symbol)
-            next_states = next_states.union(next_states_temp)
+            next_states.update(self(current_state, symbol))
         return next_states
 
     def accepts(self, word: Iterable[Hashable]) -> bool:
@@ -177,7 +175,7 @@ class EpsilonNFA(FiniteAutomaton):
         states = [to_state(x) for x in states]
         res = set()
         for state in states:
-            res = res.union(self.eclose(state))
+            res.update(self.eclose(state))
         return res
 
     def eclose(self, state: Hashable) -> Set[State]:
@@ -599,7 +597,7 @@ class EpsilonNFA(FiniteAutomaton):
         return self.reverse()
 
     def kleene_star(self) -> "EpsilonNFA":
-        """ Compute the kleene closure of current EpsilonNFA"""
+        """ Compute the kleene closure of current EpsilonNFA """
         new_start = self.__get_new_state("Start")
         kleene_closure = EpsilonNFA(start_states={new_start},
                                     final_states={new_start})

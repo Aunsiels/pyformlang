@@ -136,7 +136,7 @@ class Regex(RegexReader):
             return 1 + sum(son.get_number_operators() for son in self.sons)
         return 0
 
-    def to_minimal_dfa(self) -> "DeterministicFiniteAutomaton":
+    def to_minimal_dfa(self) -> DeterministicFiniteAutomaton:
         """ Builds minimal dfa from current regex """
         enfa = self.to_epsilon_nfa()
         dfa = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa)
@@ -164,13 +164,12 @@ class Regex(RegexReader):
         Transforms the regular expression into an epsilon NFA.
         Copy enfa in case of external usage.
         """
-        if self._enfa is not None:
-            return self._enfa.copy() if copy else self._enfa
-        self._enfa = EpsilonNFA()
-        s_initial = self._set_and_get_initial_state_in_enfa(self._enfa)
-        s_final = self._set_and_get_final_state_in_enfa(self._enfa)
-        self._process_to_enfa(self._enfa, s_initial, s_final)
-        return self._to_epsilon_nfa_internal(copy)
+        if self._enfa is None:
+            self._enfa = EpsilonNFA()
+            s_initial = self._set_and_get_initial_state_in_enfa(self._enfa)
+            s_final = self._set_and_get_final_state_in_enfa(self._enfa)
+            self._process_to_enfa(self._enfa, s_initial, s_final)
+        return self._enfa.copy() if copy else self._enfa
 
     def _set_and_get_final_state_in_enfa(self, enfa: EpsilonNFA) -> State:
         s_final = self._get_next_state_enfa()

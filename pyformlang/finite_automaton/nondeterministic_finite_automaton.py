@@ -157,4 +157,4 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
 
 class InvalidEpsilonTransition(Exception):
     """Exception raised when an epsilon transition is created in
-    nondeterministic automaton"""
+    non-epsilon NFA"""
