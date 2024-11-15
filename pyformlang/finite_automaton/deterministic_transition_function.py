@@ -13,6 +13,7 @@ from .nondeterministic_transition_function import \
     NondeterministicTransitionFunction
 from .nondeterministic_finite_automaton import InvalidEpsilonTransition
 
+
 class DeterministicTransitionFunction(NondeterministicTransitionFunction):
     """A deterministic transition function in a finite automaton
 

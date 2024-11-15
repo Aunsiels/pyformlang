@@ -36,6 +36,26 @@ class RecursiveAutomaton:
         for box in boxes:
             self._nonterminal_to_box[box.nonterminal] = box
 
+    @property
+    def nonterminals(self) -> Set[Symbol]:
+        """ The set of nonterminals """
+        return set(self._nonterminal_to_box.keys())
+
+    @property
+    def boxes(self) -> Set[Box]:
+        """ The set of boxes """
+        return set(self._nonterminal_to_box.values())
+
+    @property
+    def start_nonterminal(self) -> Symbol:
+        """ The start nonterminal """
+        return self._start_nonterminal
+
+    @property
+    def start_box(self) -> Box:
+        """ The start box """
+        return self._nonterminal_to_box[self.start_nonterminal]
+
     def get_box_by_nonterminal(self, nonterminal: Hashable) -> Optional[Box]:
         """
         Box by nonterminal
@@ -57,26 +77,6 @@ class RecursiveAutomaton:
     def get_number_boxes(self) -> int:
         """ Size of set of boxes """
         return len(self._nonterminal_to_box)
-
-    @property
-    def nonterminals(self) -> Set[Symbol]:
-        """ The set of nonterminals """
-        return set(self._nonterminal_to_box.keys())
-
-    @property
-    def boxes(self) -> Set[Box]:
-        """ The set of boxes """
-        return set(self._nonterminal_to_box.values())
-
-    @property
-    def start_nonterminal(self) -> Symbol:
-        """ The start nonterminal """
-        return self._start_nonterminal
-
-    @property
-    def start_box(self) -> Box:
-        """ The start box """
-        return self._nonterminal_to_box[self.start_nonterminal]
 
     @classmethod
     def from_regex(cls, regex: Regex, start_nonterminal: Hashable) \
