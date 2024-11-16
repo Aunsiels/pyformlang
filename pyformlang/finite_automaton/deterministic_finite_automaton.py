@@ -2,52 +2,15 @@
 Representation of a deterministic finite automaton
 """
 
-from typing import Dict, List, Iterable, AbstractSet, Optional, Hashable, Any
-from numpy import empty
+from typing import Iterable, AbstractSet, Optional, Hashable, Any
 
 from .state import State
-from .symbol import Symbol
 from .deterministic_transition_function import DeterministicTransitionFunction
 from .epsilon_nfa import EpsilonNFA
 from .nondeterministic_finite_automaton import NondeterministicFiniteAutomaton
 from .hopcroft_processing_list import HopcroftProcessingList
 from .partition import Partition
-from .utils import to_state, to_symbol, to_single_state
-
-
-class PreviousTransitions:
-    """For internal usage"""
-
-    def __init__(self,
-                 states: AbstractSet[State],
-                 symbols: AbstractSet[Symbol]) -> None:
-        self._to_index_state: Dict[Optional[State], int] = {}
-        self._to_index_state[None] = 0
-        for i, state in enumerate(states):
-            self._to_index_state[state] = i + 1
-        self._to_index_symbol: Dict[Optional[Symbol], int] = {}
-        for i, symbol in enumerate(symbols):
-            self._to_index_symbol[symbol] = i
-        self._conversion = empty((len(states) + 1, len(symbols)),
-                                 dtype=object)
-
-    def add(self,
-            next0: Optional[State],
-            symbol: Symbol,
-            state: Optional[State]) -> None:
-        """ Internal """
-        i_next0 = self._to_index_state[next0]
-        i_symbol = self._to_index_symbol[symbol]
-        if self._conversion[i_next0, i_symbol] is None:
-            self._conversion[i_next0, i_symbol] = [state]
-        else:
-            self._conversion[i_next0, i_symbol].append(state)
-
-    def get(self, next0: State, symbol: Symbol) -> List[object]:
-        """ Internal """
-        i_next0 = self._to_index_state[next0]
-        i_symbol = self._to_index_symbol[symbol]
-        return self._conversion[i_next0, i_symbol] or []
+from .utils import to_state, to_symbol, to_single_state, PreviousTransitions
 
 
 class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
@@ -263,8 +226,6 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             for symbol in self._input_symbols:
                 next0 = self._transition_function.get_next_state(state, symbol)
                 previous_transitions.add(next0, symbol, state)
-        for symbol in self._input_symbols:
-            previous_transitions.add(None, symbol, None)
         return previous_transitions
 
     def minimize(self) -> "DeterministicFiniteAutomaton":
