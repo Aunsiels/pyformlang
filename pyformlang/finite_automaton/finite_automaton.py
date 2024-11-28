@@ -635,12 +635,14 @@ class FiniteAutomaton:
         visited = set()
         states_to_process = deque((None, start_state)
                                   for start_state in self.start_states)
+        delayed_states = deque()
         while states_to_process:
             previous_state, current_state = states_to_process.pop()
             if previous_state and current_state in leading_to_final:
                 leading_to_final.add(previous_state)
                 continue
             if current_state in visited:
+                delayed_states.append((previous_state, current_state))
                 continue
             visited.add(current_state)
             next_states = self._get_next_states_from(current_state)
@@ -648,6 +650,9 @@ class FiniteAutomaton:
                 states_to_process.append((previous_state, current_state))
                 for next_state in next_states:
                     states_to_process.append((current_state, next_state))
+        for previous_state, current_state in delayed_states:
+            if previous_state and current_state in leading_to_final:
+                leading_to_final.add(previous_state)
         return leading_to_final
 
     def _get_reachable_states(self) -> Set[State]:

@@ -648,7 +648,7 @@ class TestEpsilonNFA:
         accepted_words = list(enfa.get_accepted_words(max_length))
         assert [] in accepted_words
         assert [Symbol("a"), Symbol("c")] in accepted_words
-        assert [Symbol("a"), Symbol("b"),Symbol("c")] in accepted_words
+        assert [Symbol("a"), Symbol("b"), Symbol("c")] in accepted_words
         assert [Symbol("a"), Symbol("b"),
                 Symbol("b"), Symbol("c")] in accepted_words
         assert len(accepted_words) == 4

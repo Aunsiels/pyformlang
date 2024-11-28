@@ -288,6 +288,15 @@ class TestDeterministicFiniteAutomaton:
         assert [Symbol("b"), Symbol("d")] in accepted_words
         assert len(accepted_words) == 3
 
+    def test_cyclic_word_generation(self):
+        dfa = get_cyclic_dfa_example()
+        accepted_words = list(dfa.get_accepted_words(5))
+        assert ["a", "f"] in accepted_words
+        assert ["a", "b", "e", "f"] in accepted_words
+        assert ["a", "b", "c", "e", "f"] in accepted_words
+        assert ["a", "b", "d", "a", "f"] in accepted_words
+        assert len(accepted_words) == 4
+
     def test_dfa_generating_no_words(self):
         dfa = get_dfa_example_without_accepted_words()
         accepted_words = list(dfa.get_accepted_words())
@@ -359,6 +368,21 @@ def get_dfa_example_for_word_generation():
     dfa.add_start_state(states[0])
     dfa.add_final_state(states[0])
     dfa.add_final_state(states[3])
+    return dfa
+
+
+def get_cyclic_dfa_example():
+    """ Gets DFA example with several cycles on path to final """
+    dfa = DeterministicFiniteAutomaton(start_state=0,
+                                       final_states={3})
+    dfa.add_transitions([
+        (0, "a", 1),
+        (1, "b", 2),
+        (2, "c", 2),
+        (2, "d", 0),
+        (2, "e", 1),
+        (1, "f", 3),
+    ])
     return dfa
 
 
