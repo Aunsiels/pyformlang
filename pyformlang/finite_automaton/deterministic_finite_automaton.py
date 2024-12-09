@@ -138,6 +138,13 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             return 1
         return 0
 
+    def get_next_state(self, s_from: Hashable, symb_by: Hashable) \
+            -> Optional[State]:
+        """ Make a call of deterministic transition function """
+        s_from = to_state(s_from)
+        symb_by = to_symbol(symb_by)
+        return self._transition_function.get_next_state(s_from, symb_by)
+
     def accepts(self, word: Iterable[Hashable]) -> bool:
         """ Checks whether the dfa accepts a given word
 
@@ -167,8 +174,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         for symbol in word:
             if current_state is None:
                 return False
-            current_state = self._transition_function.get_next_state(
-                current_state, symbol)
+            current_state = self.get_next_state(current_state, symbol)
         return current_state is not None and self.is_final_state(current_state)
 
     def is_deterministic(self) -> bool:
@@ -212,19 +218,12 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         """
         return self._copy_to(DeterministicFiniteAutomaton())
 
-    def get_next_state(self, s_from: Hashable, symb_by: Hashable) \
-            -> Optional[State]:
-        """ Make a call of deterministic transition function """
-        s_from = to_state(s_from)
-        symb_by = to_symbol(symb_by)
-        return self._transition_function.get_next_state(s_from, symb_by)
-
     def _get_previous_transitions(self) -> PreviousTransitions:
         previous_transitions = PreviousTransitions(self._states,
                                                    self._input_symbols)
         for state in self._states:
             for symbol in self._input_symbols:
-                next0 = self._transition_function.get_next_state(state, symbol)
+                next0 = self.get_next_state(state, symbol)
                 previous_transitions.add(next0, symbol, state)
         return previous_transitions
 
@@ -275,8 +274,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
             done = set()
             new_state = to_new_states[state]
             for symbol in self._input_symbols:
-                next_node = self._transition_function.get_next_state(
-                    state, symbol)
+                next_node = self.get_next_state(state, symbol)
                 if next_node and next_node in states:
                     next_node = to_new_states[next_node]
                     if (next_node, symbol) not in done:
@@ -430,10 +428,8 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
         matches = {self_minimal.start_state: other_minimal.start_state}
         while to_process:
             current_self, current_other = to_process.pop()
-            if (self_minimal.is_final_state(current_self)
-                    and not other_minimal.is_final_state(current_other)) or \
-                    (not self_minimal.is_final_state(current_self)
-                     and other_minimal.is_final_state(current_other)):
+            if self_minimal.is_final_state(current_self) != \
+                    other_minimal.is_final_state(current_other):
                 return False
             next_self = list(self_minimal.get_transitions_from(current_self))
             next_other = list(other_minimal.get_transitions_from(current_other))

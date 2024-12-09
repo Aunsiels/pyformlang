@@ -19,5 +19,4 @@
     "strictParameterNoneValue": false,
 
     "reportMissingParameterType": "warning",
-    "reportRedeclaration": "none",
   }

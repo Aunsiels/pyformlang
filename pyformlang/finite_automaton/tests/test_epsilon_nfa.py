@@ -484,8 +484,18 @@ class TestEpsilonNFA:
         assert len(enfa) == 1
 
     def test_call(self):
+        """ Tests the call of the transition function of the ENFA """
         enfa = get_enfa_example1()
-        assert len(list(enfa(2))) == 1
+        assert enfa(2, "c") == {3}
+        assert not enfa(3, "a")
+        assert not enfa(2313, "qwe")
+
+    def test_get_transitions_from(self):
+        """ Tests the transition obtaining from the given state """
+        enfa = get_enfa_example1()
+        assert list(enfa.get_transitions_from(2)) == [("c", 3)]
+        assert not list(enfa.get_transitions_from(3))
+        assert not list(enfa.get_transitions_from(4210))
 
     def test_remove_epsilon_transitions(self):
         enfa = EpsilonNFA()
