@@ -8,7 +8,6 @@ from abc import abstractmethod
 from collections import deque
 from networkx import MultiDiGraph
 from networkx.drawing.nx_pydot import write_dot
-from fastcore.dispatch import typedispatch
 
 from pyformlang.fst import FST
 
@@ -322,16 +321,6 @@ class FiniteAutomaton(Iterable[Tuple[State, Symbol, State]]):
             return 1
         return 0
 
-    @typedispatch
-    def __call__(self, s_from: Hashable) -> Iterable[Tuple[Symbol, Set[State]]]:
-        """
-        Gives FA transitions from given state.
-        Calls the transition function
-        """
-        s_from = to_state(s_from)
-        return self._transition_function(s_from)
-
-    @typedispatch
     def __call__(self, s_from: Hashable, symb_by: Hashable)  -> Set[State]:
         """ Gives the states obtained after calling a symbol on a state
         Calls the transition function
