@@ -12,8 +12,7 @@ class TestRSA:
         """ Test the creation of an RSA """
         # S -> a S b | a b
         regex = Regex("a S b | a b")
-        enfa = regex.to_epsilon_nfa()
-        dfa = enfa.minimize()
+        dfa = regex.to_minimal_dfa()
         box = Box(dfa, "S")
         rsa_1 = RecursiveAutomaton(box, set())
 
@@ -31,8 +30,7 @@ class TestRSA:
         # S -> a*
         rsa_2 = RecursiveAutomaton.from_regex(Regex("a*"), "S")
 
-        enfa = Regex("a*").to_epsilon_nfa()
-        dfa = enfa.minimize()
+        dfa = Regex("a*").to_minimal_dfa()
         box = Box(dfa, "S")
         rsa_1 = RecursiveAutomaton(box, set())
 
@@ -65,8 +63,8 @@ class TestRSA:
         assert rsa1_g2.get_number_boxes() == 2
         assert rsa1_g2.nonterminals == {Symbol("S"), Symbol("V")}
 
-        dfa_s = Regex("a V b").to_epsilon_nfa().minimize()
+        dfa_s = Regex("a V b").to_minimal_dfa()
         assert rsa1_g2.get_box_by_nonterminal("S") == Box(dfa_s, "S")
 
-        dfa_v = Regex("c S d | c d").to_epsilon_nfa().minimize()
+        dfa_v = Regex("c S d | c d").to_minimal_dfa()
         assert rsa1_g2.get_box_by_nonterminal("V") == Box(dfa_v, "V")

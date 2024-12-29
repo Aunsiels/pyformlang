@@ -1,22 +1,25 @@
 """ A general finite automaton representation """
 
-from typing import List, Any, Union
-
-import networkx as nx
+from typing import Dict, List, Set, Tuple, \
+    Iterable, Iterator, Optional, Hashable, Any, TypeVar
+from abc import abstractmethod
+from collections import deque
+from networkx import MultiDiGraph
 from networkx.drawing.nx_pydot import write_dot
 
 from pyformlang.fst import FST
-# pylint: disable=cyclic-import
-from pyformlang import finite_automaton
 
-from .epsilon import Epsilon
 from .state import State
 from .symbol import Symbol
+from .epsilon import Epsilon
+from .transition_function import TransitionFunction
+from .utils import to_state, to_symbol
+
+AutomatonT = TypeVar("AutomatonT", bound="FiniteAutomaton")
 
 
-class FiniteAutomaton:
+class FiniteAutomaton(Iterable[Tuple[State, Symbol, State]]):
     """ Represents a general finite automaton
-
 
     Attributes
     ----------
@@ -36,15 +39,44 @@ class FiniteAutomaton:
         A set of final or accepting states. It is a subset of states.
     """
 
-    def __init__(self):
-        self._states = set()
-        self._input_symbols = set()
-        self._transition_function = None
-        self._start_state = set()
-        self._final_states = set()
+    @abstractmethod
+    def __init__(self) -> None:
+        self._states: Set[State]
+        self._input_symbols: Set[Symbol]
+        self._transition_function: TransitionFunction
+        self._start_states: Set[State]
+        self._final_states: Set[State]
 
-    def add_transition(self, s_from: Any, symb_by: Any,
-                       s_to: Any) -> int:
+    @property
+    def states(self) -> Set[State]:
+        """ Gives the states
+
+        Returns
+        ----------
+        states : set of :class:`~pyformlang.finite_automaton.State`
+            The states
+        """
+        return self._states
+
+    @property
+    def symbols(self) -> Set[Symbol]:
+        """The symbols"""
+        return self._input_symbols
+
+    @property
+    def start_states(self) -> Set[State]:
+        """The start states"""
+        return self._start_states
+
+    @property
+    def final_states(self) -> Set[State]:
+        """The final states"""
+        return self._final_states
+
+    def add_transition(self,
+                       s_from: Hashable,
+                       symb_by: Hashable,
+                       s_to: Hashable) -> int:
         """ Adds a transition to the nfa
 
         Parameters
@@ -84,7 +116,8 @@ class FiniteAutomaton:
             self._input_symbols.add(symb_by)
         return temp
 
-    def add_transitions(self, transitions_list):
+    def add_transitions(self, transitions_list: \
+            Iterable[Tuple[Hashable, Hashable, Hashable]]) -> int:
         """
         Adds several transitions to the automaton
 
@@ -118,8 +151,10 @@ class FiniteAutomaton:
             temp = self.add_transition(s_from, symb_by, s_to)
         return temp
 
-    def remove_transition(self, s_from: State, symb_by: Symbol,
-                          s_to: State) -> int:
+    def remove_transition(self,
+                          s_from: Hashable,
+                          symb_by: Hashable,
+                          s_to: Hashable) -> int:
         """ Remove a transition of the nfa
 
         Parameters
@@ -152,17 +187,6 @@ class FiniteAutomaton:
                                                            symb_by,
                                                            s_to)
 
-    @property
-    def states(self):
-        """ Gives the states
-
-        Returns
-        ----------
-        states : set of :class:`~pyformlang.finite_automaton.State`
-            The states
-        """
-        return self._states
-
     def get_number_transitions(self) -> int:
         """ Gives the number of transitions
 
@@ -183,17 +207,7 @@ class FiniteAutomaton:
         """
         return self._transition_function.get_number_transitions()
 
-    @property
-    def symbols(self):
-        """The symbols"""
-        return self._input_symbols
-
-    @property
-    def final_states(self):
-        """The final states"""
-        return self._final_states
-
-    def add_start_state(self, state: Any) -> int:
+    def add_start_state(self, state: Hashable) -> int:
         """ Set an initial state
 
         Parameters
@@ -216,11 +230,11 @@ class FiniteAutomaton:
 
         """
         state = to_state(state)
-        self._start_state.add(state)
+        self._start_states.add(state)
         self._states.add(state)
         return 1
 
-    def remove_start_state(self, state: State) -> int:
+    def remove_start_state(self, state: Hashable) -> int:
         """ remove an initial state
 
         Parameters
@@ -244,12 +258,12 @@ class FiniteAutomaton:
 
         """
         state = to_state(state)
-        if state in self._start_state:
-            self._start_state.remove(state)
+        if state in self._start_states:
+            self._start_states.remove(state)
             return 1
         return 0
 
-    def add_final_state(self, state: Any) -> int:
+    def add_final_state(self, state: Hashable) -> int:
         """ Adds a new final state
 
         Parameters
@@ -277,7 +291,7 @@ class FiniteAutomaton:
         self._states.add(state)
         return 1
 
-    def remove_final_state(self, state: State) -> int:
+    def remove_final_state(self, state: Hashable) -> int:
         """ Remove a final state
 
         Parameters
@@ -306,7 +320,7 @@ class FiniteAutomaton:
             return 1
         return 0
 
-    def __call__(self, state: Any, symbol: Any = None) -> List[State]:
+    def __call__(self, s_from: Hashable, symb_by: Hashable)  -> Set[State]:
         """ Gives the states obtained after calling a symbol on a state
         Calls the transition function
 
@@ -332,13 +346,31 @@ class FiniteAutomaton:
         [1]
 
         """
-        # pylint: disable=not-callable
-        state = to_state(state)
-        if symbol is not None:
-            symbol = to_symbol(symbol)
-        return self._transition_function(state, symbol)
+        s_from = to_state(s_from)
+        symb_by = to_symbol(symb_by)
+        return self._transition_function(s_from, symb_by)
 
-    def is_final_state(self, state: State) -> bool:
+    def __contains__(self,
+                     transition: Tuple[Hashable, Hashable, Hashable]) -> bool:
+        """ Whether the given transition is present in finite automaton """
+        s_from, symb_by, s_to = transition
+        s_from = to_state(s_from)
+        symb_by = to_symbol(symb_by)
+        s_to = to_state(s_to)
+        return (s_from, symb_by, s_to) in self._transition_function
+
+    def get_transitions_from(self, s_from: Hashable) \
+            -> Iterable[Tuple[Symbol, State]]:
+        """ Gets transitions from the given state """
+        s_from = to_state(s_from)
+        return self._transition_function.get_transitions_from(s_from)
+
+    def get_next_states_from(self, s_from: Hashable) -> Set[State]:
+        """ Gets a set of states that are next to the given one """
+        s_from = to_state(s_from)
+        return self._transition_function.get_next_states_from(s_from)
+
+    def is_final_state(self, state: Hashable) -> bool:
         """ Checks if a state is final
 
         Parameters
@@ -366,12 +398,7 @@ class FiniteAutomaton:
         state = to_state(state)
         return state in self._final_states
 
-    @property
-    def start_states(self):
-        """The start states"""
-        return self._start_state
-
-    def add_symbol(self, symbol: Symbol):
+    def add_symbol(self, symbol: Hashable) -> None:
         """ Add a symbol
 
         Parameters
@@ -389,7 +416,7 @@ class FiniteAutomaton:
         symbol = to_symbol(symbol)
         self._input_symbols.add(symbol)
 
-    def to_fst(self) -> "FST":
+    def to_fst(self) -> FST:
         """ Turns the finite automaton into a finite state transducer
 
         The transducers accepts only the words in the language of the \
@@ -410,11 +437,11 @@ class FiniteAutomaton:
 
         """
         fst = FST()
-        for start_state in self._start_state:
+        for start_state in self._start_states:
             fst.add_start_state(start_state.value)
         for final_state in self._final_states:
             fst.add_final_state(final_state.value)
-        for s_from, symb_by, s_to in self._transition_function.get_edges():
+        for s_from, symb_by, s_to in self._transition_function:
             fst.add_transition(s_from.value,
                                symb_by.value,
                                s_to.value,
@@ -443,7 +470,7 @@ class FiniteAutomaton:
 
         """
         to_process = []
-        for state in self._start_state:
+        for state in self._start_states:
             to_process.append((state, set()))
         while to_process:
             current, visited = to_process.pop()
@@ -458,7 +485,7 @@ class FiniteAutomaton:
                 to_process.append((state, visited.copy()))
         return True
 
-    def to_networkx(self) -> nx.MultiDiGraph:
+    def to_networkx(self) -> MultiDiGraph:
         """
         Transform the current automaton into a networkx graph
 
@@ -478,7 +505,7 @@ class FiniteAutomaton:
         >>> graph = enfa.to_networkx()
 
         """
-        graph = nx.MultiDiGraph()
+        graph = MultiDiGraph()
         for state in self._states:
             graph.add_node(state.value,
                            is_start=state in self.start_states,
@@ -486,7 +513,7 @@ class FiniteAutomaton:
                            peripheries=2 if state in self.final_states else 1,
                            label=state.value)
             if state in self.start_states:
-                add_start_state_to_graph(graph, state)
+                self.__add_start_state_to_graph(graph, state)
         for s_from, symbol, s_to in self._transition_function.get_edges():
             label_ = symbol.value
             if label_ == 'epsilon':
@@ -495,55 +522,16 @@ class FiniteAutomaton:
         return graph
 
     @classmethod
-    def from_networkx(cls, graph):
+    @abstractmethod
+    def from_networkx(cls, graph: MultiDiGraph) -> "FiniteAutomaton":
         """
         Import a networkx graph into an finite state automaton. \
         The imported graph requires to have the good format, i.e. to come \
         from the function to_networkx
-
-        Parameters
-        ----------
-        graph :
-            The graph representation of the automaton
-
-        Returns
-        -------
-        enfa :
-            A epsilon nondeterministic finite automaton read from the graph
-
-        TODO
-        -------
-        * We lose the type of the node value if going through a dot file
-        * Explain the format
-
-        Examples
-        --------
-
-        >>> enfa = EpsilonNFA()
-        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
-        (0, "epsilon", 2)])
-        >>> enfa.add_start_state(0)
-        >>> enfa.add_final_state(1)
-        >>> graph = enfa.to_networkx()
-        >>> enfa_from_nx = EpsilonNFA.from_networkx(graph)
-
         """
-        enfa = finite_automaton.EpsilonNFA()
-        for s_from in graph:
-            for s_to in graph[s_from]:
-                for transition in graph[s_from][s_to].values():
-                    if "label" in transition:
-                        enfa.add_transition(s_from,
-                                            transition["label"],
-                                            s_to)
-        for node in graph.nodes:
-            if graph.nodes[node].get("is_start", False):
-                enfa.add_start_state(node)
-            if graph.nodes[node].get("is_final", False):
-                enfa.add_final_state(node)
-        return enfa
+        raise NotImplementedError
 
-    def write_as_dot(self, filename):
+    def write_as_dot(self, filename: str) -> None:
         """
         Write the automaton in dot format into a file
 
@@ -564,55 +552,90 @@ class FiniteAutomaton:
         """
         write_dot(self.to_networkx(), filename)
 
-    def is_equivalent_to(self, other):
-        """
-        Checks if the current automaton is equivalent to a given one.
-
-        Parameters
-        ----------
-        other :
-            An other finite state automaton
-
-        Returns
-        -------
-        is_equivalent : bool
-            Whether the two automata are equivalent or not
-
-        Examples
-        --------
-
-        >>> enfa = EpsilonNFA()
-        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
-        (0, "epsilon", 2)])
-        >>> enfa.add_start_state(0)
-        >>> enfa.add_final_state(1)
-        >>> dfa = enfa.to_deterministic()
-        >>> dfa.is_deterministic()
-        True
-
-        """
-        self_dfa = self.to_deterministic()
-        return self_dfa.is_equivalent_to(other)
-
-    def to_deterministic(self):
-        """ Turns the automaton into a deterministic one"""
+    @abstractmethod
+    def accepts(self, word: Iterable[Hashable]) -> bool:
+        """ Checks whether the finite automaton accepts a given word """
         raise NotImplementedError
 
-    def is_deterministic(self):
-        """ Checks if the automaton is deterministic """
-        raise NotImplementedError
+    def get_accepted_words(self, max_length: Optional[int] = None) \
+            -> Iterable[List[Symbol]]:
+        """
+        Gets words accepted by the finite automaton.
+        """
+        if max_length is not None and max_length < 0:
+            return
+        states_to_visit = deque((start_state, [])
+                                for start_state in self.start_states)
+        states_leading_to_final = self._get_states_leading_to_final()
+        words_by_state = {state: set() for state in self.states}
+        yielded_words = set()
+        while states_to_visit:
+            current_state, current_word = states_to_visit.popleft()
+            if max_length is not None and len(current_word) > max_length:
+                continue
+            word_to_add = tuple(current_word)
+            if not self.__try_add(words_by_state[current_state], word_to_add):
+                continue
+            transitions = self.get_transitions_from(current_state)
+            for symbol, next_state in transitions:
+                if next_state in states_leading_to_final:
+                    temp_word = current_word.copy()
+                    if symbol != Epsilon():
+                        temp_word.append(symbol)
+                    states_to_visit.append((next_state, temp_word))
+            if self.is_final_state(current_state):
+                if self.__try_add(yielded_words, word_to_add):
+                    yield current_word
 
-    def __eq__(self, other):
-        return self.is_equivalent_to(other)
+    def _get_states_leading_to_final(self) -> Set[State]:
+        """
+        Gets a set of states from which one
+        of the final states can be reached.
+        """
+        leading_to_final = self.final_states.copy()
+        visited = set()
+        states_to_process: deque[Any] = \
+            deque((None, start_state) for start_state in self.start_states)
+        delayed_states = deque()
+        while states_to_process:
+            previous_state, current_state = states_to_process.pop()
+            if previous_state and current_state in leading_to_final:
+                leading_to_final.add(previous_state)
+                continue
+            if current_state in visited:
+                delayed_states.append((previous_state, current_state))
+                continue
+            visited.add(current_state)
+            next_states = self.get_next_states_from(current_state)
+            if next_states:
+                states_to_process.append((previous_state, current_state))
+                for next_state in next_states:
+                    states_to_process.append((current_state, next_state))
+        for previous_state, current_state in delayed_states:
+            if previous_state and current_state in leading_to_final:
+                leading_to_final.add(previous_state)
+        return leading_to_final
 
-    def __len__(self):
+    def _get_reachable_states(self) -> Set[State]:
+        """ Get all states which are reachable """
+        visited = set()
+        states_to_process = deque(self.start_states)
+        while states_to_process:
+            current_state = states_to_process.popleft()
+            visited.add(current_state)
+            for next_state in self.get_next_states_from(current_state):
+                if next_state not in visited:
+                    states_to_process.append(next_state)
+        return visited
+
+    def __len__(self) -> int:
         """Number of transitions"""
         return len(self._transition_function)
 
-    def __iter__(self):
-        yield from self._transition_function.__iter__()
+    def __iter__(self) -> Iterator[Tuple[State, Symbol, State]]:
+        yield from self._transition_function
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[State, Dict[Symbol, Set[State]]]:
         """
         Get the dictionary representation of the transition function. The \
         keys of the dictionary are the source nodes. The items are \
@@ -637,43 +660,52 @@ class FiniteAutomaton:
         """
         return self._transition_function.to_dict()
 
+    @abstractmethod
+    def copy(self: AutomatonT) -> AutomatonT:
+        """ Copies the current Finite Automaton instance """
+        raise NotImplementedError
 
-def to_state(given: Any) -> Union[State, None]:
-    """ Transforms the input into a state
+    def __copy__(self: AutomatonT) -> AutomatonT:
+        return self.copy()
 
-    Parameters
-    ----------
-    given : any
-        What we want to transform
-    """
-    if given is None:
-        return None
-    if isinstance(given, State):
-        return given
-    return State(given)
+    def _copy_to(self, fa_to_copy_to: AutomatonT) -> AutomatonT:
+        """ Copies current automaton properties to the given one """
+        for start in self._start_states:
+            fa_to_copy_to.add_start_state(start)
+        for final in self._final_states:
+            fa_to_copy_to.add_final_state(final)
+        for state in self._states:
+            for symbol in self._input_symbols:
+                states = self._transition_function(state, symbol)
+                for state_to in states:
+                    fa_to_copy_to.add_transition(state, symbol, state_to)
+            states = self._transition_function(state, Epsilon())
+            for state_to in states:
+                fa_to_copy_to.add_transition(state, Epsilon(), state_to)
+        return fa_to_copy_to
 
+    @abstractmethod
+    def is_deterministic(self) -> bool:
+        """ Checks if the automaton is deterministic """
+        raise NotImplementedError
 
-def to_symbol(given: Any) -> Symbol:
-    """ Transforms the input into a symbol
+    @staticmethod
+    def __try_add(set_to_add_to: Set[Any], element_to_add: Any) -> bool:
+        """
+        Tries to add a given element to the given set.
+        Returns True if element was added, otherwise False.
+        """
+        initial_length = len(set_to_add_to)
+        set_to_add_to.add(element_to_add)
+        return len(set_to_add_to) != initial_length
 
-    Parameters
-    ----------
-    given : any
-        What we want to transform
-    """
-    if isinstance(given, Symbol):
-        return given
-    if given in ("epsilon", "ɛ"):
-        return Epsilon()
-    return Symbol(given)
-
-
-def add_start_state_to_graph(graph, state):
-    """ Adds a starting node to a given graph """
-    graph.add_node("starting_" + str(state.value),
-                   label="",
-                   shape=None,
-                   height=.0,
-                   width=.0)
-    graph.add_edge("starting_" + str(state.value),
-                   state.value)
+    @staticmethod
+    def __add_start_state_to_graph(graph: MultiDiGraph, state: State) -> None:
+        """ Adds a starting node to a given graph """
+        graph.add_node("starting_" + str(state.value),
+                       label="",
+                       shape=None,
+                       height=.0,
+                       width=.0)
+        graph.add_edge("starting_" + str(state.value),
+                       state.value)

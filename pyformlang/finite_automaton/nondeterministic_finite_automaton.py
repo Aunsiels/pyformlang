@@ -2,13 +2,11 @@
 Representation of a nondeterministic finite automaton
 """
 
-from typing import Iterable, Any
+from typing import Iterable, Hashable
 
-# pylint: disable=cyclic-import
-from pyformlang.finite_automaton import epsilon
+from .epsilon import Epsilon
 from .epsilon_nfa import EpsilonNFA
-from .finite_automaton import to_symbol
-from .transition_function import InvalidEpsilonTransition
+from .utils import to_symbol
 
 
 class NondeterministicFiniteAutomaton(EpsilonNFA):
@@ -60,7 +58,7 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
 
     """
 
-    def accepts(self, word: Iterable[Any]) -> bool:
+    def accepts(self, word: Iterable[Hashable]) -> bool:
         """ Checks whether the nfa accepts a given word
 
         Parameters
@@ -85,7 +83,7 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
 
         """
         word = [to_symbol(x) for x in word]
-        current_states = self._start_state
+        current_states = self._start_states
         for symbol in word:
             current_states = self._get_next_states_iterable(current_states,
                                                             symbol)
@@ -110,36 +108,53 @@ class NondeterministicFiniteAutomaton(EpsilonNFA):
         False
 
         """
-        return len(self._start_state) <= 1 and \
+        return len(self._start_states) <= 1 and \
             self._transition_function.is_deterministic()
 
-    def to_deterministic(self) -> "DeterministicFiniteAutomaton":
-        """ Transforms the nfa into a dfa
+    def add_transition(self,
+                       s_from: Hashable,
+                       symb_by: Hashable,
+                       s_to: Hashable) -> int:
+        symb_by = to_symbol(symb_by)
+        if symb_by == Epsilon():
+            raise InvalidEpsilonTransition
+        return super().add_transition(s_from, symb_by, s_to)
+
+    def copy(self) -> "NondeterministicFiniteAutomaton":
+        """ Copies the current NFA instance """
+        return self._copy_to(NondeterministicFiniteAutomaton())
+
+    @classmethod
+    def from_epsilon_nfa(cls, enfa: EpsilonNFA) \
+            -> "NondeterministicFiniteAutomaton":
+        """ Builds nfa equivalent to the given enfa
 
         Returns
         ----------
-        dfa :  :class:`~pyformlang.deterministic_finite_automaton\
-        .DeterministicFiniteAutomaton`
-            A dfa equivalent to the current nfa
-
-        Examples
-        --------
-
-        >>> nfa = NondeterministicFiniteAutomaton()
-        >>> nfa.add_transitions([(0, "a", 1), (0, "a", 2)])
-        >>> nfa.add_start_state(0)
-        >>> nfa.add_final_state(1)
-        >>> dfa = nfa.to_deterministic()
-        >>> nfa.is_equivalent_to(dfa)
-        True
-
+        dfa :  :class:`~pyformlang.finite_automaton. \
+            NondeterministicFiniteAutomaton`
+            A non-deterministic finite automaton equivalent to the current \
+            nfa, with no epsilon transition
         """
-        return self._to_deterministic_internal(False)
+        nfa = NondeterministicFiniteAutomaton()
+        for state in enfa.start_states:
+            nfa.add_start_state(state)
+        for state in enfa.final_states:
+            nfa.add_final_state(state)
+        start_eclose = enfa.eclose_iterable(enfa.start_states)
+        for state in start_eclose:
+            nfa.add_start_state(state)
+        for state in enfa.states:
+            eclose = enfa.eclose(state)
+            for e_state in eclose:
+                if e_state in enfa.final_states:
+                    nfa.add_final_state(state)
+                for symb in enfa.symbols:
+                    for next_state in enfa(e_state, symb):
+                        nfa.add_transition(state, symb, next_state)
+        return nfa
 
-    def add_transition(self,
-                       s_from: Any,
-                       symb_by: Any,
-                       s_to: Any) -> int:
-        if symb_by == epsilon.Epsilon():
-            raise InvalidEpsilonTransition
-        return super().add_transition(s_from, symb_by, s_to)
+
+class InvalidEpsilonTransition(Exception):
+    """Exception raised when an epsilon transition is created in
+    non-epsilon NFA"""

@@ -1,24 +1,20 @@
 """Linked nodes in both direction"""
 
+from typing import Optional, Any
+
 
 class DoublyLinkedNode:
     """Represents doubly linked list of nodes from a doubly linked list"""
 
     def __init__(self,
-                 list_in,
-                 next_node=None,
-                 previous_node=None,
-                 value=None):
-        self.next_node = next_node
-        self.previous_node = previous_node
-        self.value = value
-        self.list_in = list_in
+                 next_node: "DoublyLinkedNode" = None,
+                 previous_node: "DoublyLinkedNode" = None,
+                 value: Any = None) -> None:
+        self.next_node: Optional[DoublyLinkedNode] = next_node
+        self.previous_node: Optional[DoublyLinkedNode] = previous_node
+        self.value: Any = value
 
-    def delete(self):
-        """Delete the current node"""
-        self.list_in.delete(self)
-
-    def append(self, value):
+    def append(self, value: Any) -> "DoublyLinkedNode":
         """
         Append a new node with the given value
 
@@ -33,9 +29,6 @@ class DoublyLinkedNode:
             The created node
 
         """
-        next_node = DoublyLinkedNode(self.list_in, self.next_node, self, value)
-        if self.next_node is None:
-            self.list_in.last = next_node
+        next_node = DoublyLinkedNode(self.next_node, self, value)
         self.next_node = next_node
-        self.list_in.size += 1
         return next_node

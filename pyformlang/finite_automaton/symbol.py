@@ -21,12 +21,10 @@ class Symbol(FiniteAutomatonObject):  # pylint: disable=too-few-public-methods
     A
     """
 
+    def __hash__(self) -> int:
+        return super().__hash__()
+
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, Symbol):
             return self._value == other.value
         return self._value == other
-
-    def __hash__(self) -> int:
-        if self._hash is None:
-            self._hash = hash(self._value)
-        return self._hash

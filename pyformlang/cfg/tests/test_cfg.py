@@ -516,7 +516,8 @@ class TestCFG:
     def test_intersection(self):
         """ Tests the intersection with a regex """
         regex = Regex("a*b*")
-        dfa = regex.to_epsilon_nfa()
+        enfa = regex.to_epsilon_nfa()
+        dfa = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa)
         symb_a = Symbol("a")
         symb_b = Symbol("b")
         assert dfa.accepts([symb_a, symb_a, symb_b, symb_b])
@@ -530,7 +531,7 @@ class TestCFG:
         cfg = CFG(productions=productions, start_symbol=var_s)
         assert cfg.contains([ter_a, ter_a, ter_b, ter_b])
         assert not cfg.contains([ter_a, ter_a, ter_b])
-        cfg_i = cfg.intersection(regex)
+        cfg_i = cfg.intersection(regex.to_minimal_dfa())
         assert cfg_i.contains([ter_a, ter_a, ter_b, ter_b])
         assert not cfg_i.contains([ter_a, ter_a, ter_b])
         assert cfg_i.contains([])
@@ -548,7 +549,7 @@ class TestCFG:
                        Production(var_s, [ter_b, var_s, ter_a]),
                        Production(var_s, [])}
         cfg = CFG(productions=productions, start_symbol=var_s)
-        cfg_i = cfg & regex
+        cfg_i = cfg & regex.to_minimal_dfa()
         assert not cfg_i
 
     def test_intersection_dfa(self):

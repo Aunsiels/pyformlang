@@ -7,10 +7,9 @@ import networkx as nx
 
 # pylint: disable=cyclic-import
 from pyformlang import pda
-from pyformlang.finite_automaton import FiniteAutomaton
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton
 # pylint: disable=cyclic-import
 from pyformlang.pda import cfg_variable_converter as cvc
-from pyformlang import regular_expression
 from .cfg_object import CFGObject
 # pylint: disable=cyclic-import
 from .cyk_table import CYKTable, DerivationDoesNotExist
@@ -788,7 +787,7 @@ class CFG:
                                    state, [])
         return new_pda
 
-    def intersection(self, other: Any) -> "CFG":
+    def intersection(self, other: DeterministicFiniteAutomaton) -> "CFG":
         """ Gives the intersection of the current CFG with an other object
 
         Equivalent to:
@@ -810,13 +809,6 @@ class CFG:
             When trying to intersect with something else than a regex or a
             finite automaton
         """
-        if isinstance(other, regular_expression.Regex):
-            other = other.to_epsilon_nfa().to_deterministic()
-        elif isinstance(other, FiniteAutomaton):
-            if not other.is_deterministic():
-                other = other.to_deterministic()
-        else:
-            raise NotImplementedError
         if other.is_empty():
             return CFG()
         generate_empty = self.contains([]) and other.accepts([])
@@ -845,10 +837,12 @@ class CFG:
         return res_cfg
 
     @staticmethod
-    def _intersection_starting_rules(cfg, other, cv_converter):
+    def _intersection_starting_rules(cfg: "CFG",
+                                     other: DeterministicFiniteAutomaton,
+                                     cv_converter):
         start = Variable("Start")
         productions_temp = []
-        start_other = list(other.start_states)[0]  # it is deterministic
+        start_other = other.start_state
         for final_state in other.final_states:
             new_body = [
                 cv_converter.to_cfg_combined_variable(
@@ -860,15 +854,17 @@ class CFG:
         return productions_temp
 
     @staticmethod
-    def _intersection_when_terminal(other_fst, production,
+    def _intersection_when_terminal(other: DeterministicFiniteAutomaton,
+                                    production,
                                     cv_converter, states):
         productions_temp = []
         for state_p in states:
-            next_states = other_fst(state_p, production.body[0].value)
-            if next_states:
+            next_state = other.get_next_state(
+                state_p, production.body[0].value)
+            if next_state:
                 new_head = \
                     cv_converter.to_cfg_combined_variable(
-                        state_p, production.head, next_states[0])
+                        state_p, production.head, next_state)
                 productions_temp.append(
                     Production(new_head,
                                [production.body[0]],
@@ -904,7 +900,7 @@ class CFG:
                                                    state_r)]
             for state_q in states]
 
-    def __and__(self, other):
+    def __and__(self, other: DeterministicFiniteAutomaton) -> "CFG":
         """ Gives the intersection of the current CFG with an other object
 
         Parameters
