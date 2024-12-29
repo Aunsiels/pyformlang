@@ -2,8 +2,6 @@
 General transition function representation
 """
 
-# pylint: disable=function-redefined
-
 from typing import Dict, Set, Tuple, Iterable, Iterator
 from abc import abstractmethod
 

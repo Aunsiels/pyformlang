@@ -88,8 +88,8 @@ class Regex(RegexReader):
     """
 
     def __init__(self, regex: str) -> None:
-        self.sons: List[Regex] = [] # type: ignore
         super().__init__(regex)
+        self.sons: List[Regex] # type: ignore
         self._counter = 0
         self._enfa: Optional[EpsilonNFA] = None
 
@@ -138,7 +138,7 @@ class Regex(RegexReader):
 
     def to_minimal_dfa(self) -> DeterministicFiniteAutomaton:
         """ Builds minimal dfa from current regex """
-        enfa = self.to_epsilon_nfa()
+        enfa = self._to_epsilon_nfa_internal()
         dfa = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa)
         return dfa.minimize()
 
@@ -157,19 +157,16 @@ class Regex(RegexReader):
         >>> regex.to_epsilon_nfa()
 
         """
-        return self._to_epsilon_nfa_internal(True)
+        return self._to_epsilon_nfa_internal().copy()
 
-    def _to_epsilon_nfa_internal(self, copy: bool) -> EpsilonNFA:
-        """
-        Transforms the regular expression into an epsilon NFA.
-        Copy enfa in case of external usage.
-        """
+    def _to_epsilon_nfa_internal(self) -> EpsilonNFA:
+        """ Transforms the regular expression into an epsilon NFA """
         if self._enfa is None:
             self._enfa = EpsilonNFA()
             s_initial = self._set_and_get_initial_state_in_enfa(self._enfa)
             s_final = self._set_and_get_final_state_in_enfa(self._enfa)
             self._process_to_enfa(self._enfa, s_initial, s_final)
-        return self._enfa.copy() if copy else self._enfa
+        return self._enfa
 
     def _set_and_get_final_state_in_enfa(self, enfa: EpsilonNFA) -> State:
         s_final = self._get_next_state_enfa()
@@ -567,8 +564,7 @@ class Regex(RegexReader):
         True
 
         """
-        self._enfa = self._to_epsilon_nfa_internal(False)
-        return self._enfa.accepts(word)
+        return self._to_epsilon_nfa_internal().accepts(word)
 
     @classmethod
     def from_finite_automaton(cls, automaton: FiniteAutomaton) -> "Regex":
