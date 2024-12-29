@@ -2,8 +2,6 @@
 A deterministic transition function
 """
 
-# pylint: disable=function-redefined
-
 from typing import Optional
 
 from .state import State

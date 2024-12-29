@@ -2,8 +2,6 @@
 A nondeterministic transition function
 """
 
-# pylint: disable=function-redefined
-
 from typing import Dict, Set, Iterable, Tuple
 from copy import deepcopy
 
