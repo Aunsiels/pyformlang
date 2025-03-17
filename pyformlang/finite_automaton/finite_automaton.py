@@ -1,6 +1,7 @@
 """ A general finite automaton representation """
 
-from typing import List, Any, Union
+from typing import List, Iterable, Set, Optional, Union, Any
+from collections import deque
 
 import networkx as nx
 from networkx.drawing.nx_pydot import write_dot
@@ -594,6 +595,86 @@ class FiniteAutomaton:
         self_dfa = self.to_deterministic()
         return self_dfa.is_equivalent_to(other)
 
+    def get_accepted_words(self, max_length: Optional[int] = None) \
+            -> Iterable[List[Symbol]]:
+        """
+        Gets words accepted by the finite automaton.
+        """
+        if max_length is not None and max_length < 0:
+            return []
+        states_to_visit = deque((start_state, [])
+                                for start_state in self.start_states)
+        states_leading_to_final = self._get_states_leading_to_final()
+        words_by_state = {state: set() for state in self.states}
+        yielded_words = set()
+        while states_to_visit:
+            current_state, current_word = states_to_visit.popleft()
+            if max_length is not None and len(current_word) > max_length:
+                continue
+            word_to_add = tuple(current_word)
+            if not self.__try_add(words_by_state[current_state], word_to_add):
+                continue
+            transitions = self._transition_function.get_transitions_from(
+                current_state)
+            for symbol, next_state in transitions:
+                if next_state in states_leading_to_final:
+                    temp_word = current_word.copy()
+                    if symbol != Epsilon():
+                        temp_word.append(symbol)
+                    states_to_visit.append((next_state, temp_word))
+            if self.is_final_state(current_state):
+                if self.__try_add(yielded_words, word_to_add):
+                    yield current_word
+
+    def _get_states_leading_to_final(self) -> Set[State]:
+        """
+        Gets a set of states from which one
+        of the final states can be reached.
+        """
+        leading_to_final = self.final_states.copy()
+        visited = set()
+        states_to_process = deque((None, start_state)
+                                  for start_state in self.start_states)
+        delayed_states = deque()
+        while states_to_process:
+            previous_state, current_state = states_to_process.pop()
+            if previous_state and current_state in leading_to_final:
+                leading_to_final.add(previous_state)
+                continue
+            if current_state in visited:
+                delayed_states.append((previous_state, current_state))
+                continue
+            visited.add(current_state)
+            next_states = self._get_next_states_from(current_state)
+            if next_states:
+                states_to_process.append((previous_state, current_state))
+                for next_state in next_states:
+                    states_to_process.append((current_state, next_state))
+        for previous_state, current_state in delayed_states:
+            if previous_state and current_state in leading_to_final:
+                leading_to_final.add(previous_state)
+        return leading_to_final
+
+    def _get_reachable_states(self) -> Set[State]:
+        """ Get all states which are reachable """
+        visited = set()
+        states_to_process = deque(self.start_states)
+        while states_to_process:
+            current_state = states_to_process.popleft()
+            visited.add(current_state)
+            for next_state in self._get_next_states_from(current_state):
+                if next_state not in visited:
+                    states_to_process.append(next_state)
+        return visited
+
+    def _get_next_states_from(self, state_from: State) -> Set[State]:
+        """ Gets a set of states that are next to the given one """
+        next_states = set()
+        for _, next_state in \
+                self._transition_function.get_transitions_from(state_from):
+            next_states.add(next_state)
+        return next_states
+
     def to_deterministic(self):
         """ Turns the automaton into a deterministic one"""
         raise NotImplementedError
@@ -636,6 +717,16 @@ class FiniteAutomaton:
 
         """
         return self._transition_function.to_dict()
+
+    @staticmethod
+    def __try_add(set_to_add_to: Set[Any], element_to_add: Any) -> bool:
+        """
+        Tries to add a given element to the given set.
+        Returns True if element was added, otherwise False.
+        """
+        initial_length = len(set_to_add_to)
+        set_to_add_to.add(element_to_add)
+        return len(set_to_add_to) != initial_length
 
 
 def to_state(given: Any) -> Union[State, None]:
