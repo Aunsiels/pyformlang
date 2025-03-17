@@ -1,8 +1,9 @@
 """
 Test the nondeterministic transition functions
 """
-from pyformlang.finite_automaton import State, Symbol, \
-    NondeterministicTransitionFunction, Epsilon
+
+from pyformlang.finite_automaton import NondeterministicTransitionFunction
+from pyformlang.finite_automaton import State, Symbol, Epsilon
 
 
 class TestNondeterministicTransitionFunction:
@@ -59,19 +60,19 @@ class TestNondeterministicTransitionFunction:
         symb_by = Symbol("a")
         transition_function.add_transition(s_from, symb_by, s_to)
         assert transition_function.remove_transition(s_from,
-                                                               symb_by,
-                                                               s_to) == 1
+                                                     symb_by,
+                                                     s_to) == 1
         assert len(transition_function(s_to, symb_by)) == 0
         assert transition_function.get_number_transitions() == 0
         assert len(transition_function(s_from, symb_by)) == 0
         assert transition_function.remove_transition(s_from,
-                                                               symb_by,
-                                                               s_to) == 0
+                                                     symb_by,
+                                                     s_to) == 0
         transition_function.add_transition(s_from, symb_by, s_to)
         transition_function.add_transition(s_from, symb_by, s_from)
         assert transition_function.remove_transition(s_from,
-                                                               symb_by,
-                                                               s_to) == 1
+                                                     symb_by,
+                                                     s_to) == 1
         assert transition_function.get_number_transitions() == 1
         assert len(transition_function(s_from, symb_by)) == 1
 
