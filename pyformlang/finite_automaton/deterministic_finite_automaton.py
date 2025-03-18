@@ -389,7 +389,7 @@ class DeterministicFiniteAutomaton(NondeterministicFiniteAutomaton):
                     if processing_list.contains(valid_set, symbol):
                         processing_list.insert(new_class, symbol)
                     elif (len(partition.part[valid_set]) <
-                          len(partition.part[valid_set])):
+                          len(partition.part[new_class])):
                         processing_list.insert(valid_set, symbol)
                     else:
                         processing_list.insert(new_class, symbol)
