@@ -543,31 +543,3 @@ class Regex(RegexReader):
         if self._enfa is None:
             self._enfa = self.to_epsilon_nfa()
         return self._enfa.accepts(word)
-
-    @classmethod
-    def from_python_regex(cls, regex):
-        """
-        Creates a regex from a string using the python way to write it.
-
-        Careful:
-        Not everything is implemented, check PythonRegex class \
-        documentation for more details.
-
-        It is equivalent to calling PythonRegex constructor directly.
-
-        Parameters
-        ----------
-        regex : str
-            The regex given as a string or compile regex
-
-        Returns
-        -------
-        python_regex : :class:`~pyformlang.regular_expression.PythonRegex`
-            The regex
-
-        Examples
-        --------
-        >>> Regex.from_python_regex("a+[cd]")
-
-        """
-        return regular_expression.PythonRegex(regex)

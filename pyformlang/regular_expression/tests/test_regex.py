@@ -1,7 +1,7 @@
 """
 Tests for regular expressions
 """
-from pyformlang.regular_expression import Regex, MisformedRegexError
+from pyformlang.regular_expression import Regex, MisformedRegexError, PythonRegex
 from pyformlang import finite_automaton
 import pytest
 
@@ -173,13 +173,13 @@ class TestRegex:
         assert not regex.accepts(["a", "b"])
 
     def test_from_python_simple(self):
-        regex = Regex.from_python_regex("abc")
+        regex = PythonRegex("abc")
         assert regex.accepts(["a", "b", "c"])
         assert not regex.accepts(["a", "b", "b"])
         assert not regex.accepts(["a", "b"])
 
     def test_from_python_brackets(self):
-        regex = Regex.from_python_regex("a[bc]")
+        regex = PythonRegex("a[bc]")
         assert regex.accepts(["a", "b"])
         assert regex.accepts(["a", "c"])
         assert not regex.accepts(["a", "b", "c"])
