@@ -1,16 +1,18 @@
 """
 Representation of a regular expression
 """
-from typing import Iterable
 
-from pyformlang import finite_automaton
-# pylint: disable=cyclic-import
-import pyformlang.regular_expression.regex_objects
-from pyformlang import cfg
-from pyformlang.finite_automaton import State
-# pylint: disable=cyclic-import
-from pyformlang.regular_expression.regex_reader import RegexReader
-from pyformlang import regular_expression
+from typing import List, Iterable, Tuple, Optional
+
+from pyformlang.finite_automaton import FiniteAutomaton, EpsilonNFA
+from pyformlang.finite_automaton import DeterministicFiniteAutomaton
+from pyformlang.finite_automaton import State, Symbol, Epsilon as FAEpsilon
+from pyformlang.cfg.cfg import CFG, Production
+from pyformlang.cfg.utils import to_variable
+
+from .regex_reader import RegexReader
+from .regex_objects import Epsilon as RegexEpsilon, \
+    Empty, Concatenation, Union, KleeneStar
 
 
 class Regex(RegexReader):
@@ -85,16 +87,11 @@ class Regex(RegexReader):
 
     """
 
-    def __init__(self, regex):
-        self.head = None
-        self.sons = None
+    def __init__(self, regex: str) -> None:
         super().__init__(regex)
+        self.sons: List[Regex] # type: ignore
         self._counter = 0
-        self._initialize_enfa()
-        self._enfa = None
-
-    def _initialize_enfa(self):
-        self._enfa = finite_automaton.EpsilonNFA()
+        self._enfa: Optional[EpsilonNFA] = None
 
     def get_number_symbols(self) -> int:
         """ Gives the number of symbols in the regex
@@ -139,7 +136,13 @@ class Regex(RegexReader):
             return 1 + sum(son.get_number_operators() for son in self.sons)
         return 0
 
-    def to_epsilon_nfa(self):
+    def to_minimal_dfa(self) -> DeterministicFiniteAutomaton:
+        """ Builds minimal dfa from current regex """
+        enfa = self._to_epsilon_nfa_internal()
+        dfa = DeterministicFiniteAutomaton.from_epsilon_nfa(enfa)
+        return dfa.minimize()
+
+    def to_epsilon_nfa(self) -> EpsilonNFA:
         """ Transforms the regular expression into an epsilon NFA
 
         Returns
@@ -154,28 +157,31 @@ class Regex(RegexReader):
         >>> regex.to_epsilon_nfa()
 
         """
-        self._initialize_enfa()
-        s_initial = self._set_and_get_initial_state_in_enfa()
-        s_final = self._set_and_get_final_state_in_enfa()
-        self._process_to_enfa(s_initial, s_final)
+        return self._to_epsilon_nfa_internal().copy()
+
+    def _to_epsilon_nfa_internal(self) -> EpsilonNFA:
+        """ Transforms the regular expression into an epsilon NFA """
+        if self._enfa is None:
+            self._enfa = EpsilonNFA()
+            s_initial = self._set_and_get_initial_state_in_enfa(self._enfa)
+            s_final = self._set_and_get_final_state_in_enfa(self._enfa)
+            self._process_to_enfa(self._enfa, s_initial, s_final)
         return self._enfa
 
-    def _set_and_get_final_state_in_enfa(self):
+    def _set_and_get_final_state_in_enfa(self, enfa: EpsilonNFA) -> State:
         s_final = self._get_next_state_enfa()
-        self._enfa.add_final_state(s_final)
+        enfa.add_final_state(s_final)
         return s_final
 
-    def _get_next_state_enfa(self):
-        s_final = finite_automaton.State(self._counter)
-        self._counter += 1
-        return s_final
-
-    def _set_and_get_initial_state_in_enfa(self):
+    def _set_and_get_initial_state_in_enfa(self, enfa: EpsilonNFA) -> State:
         s_initial = self._get_next_state_enfa()
-        self._enfa.add_start_state(s_initial)
+        enfa.add_start_state(s_initial)
         return s_initial
 
-    def _process_to_enfa(self, s_from: State, s_to: State):
+    def _process_to_enfa(self,
+                         enfa: EpsilonNFA,
+                         s_from: State,
+                         s_to: State) -> None:
         """ Internal function to add a regex to a given epsilon NFA
 
         Parameters
@@ -186,71 +192,89 @@ class Regex(RegexReader):
             The destination state
         """
         if self.sons:
-            self._process_to_enfa_when_sons(s_from, s_to)
+            self._process_to_enfa_when_sons(enfa, s_from, s_to)
         else:
-            self._process_to_enfa_when_no_son(s_from, s_to)
+            self._process_to_enfa_when_no_son(enfa, s_from, s_to)
 
-    def _process_to_enfa_when_no_son(self, s_from, s_to):
-        if isinstance(self.head,
-                      pyformlang.regular_expression.regex_objects.Epsilon):
-            self._add_epsilon_transition_in_enfa_between(s_from, s_to)
-        elif not isinstance(self.head,
-                            pyformlang.regular_expression.regex_objects.Empty):
-            symbol = finite_automaton.Symbol(self.head.value)
-            self._enfa.add_transition(s_from, symbol, s_to)
+    def _process_to_enfa_when_sons(self,
+                                   enfa: EpsilonNFA,
+                                   s_from: State,
+                                   s_to: State) -> None:
+        if isinstance(self.head, Concatenation):
+            self._process_to_enfa_concatenation(enfa, s_from, s_to)
+        elif isinstance(self.head, Union):
+            self._process_to_enfa_union(enfa, s_from, s_to)
+        elif isinstance(self.head, KleeneStar):
+            self._process_to_enfa_kleene_star(enfa, s_from, s_to)
 
-    def _process_to_enfa_when_sons(self, s_from, s_to):
-        if isinstance(
-                self.head,
-                pyformlang.regular_expression.regex_objects.Concatenation):
-            self._process_to_enfa_concatenation(s_from, s_to)
-        elif isinstance(self.head,
-                        pyformlang.regular_expression.regex_objects.Union):
-            self._process_to_enfa_union(s_from, s_to)
-        elif isinstance(
-                self.head,
-                pyformlang.regular_expression.regex_objects.KleeneStar):
-            self._process_to_enfa_kleene_star(s_from, s_to)
+    def _process_to_enfa_when_no_son(self,
+                                     enfa: EpsilonNFA,
+                                     s_from: State,
+                                     s_to: State) -> None:
+        if isinstance(self.head, RegexEpsilon):
+            enfa.add_transition(s_from, FAEpsilon(), s_to)
+        elif not isinstance(self.head, Empty):
+            symbol = Symbol(self.head.value)
+            enfa.add_transition(s_from, symbol, s_to)
 
-    def _process_to_enfa_kleene_star(self, s_from, s_to):
+    def _process_to_enfa_union(self,
+                               enfa: EpsilonNFA,
+                               s_from: State,
+                               s_to: State) -> None:
+        son_number = 0
+        self._create_union_branch_in_enfa(enfa, s_from, s_to, son_number)
+        son_number = 1
+        self._create_union_branch_in_enfa(enfa, s_from, s_to, son_number)
+
+    def _process_to_enfa_kleene_star(self,
+                                     enfa: EpsilonNFA,
+                                     s_from: State,
+                                     s_to: State) -> None:
         # pylint: disable=protected-access
         state_first = self._get_next_state_enfa()
         state_second = self._get_next_state_enfa()
-        self._add_epsilon_transition_in_enfa_between(state_second, state_first)
-        self._add_epsilon_transition_in_enfa_between(s_from, s_to)
-        self._add_epsilon_transition_in_enfa_between(s_from, state_first)
-        self._add_epsilon_transition_in_enfa_between(state_second, s_to)
-        self._process_to_enfa_son(state_first, state_second, 0)
+        enfa.add_transition(state_second, FAEpsilon(), state_first)
+        enfa.add_transition(s_from, FAEpsilon(), s_to)
+        enfa.add_transition(s_from, FAEpsilon(), state_first)
+        enfa.add_transition(state_second, FAEpsilon(), s_to)
+        self._process_to_enfa_son(enfa, state_first, state_second, 0)
 
-    def _process_to_enfa_union(self, s_from, s_to):
-        son_number = 0
-        self._create_union_branch_in_enfa(s_from, s_to, son_number)
-        son_number = 1
-        self._create_union_branch_in_enfa(s_from, s_to, son_number)
-
-    def _create_union_branch_in_enfa(self, s_from, s_to, son_number):
+    def _create_union_branch_in_enfa(self,
+                                     enfa: EpsilonNFA,
+                                     s_from: State,
+                                     s_to: State,
+                                     son_number: int) -> None:
         state0 = self._get_next_state_enfa()
         state2 = self._get_next_state_enfa()
-        self._add_epsilon_transition_in_enfa_between(s_from, state0)
-        self._add_epsilon_transition_in_enfa_between(state2, s_to)
-        self._process_to_enfa_son(state0, state2, son_number)
+        enfa.add_transition(s_from, FAEpsilon(), state0)
+        enfa.add_transition(state2, FAEpsilon(), s_to)
+        self._process_to_enfa_son(enfa, state0, state2, son_number)
 
-    def _process_to_enfa_concatenation(self, s_from, s_to):
+    def _process_to_enfa_concatenation(self,
+                                       enfa: EpsilonNFA,
+                                       s_from: State,
+                                       s_to: State) -> None:
         state0 = self._get_next_state_enfa()
         state1 = self._get_next_state_enfa()
-        self._add_epsilon_transition_in_enfa_between(state0, state1)
-        self._process_to_enfa_son(s_from, state0, 0)
-        self._process_to_enfa_son(state1, s_to, 1)
+        enfa.add_transition(state0, FAEpsilon(), state1)
+        self._process_to_enfa_son(enfa, s_from, state0, 0)
+        self._process_to_enfa_son(enfa, state1, s_to, 1)
 
-    def _add_epsilon_transition_in_enfa_between(self, state0, state1):
-        self._enfa.add_transition(state0, finite_automaton.Epsilon(), state1)
-
-    def _process_to_enfa_son(self, s_from, s_to, index_son):
+    def _process_to_enfa_son(self,
+                             enfa: EpsilonNFA,
+                             s_from: State,
+                             s_to: State,
+                             index_son: int) -> None:
         # pylint: disable=protected-access
         self.sons[index_son]._counter = self._counter
-        self.sons[index_son]._enfa = self._enfa
-        self.sons[index_son]._process_to_enfa(s_from, s_to)
+        self.sons[index_son]._enfa = enfa
+        self.sons[index_son]._process_to_enfa(enfa, s_from, s_to)
         self._counter = self.sons[index_son]._counter
+
+    def _get_next_state_enfa(self) -> State:
+        s_final = State(self._counter)
+        self._counter += 1
+        return s_final
 
     def get_tree_str(self, depth: int = 0) -> str:
         """ Get a string representation of the tree behind the regex
@@ -280,7 +304,7 @@ class Regex(RegexReader):
             temp += son.get_tree_str(depth + 1)
         return temp
 
-    def to_cfg(self, starting_symbol="S") -> "CFG":
+    def to_cfg(self, starting_symbol: str = "S") -> CFG:
         """
         Turns the regex into a context-free grammar
 
@@ -304,11 +328,12 @@ class Regex(RegexReader):
 
         """
         productions, _ = self._get_production(starting_symbol)
-        cfg_res = cfg.CFG(start_symbol=cfg.utils.to_variable(starting_symbol),
+        cfg_res = CFG(start_symbol=to_variable(starting_symbol),
                           productions=set(productions))
         return cfg_res
 
-    def _get_production(self, current_symbol, count=0):
+    def _get_production(self, current_symbol: str, count: int = 0) \
+            -> Tuple[List[Production], int]:
         next_symbols = []
         next_productions = []
         for son in self.sons:
@@ -322,7 +347,7 @@ class Regex(RegexReader):
         next_productions += new_prods
         return next_productions, count
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.head.get_str_repr([str(son) for son in self.sons])
 
     def union(self, other: "Regex") -> "Regex":
@@ -357,11 +382,11 @@ class Regex(RegexReader):
 
         """
         regex = Regex("")
-        regex.head = pyformlang.regular_expression.regex_objects.Union()
+        regex.head = Union()
         regex.sons = [self, other]
         return regex
 
-    def __or__(self, other):
+    def __or__(self, other: "Regex") -> "Regex":
         """ Makes the union with another regex
 
         Parameters
@@ -427,12 +452,11 @@ class Regex(RegexReader):
         True
         """
         regex = Regex("")
-        regex.head = \
-            pyformlang.regular_expression.regex_objects.Concatenation()
+        regex.head = Concatenation()
         regex.sons = [self, other]
         return regex
 
-    def __add__(self, other):
+    def __add__(self, other: "Regex") -> "Regex":
         """ Concatenates a regular expression with an other one
 
         Parameters
@@ -485,11 +509,11 @@ class Regex(RegexReader):
 
         """
         regex = Regex("")
-        regex.head = pyformlang.regular_expression.regex_objects.KleeneStar()
+        regex.head = KleeneStar()
         regex.sons = [self]
         return regex
 
-    def from_string(self, regex_str: str):
+    def from_string(self, regex_str: str) -> "Regex":
         """ Construct a regex from a string. For internal usage.
 
         Equivalent to the constructor of Regex
@@ -540,6 +564,255 @@ class Regex(RegexReader):
         True
 
         """
-        if self._enfa is None:
-            self._enfa = self.to_epsilon_nfa()
-        return self._enfa.accepts(word)
+        return self._to_epsilon_nfa_internal().accepts(word)
+
+    @classmethod
+    def from_finite_automaton(cls, automaton: FiniteAutomaton) -> "Regex":
+        """ Creates a regular expression from given finite automaton
+
+        Returns
+        ----------
+        regex : :class:`~pyformlang.regular_expression.Regex`
+            A regular expression equivalent to the current Epsilon NFA
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "abc", 1), (0, "d", 1), \
+        (0, "epsilon", 2)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(1)
+        >>> regex = enfa.to_regex()
+        >>> regex.accepts(["abc"])
+        True
+
+        """
+        copies = [automaton.copy() for _ in automaton.final_states]
+        final_states = list(automaton.final_states)
+        for i in range(len(automaton.final_states)):
+            for j in range(len(automaton.final_states)):
+                if i != j:
+                    copies[j].remove_final_state(final_states[i])
+        regex_l = []
+        for copy in copies:
+            cls._remove_all_basic_states(copy)
+            regex_sub = cls._get_regex_simple(copy)
+            if regex_sub:
+                regex_l.append(regex_sub)
+        res = "+".join(regex_l)
+        return Regex(res)
+
+    @classmethod
+    def _get_regex_simple(cls, automaton: FiniteAutomaton) -> str:
+        """ Get the regex of an automaton when it only composed of a start and
+        a final state
+
+        CAUTION: For internal use only!
+
+        Returns
+        ----------
+        regex : str
+            A regex representing the automaton
+        """
+        if not automaton.final_states or not automaton.start_states:
+            return ""
+        if len(automaton.final_states) != 1 or len(automaton.start_states) != 1:
+            raise ValueError("The automaton is not simple enough!")
+        if automaton.start_states == automaton.final_states:
+            # We are suppose to have only one good symbol
+            for symbol in automaton.symbols:
+                out_states = automaton(list(automaton.start_states)[0], symbol)
+                if out_states:
+                    return "(" + str(symbol.value) + ")*"
+            return "epsilon"
+        start_to_start, start_to_end, end_to_start, end_to_end = \
+            cls._get_bi_transitions(automaton)
+        return cls.__get_regex_sub(start_to_start,
+                                    start_to_end,
+                                    end_to_start,
+                                    end_to_end)
+
+    @classmethod
+    def _get_bi_transitions(cls, automaton: FiniteAutomaton) \
+            -> Tuple[str, str, str, str]:
+        """ Internal method to compute the transition in the case of a \
+        simple automaton
+
+        Returns
+        start_to_start : str
+            The transition from the start state to the start state
+        start_to_end : str
+            The transition from the start state to the end state
+        end_to_start : str
+            The transition from the end state to the start state
+        end_to_end : str
+            The transition from the end state to the end state
+        ----------
+        """
+        start = list(automaton.start_states)[0]
+        end = list(automaton.final_states)[0]
+        start_to_start = "epsilon"
+        start_to_end = ""
+        end_to_end = "epsilon"
+        end_to_start = ""
+        for state in automaton.states:
+            for symbol in automaton.symbols.union({FAEpsilon()}):
+                for out_state in automaton(state, symbol):
+                    symbol_str = str(symbol.value)
+                    if not symbol_str.isalnum():
+                        symbol_str = "(" + symbol_str + ")"
+                    if state == start and out_state == start:
+                        start_to_start = symbol_str
+                    elif state == start and out_state == end:
+                        start_to_end = symbol_str
+                    elif state == end and out_state == start:
+                        end_to_start = symbol_str
+                    elif state == end and out_state == end:
+                        end_to_end = symbol_str
+        return start_to_start, start_to_end, end_to_start, end_to_end
+
+    @classmethod
+    def _remove_all_basic_states(cls, automaton: FiniteAutomaton) -> None:
+        """ Remove all states which are not the start state or a final state
+
+        CAREFUL: This method modifies the current automaton, for internal usage
+        only!
+
+        The function _create_or_transitions is supposed to be called before
+        calling this function
+        """
+        cls._create_or_transitions(automaton)
+        states = automaton.states.copy()
+        for state in states:
+            if (state not in automaton.start_states \
+                    and state not in automaton.final_states):
+                cls._remove_state(automaton, state)
+
+    @classmethod
+    def _remove_state(cls, automaton: FiniteAutomaton, state: State) -> None:
+        """ Removes a given state from the epsilon NFA
+
+        CAREFUL: This method modifies the current automaton, for internal usage
+        only!
+
+        The function _create_or_transitions is supposed to be called before
+        calling this function
+
+        Parameters
+        ----------
+        state : :class:`~pyformlang.finite_automaton.State`
+            The state to remove
+
+        """
+        # First compute all endings
+        out_transitions = {}
+        input_symbols = automaton.symbols.union({FAEpsilon()})
+        for symbol in input_symbols:
+            out_states = automaton(state, symbol).copy()
+            for out_state in out_states:
+                out_transitions[out_state] = str(symbol.value)
+                automaton.remove_transition(state, symbol, out_state)
+        if state in out_transitions:
+            to_itself = "(" + out_transitions[state] + ")*"
+            del out_transitions[state]
+            for out_state in list(out_transitions.keys()):
+                out_transitions[out_state] = to_itself + "." + \
+                                             out_transitions[out_state]
+        for in_state in automaton.states:
+            if in_state == state:
+                continue
+            for symbol in input_symbols:
+                out_states = automaton(in_state, symbol)
+                if state not in out_states:
+                    continue
+                symbol_str = "(" + str(symbol.value) + ")"
+                automaton.remove_transition(in_state, symbol, state)
+                for out_state, next_symb in out_transitions.items():
+                    new_symbol = Symbol(symbol_str + "." + next_symb)
+                    automaton.add_transition(in_state, new_symbol, out_state)
+        automaton.states.remove(state)
+        # We make sure the automaton has the good structure
+        cls._create_or_transitions(automaton)
+
+    @classmethod
+    def _create_or_transitions(cls, automaton: FiniteAutomaton) -> None:
+        """ Creates a OR transition instead of several connections
+
+        CAREFUL: This method modifies the automaton and is designed for \
+        internal use only!
+        """
+        for state in automaton.states:
+            new_transitions = {}
+            input_symbols = automaton.symbols.union({FAEpsilon()})
+            for symbol in input_symbols:
+                out_states = automaton(state, symbol)
+                out_states = out_states.copy()
+                symbol_str = str(symbol.value)
+                for out_state in out_states:
+                    automaton.remove_transition(state, symbol, out_state)
+                    base = new_transitions.setdefault(out_state, "")
+                    if "+" in symbol_str:
+                        symbol_str = "(" + symbol_str + ")"
+                    if base:
+                        new_transitions[out_state] = "((" + base + ")+(" + \
+                                                     symbol_str + "))"
+                    else:
+                        new_transitions[out_state] = symbol_str
+            for out_state, next_symb in new_transitions.items():
+                automaton.add_transition(state,
+                                         next_symb,
+                                         out_state)
+
+    @classmethod
+    def __get_regex_sub(cls,
+                        start_to_start: str,
+                        start_to_end: str,
+                        end_to_start: str,
+                        end_to_end: str) -> str:
+        """ Combines the transitions in the regex simple function """
+        if not start_to_end:
+            return ""
+        temp, part1 = cls.__get_temp(start_to_end, end_to_start, end_to_end)
+        part0 = "epsilon"
+        if start_to_start != "epsilon":
+            if temp:
+                part0 = "(" + start_to_start + "+" + temp + ")*"
+            else:
+                part0 = "(" + start_to_start + ")*"
+        elif temp != "epsilon" and temp:
+            part0 = "(" + temp + ")*"
+        return "(" + part0 + "." + part1 + ")"
+
+    @classmethod
+    def __get_temp(cls,
+                   start_to_end: str,
+                   end_to_start: str,
+                   end_to_end: str) -> Tuple[str, str]:
+        """
+        Gets a temp values in the computation
+        of the simple automaton regex.
+        """
+        temp = "epsilon"
+        if (start_to_end != "epsilon"
+                or end_to_end != "epsilon"
+                or end_to_start != "epsilon"):
+            temp = ""
+        if start_to_end != "epsilon":
+            temp = start_to_end
+        if end_to_end != "epsilon":
+            if temp:
+                temp += "." + end_to_end + "*"
+            else:
+                temp = end_to_end + "*"
+        part1 = temp
+        if not part1:
+            part1 = "epsilon"
+        if end_to_start != "epsilon":
+            if temp:
+                temp += "." + end_to_start
+            else:
+                temp = end_to_start
+        if not end_to_start:
+            temp = ""
+        return temp, part1

@@ -1,6 +1,7 @@
 """
 Testing python regex parsing
 """
+
 import re
 
 from pyformlang.regular_expression.python_regex import PythonRegex
@@ -10,6 +11,12 @@ class TestPythonRegex:
     """ Tests for python regex """
 
     # pylint: disable=missing-function-docstring, too-many-public-methods
+
+    def test_simple(self):
+        regex = PythonRegex("abc")
+        assert regex.accepts(["a", "b", "c"])
+        assert not regex.accepts(["a", "b", "b"])
+        assert not regex.accepts(["a", "b"])
 
     def test_with_brackets(self):
         regex = PythonRegex("a[bc]")

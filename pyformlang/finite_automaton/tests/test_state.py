@@ -1,6 +1,7 @@
 """
 Tests the states
 """
+
 from pyformlang.finite_automaton import State
 
 

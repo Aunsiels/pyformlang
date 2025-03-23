@@ -41,9 +41,10 @@ from .epsilon_nfa import EpsilonNFA
 from .state import State
 from .symbol import Symbol
 from .epsilon import Epsilon
-from .transition_function import (TransitionFunction,
-                                  DuplicateTransitionError,
-                                  InvalidEpsilonTransition)
+from .deterministic_transition_function import \
+    (DeterministicTransitionFunction,
+     DuplicateTransitionError,
+     InvalidEpsilonTransition)
 from .nondeterministic_transition_function import \
     NondeterministicTransitionFunction
 
@@ -54,7 +55,7 @@ __all__ = ["FiniteAutomaton",
            "State",
            "Symbol",
            "Epsilon",
-           "TransitionFunction",
+           "DeterministicTransitionFunction",
            "NondeterministicTransitionFunction",
            "DuplicateTransitionError",
            "InvalidEpsilonTransition"]

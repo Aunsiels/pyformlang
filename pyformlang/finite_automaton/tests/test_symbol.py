@@ -1,6 +1,7 @@
 """
 Tests for the symbols
 """
+
 from pyformlang.finite_automaton import Symbol
 
 

@@ -1,6 +1,7 @@
 """
 Tests for epsilon transitions
 """
+
 from pyformlang.finite_automaton import Epsilon
 from pyformlang.finite_automaton import Symbol
 
