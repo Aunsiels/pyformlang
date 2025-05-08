@@ -1104,3 +1104,48 @@ class CFG:
         """
         return all(
             production.is_normal_form() for production in self._productions)
+
+    def get_prefix_language(self):
+        """
+        Generates the prefix language of the CFG, i.e., the language of all prefixes of valid words
+        Based on https://cs.uwaterloo.ca/~s4bendav/files/CS360S21Lec10.pdf
+        """
+        if self.is_empty():
+            return CFG()
+        cfg = self
+        if not self.is_normal_form():
+            cfg = cfg.to_normal_form()
+        cfg = cfg.remove_useless_symbols()
+        def to_zero(var: Variable):
+            return Variable((var.value, 0))
+        new_variables = list(cfg.variables) + [to_zero(var) for var in cfg.variables]
+        new_productions = list(cfg.productions)
+        for p in cfg.productions:
+            if len(p.body) == 1:
+                # the production is of the form X -> c
+                new_productions.append(Production(
+                    to_zero(p.head),
+                    p.body
+                ))
+                new_productions.append(Production(
+                    to_zero(p.head),
+                    [Epsilon()]
+                ))
+            else:
+                # the production is of the form X -> Y Z
+                new_productions.append(Production(
+                    to_zero(p.head),
+                    [p.body[0], to_zero(p.body[1])]
+                ))
+                new_productions.append(Production(
+                    to_zero(p.head),
+                    [to_zero(p.body[0])]
+                ))
+        new_productions.append(Production(cfg.start_symbol, [Epsilon()]))
+        new_productions.append(Production(to_zero(cfg.start_symbol), [Epsilon()]))
+        return CFG(
+            variables=set(new_variables),
+            terminals=set(cfg.terminals) | {Epsilon()},
+            productions=new_productions,
+            start_symbol=to_zero(cfg.start_symbol),
+        )
