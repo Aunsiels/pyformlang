@@ -1107,7 +1107,7 @@ class CFG:
 
     def get_prefix_language(self):
         """
-        Generates the prefix language of the CFG, i.e., the language of all prefixes of valid words
+        Generates the prefix language of the CFL, i.e., the language of all prefixes of valid words
         Based on https://cs.uwaterloo.ca/~s4bendav/files/CS360S21Lec10.pdf
         """
         if self.is_empty():
@@ -1149,3 +1149,9 @@ class CFG:
             productions=new_productions,
             start_symbol=to_zero(cfg.start_symbol),
         )
+
+    def get_suffix_language(self):
+        """
+        Generates the suffix language of the CFL, i.e., the language containing all suffixes of valid words
+        """
+        return self.reverse().get_prefix_language().reverse()

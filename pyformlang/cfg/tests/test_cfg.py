@@ -863,9 +863,38 @@ class TestCFG:
             "abb",
             "aba",
             "aaaba",
+            "bbb",
         ]:
             assert not cfg.contains(invalid)
             assert not prefix_cfg.contains(invalid)
+
+    def test_suffix_lang(self):
+        cfg = CFG.from_text("S -> a S b | a b | c")
+        suffix_cfg = cfg.get_suffix_language()
+        assert suffix_cfg.contains("")
+        for word in [
+            "ab",
+            "aabb",
+        ]:
+            assert cfg.contains(word)
+            assert suffix_cfg.contains(word)
+        for suffix in [
+            "bbb",
+            "cbbb",
+            "acbbb"
+        ]:
+            assert not cfg.contains(suffix)
+            assert suffix_cfg.contains(suffix)
+        for invalid in [
+            "aab",
+            "aba",
+            "aaaba",
+            "abbbba",
+            "bbbbab",
+            "aaa",
+        ]:
+            assert not cfg.contains(invalid)
+            assert not suffix_cfg.contains(invalid)
 
 
 def get_example_text_duplicate():
