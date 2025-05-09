@@ -19,7 +19,7 @@ class Variable(CFGObject):  # pylint: disable=too-few-public-methods
         self.index_cfg_converter = None
 
     def __eq__(self, other):
-        if isinstance(other, CFGObject):
+        if isinstance(other, Variable):
             return self._value == other.value
         return self._value == other
 
