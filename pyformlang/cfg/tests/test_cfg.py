@@ -280,6 +280,12 @@ class TestCFG:
         assert not new_cfg.is_empty()
         assert new_cfg.contains([ter_a, ter_a, ter_b, ter_b, ter_a, ter_b])
 
+    def test_concatenation_variable_names(self):
+        first_lang = CFG({Variable("S")}, {Terminal("S")}, Variable("S"), {Production(Variable("S"), [Terminal("S")])})
+        second_lang = CFG({Variable("S")}, {Terminal("a")}, Variable("S"), {Production(Variable("S"), [Terminal("a")])})
+        concat = first_lang.concatenate(second_lang)
+        assert "Sa" in concat
+
     def test_closure(self):
         """ Tests the closure of a cfg """
         var_s = Variable("S")
