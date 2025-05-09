@@ -769,6 +769,16 @@ class TestCFG:
         assert cfg.contains(["a", "b"])
         assert ["a", "b"] in cfg
 
+    def test_from_text3(self):
+        text = """
+        S  -> "TER:A" "TER:B" "VAR:a"
+        "VAR:a" -> "TER:A" | $
+        """
+        cfg = CFG.from_text(text)
+        assert cfg.contains(["A", "B"])
+        assert cfg.contains(["A", "B", "A"])
+
+
     def test_from_text_union(self):
         text = """
         "VAR:S" -> TER:a | b
