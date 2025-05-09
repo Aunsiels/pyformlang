@@ -858,6 +858,60 @@ class TestCFG:
         cfg = CFG.from_text("S -> a S b | a b epsilon")
         assert cfg.contains(["a", "b"])
 
+    def test_prefix_lang(self):
+        cfg = CFG.from_text("S -> a S b | a b | c")
+        prefix_cfg = cfg.get_prefix_language()
+        assert prefix_cfg.contains("")
+        for word in [
+            "ab",
+            "aabb",
+        ]:
+            assert cfg.contains(word)
+            assert prefix_cfg.contains(word)
+        for prefix in [
+            "aaa",
+            "aaac",
+            "aaacb"
+        ]:
+            assert not cfg.contains(prefix)
+            assert prefix_cfg.contains(prefix)
+        for invalid in [
+            "abb",
+            "aba",
+            "aaaba",
+            "bbb",
+        ]:
+            assert not cfg.contains(invalid)
+            assert not prefix_cfg.contains(invalid)
+
+    def test_suffix_lang(self):
+        cfg = CFG.from_text("S -> a S b | a b | c")
+        suffix_cfg = cfg.get_suffix_language()
+        assert suffix_cfg.contains("")
+        for word in [
+            "ab",
+            "aabb",
+        ]:
+            assert cfg.contains(word)
+            assert suffix_cfg.contains(word)
+        for suffix in [
+            "bbb",
+            "cbbb",
+            "acbbb"
+        ]:
+            assert not cfg.contains(suffix)
+            assert suffix_cfg.contains(suffix)
+        for invalid in [
+            "aab",
+            "aba",
+            "aaaba",
+            "abbbba",
+            "bbbbab",
+            "aaa",
+        ]:
+            assert not cfg.contains(invalid)
+            assert not suffix_cfg.contains(invalid)
+
 
 def get_example_text_duplicate():
     """ Duplicate text """
