@@ -1081,14 +1081,13 @@ class CFG:
                     body_component = body_component[5:-1]
                 else:
                     type_component = ""
-                if not body_component[0].isupper() or type_component == "TER":
+                if type_component != "VAR" and (not body_component[0].isupper() or type_component == "TER" or body_component in EPSILON_SYMBOLS):
                     if body_component in EPSILON_SYMBOLS:
-                        body_ter = Epsilon()
-                    else:
-                        body_ter = Terminal(body_component)
+                        continue
+                    body_ter = Terminal(body_component)
                     terminals.add(body_ter)
                     body.append(body_ter)
-                elif body_component[0].isupper() or type_component == "VAR":
+                elif type_component != "TER" and (body_component[0].isupper() or type_component == "VAR"):
                     body_var = Variable(body_component)
                     variables.add(body_var)
                     body.append(body_var)
