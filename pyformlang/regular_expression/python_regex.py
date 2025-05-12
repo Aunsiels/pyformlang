@@ -63,9 +63,10 @@ class PythonRegex(regex.Regex):
     * Set of characters with []
     * Inverse set of character with [^...]
     * positive closure +
+    * Kleene star *
     * . for all printable characters
     * ? for optional character/group
-    * Repetition of characters with {m} and {n,m}q
+    * Repetition of characters with {m} and {n,m}
     * Shortcuts: \\d, \\s, \\w
 
     Parameters
