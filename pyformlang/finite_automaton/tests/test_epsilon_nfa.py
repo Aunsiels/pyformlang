@@ -665,9 +665,10 @@ class TestEpsilonNFA:
 
     def test_get_prefix_language(self):
         enfa = EpsilonNFA()
-        enfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3), (1, "d", 3)])
+        enfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3), (1, "d", 3), (4, "e", 4)])
         enfa.add_start_state(0)
         enfa.add_final_state(3)
+        enfa.add_start_state(4)
         enfa_prefix = enfa.get_prefix_language()
         assert enfa_prefix.accepts(["a"])
         assert enfa_prefix.accepts(["a", "b"])
@@ -675,12 +676,14 @@ class TestEpsilonNFA:
         assert enfa_prefix.accepts(["a", "d"])
         assert not enfa_prefix.accepts(["d"])
         assert enfa_prefix.accepts([])
+        assert not enfa_prefix.accepts(["e"])
 
     def test_get_suffix_language(self):
         enfa = EpsilonNFA()
-        enfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3), (1, "d", 3)])
+        enfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3), (1, "d", 3), (4, "e", 4)])
         enfa.add_start_state(0)
         enfa.add_final_state(3)
+        enfa.add_final_state(4)
         enfa_prefix = enfa.get_suffix_language()
         assert enfa_prefix.accepts(["c"])
         assert enfa_prefix.accepts(["b", "c"])
@@ -689,6 +692,7 @@ class TestEpsilonNFA:
         assert enfa_prefix.accepts(["d"])
         assert not enfa_prefix.accepts(["a", "b"])
         assert enfa_prefix.accepts([])
+        assert not enfa_prefix.accepts(["e"])
 
 
 def get_digits_enfa():

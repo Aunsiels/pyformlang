@@ -924,9 +924,10 @@ nfa, with no epsilon transition
         >>> enfa_prefix.accepts(["c"])
         False
         """
-        # Make every state final
         enfa = self.copy()
-        for state in enfa._states:
+        # Make every state final that can reach the final state
+        reachables = enfa._get_states_leading_to_final()
+        for state in reachables:
             enfa.add_final_state(state)
         return enfa
 
@@ -953,9 +954,10 @@ nfa, with no epsilon transition
         >>> enfa_prefix.accepts(["a"])
         False
         """
-        # Add all states to the start state
         enfa = self.copy()
-        for state in enfa._states:
+        # Add all states to the start state that are reachable from the start
+        reachables = enfa._get_reachable_states()
+        for state in reachables:
             enfa.add_start_state(state)
         return enfa
 
