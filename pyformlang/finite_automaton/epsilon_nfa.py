@@ -901,6 +901,64 @@ nfa, with no epsilon transition
     def __bool__(self):
         return not self.is_empty()
 
+    def get_prefix_language(self) -> "EpsilonNFA":
+        """ Get the prefix language of the current Epsilon NFA
+
+        Returns
+        ----------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The prefix language of the current Epsilon NFA
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(3)
+        >>> enfa_prefix = enfa.get_prefix_language()
+        >>> enfa_prefix.accepts(["a"])
+        True
+        >>> enfa_prefix.accepts(["a", "b"])
+        True
+        >>> enfa_prefix.accepts(["c"])
+        False
+        """
+        # Make every state final
+        enfa = self.copy()
+        for state in enfa._states:
+            enfa.add_final_state(state)
+        return enfa
+
+    def get_suffix_language(self) -> "EpsilonNFA":
+        """ Get the suffix language of the current Epsilon NFA
+
+        Returns
+        ----------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The suffix language of the current Epsilon NFA
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(3)
+        >>> enfa_prefix = enfa.get_suffix_language()
+        >>> enfa_prefix.accepts(["c"])
+        True
+        >>> enfa_prefix.accepts(["b", "c"])
+        True
+        >>> enfa_prefix.accepts(["a"])
+        False
+        """
+        # Add all states to the start state
+        enfa = self.copy()
+        for state in enfa._states:
+            enfa.add_start_state(state)
+        return enfa
+
 
 def get_temp(start_to_end: str, end_to_start: str, end_to_end: str) \
         -> (str, str):

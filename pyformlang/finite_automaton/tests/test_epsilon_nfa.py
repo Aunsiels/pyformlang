@@ -663,6 +663,33 @@ class TestEpsilonNFA:
         accepted_words = list(enfa.get_accepted_words(0))
         assert not accepted_words
 
+    def test_get_prefix_language(self):
+        enfa = EpsilonNFA()
+        enfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3), (1, "d", 3)])
+        enfa.add_start_state(0)
+        enfa.add_final_state(3)
+        enfa_prefix = enfa.get_prefix_language()
+        assert enfa_prefix.accepts(["a"])
+        assert enfa_prefix.accepts(["a", "b"])
+        assert not enfa_prefix.accepts(["c"])
+        assert enfa_prefix.accepts(["a", "d"])
+        assert not enfa_prefix.accepts(["d"])
+        assert enfa_prefix.accepts([])
+
+    def test_get_suffix_language(self):
+        enfa = EpsilonNFA()
+        enfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3), (1, "d", 3)])
+        enfa.add_start_state(0)
+        enfa.add_final_state(3)
+        enfa_prefix = enfa.get_suffix_language()
+        assert enfa_prefix.accepts(["c"])
+        assert enfa_prefix.accepts(["b", "c"])
+        assert not enfa_prefix.accepts(["a"])
+        assert enfa_prefix.accepts(["a", "d"])
+        assert enfa_prefix.accepts(["d"])
+        assert not enfa_prefix.accepts(["a", "b"])
+        assert enfa_prefix.accepts([])
+
 
 def get_digits_enfa():
     """ An epsilon NFA to recognize digits """
