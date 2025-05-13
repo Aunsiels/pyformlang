@@ -959,6 +959,11 @@ nfa, with no epsilon transition
         # Add an epsilon edge from a new start state to all start states that are reachable from the start
         reachables = enfa._get_reachable_states()
         new_start = State("<SuffixStart>")
+        # ensure that this state is new
+        i = 0
+        while new_start in enfa.states:
+            new_start = State(f"<SuffixStart>{i}")
+            i += 1
         enfa._start_state = {new_start}
         for state in reachables:
             enfa.add_transition(new_start, Epsilon(), state)
