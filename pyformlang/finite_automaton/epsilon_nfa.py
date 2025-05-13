@@ -901,6 +901,74 @@ nfa, with no epsilon transition
     def __bool__(self):
         return not self.is_empty()
 
+    def get_prefix_language(self) -> "EpsilonNFA":
+        """ Get the prefix language of the current Epsilon NFA
+
+        Returns
+        ----------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The prefix language of the current Epsilon NFA
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(3)
+        >>> enfa_prefix = enfa.get_prefix_language()
+        >>> enfa_prefix.accepts(["a"])
+        True
+        >>> enfa_prefix.accepts(["a", "b"])
+        True
+        >>> enfa_prefix.accepts(["c"])
+        False
+        """
+        enfa = self.copy()
+        # Make every state final that can reach the final state
+        reachables = enfa._get_states_leading_to_final()
+        for state in reachables:
+            enfa.add_final_state(state)
+        return enfa
+
+    def get_suffix_language(self) -> "EpsilonNFA":
+        """ Get the suffix language of the current Epsilon NFA
+
+        Returns
+        ----------
+        enfa : :class:`~pyformlang.finite_automaton.EpsilonNFA`
+            The suffix language of the current Epsilon NFA
+
+        Examples
+        --------
+
+        >>> enfa = EpsilonNFA()
+        >>> enfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3)])
+        >>> enfa.add_start_state(0)
+        >>> enfa.add_final_state(3)
+        >>> enfa_prefix = enfa.get_suffix_language()
+        >>> enfa_prefix.accepts(["c"])
+        True
+        >>> enfa_prefix.accepts(["b", "c"])
+        True
+        >>> enfa_prefix.accepts(["a"])
+        False
+        """
+        # copy ourselves as an epsilon nfa, as we might have been deterministic before
+        enfa = EpsilonNFA.copy(self)
+        # Add an epsilon edge from a new start state to all start states that are reachable from the start
+        reachables = enfa._get_reachable_states()
+        new_start = State("<SuffixStart>")
+        # ensure that this state is new
+        i = 0
+        while new_start in enfa.states:
+            new_start = State(f"<SuffixStart>{i}")
+            i += 1
+        enfa._start_state = {new_start}
+        for state in reachables:
+            enfa.add_transition(new_start, Epsilon(), state)
+        return enfa
+
 
 def get_temp(start_to_end: str, end_to_start: str, end_to_end: str) \
         -> (str, str):
