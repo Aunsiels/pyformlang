@@ -954,11 +954,14 @@ nfa, with no epsilon transition
         >>> enfa_prefix.accepts(["a"])
         False
         """
-        enfa = self.copy()
-        # Add all states to the start state that are reachable from the start
+        # copy ourselves as an epsilon nfa, as we might have been deterministic before
+        enfa = EpsilonNFA.copy(self)
+        # Add an epsilon edge from a new start state to all start states that are reachable from the start
         reachables = enfa._get_reachable_states()
+        new_start = State("<SuffixStart>")
+        enfa._start_state = {new_start}
         for state in reachables:
-            enfa.add_start_state(state)
+            enfa.add_transition(new_start, Epsilon(), state)
         return enfa
 
 
