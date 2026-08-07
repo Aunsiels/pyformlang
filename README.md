@@ -41,3 +41,7 @@ On the implementation of Hopcroft minimization algorithm: [Implementation of Hop
 
 Please refer to the official documentation: [pyformlang.readthedocs.io](https://pyformlang.readthedocs.io).
 
+## Other Resources
+
+[Rustformlang](https://github.com/eth-sri/constrained-diffusion/tree/main/rustformlang) is a version of Pyformlang written in Rust for higher efficiency.
+

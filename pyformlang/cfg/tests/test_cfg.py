@@ -280,6 +280,12 @@ class TestCFG:
         assert not new_cfg.is_empty()
         assert new_cfg.contains([ter_a, ter_a, ter_b, ter_b, ter_a, ter_b])
 
+    def test_concatenation_variable_names(self):
+        first_lang = CFG({Variable("S")}, {Terminal("S")}, Variable("S"), {Production(Variable("S"), [Terminal("S")])})
+        second_lang = CFG({Variable("S")}, {Terminal("a")}, Variable("S"), {Production(Variable("S"), [Terminal("a")])})
+        concat = first_lang.concatenate(second_lang)
+        assert "Sa" in concat
+
     def test_closure(self):
         """ Tests the closure of a cfg """
         var_s = Variable("S")
@@ -769,6 +775,16 @@ class TestCFG:
         assert cfg.contains(["a", "b"])
         assert ["a", "b"] in cfg
 
+    def test_from_text3(self):
+        text = """
+        S  -> "TER:A" "TER:B" "VAR:a"
+        "VAR:a" -> "TER:A" | $
+        """
+        cfg = CFG.from_text(text)
+        assert cfg.contains(["A", "B"])
+        assert cfg.contains(["A", "B", "A"])
+
+
     def test_from_text_union(self):
         text = """
         "VAR:S" -> TER:a | b
@@ -853,6 +869,60 @@ class TestCFG:
     def test_to_text_epsilon(self):
         cfg = CFG.from_text("S -> a S b | a b epsilon")
         assert cfg.contains(["a", "b"])
+
+    def test_prefix_lang(self):
+        cfg = CFG.from_text("S -> a S b | a b | c")
+        prefix_cfg = cfg.get_prefix_language()
+        assert prefix_cfg.contains("")
+        for word in [
+            "ab",
+            "aabb",
+        ]:
+            assert cfg.contains(word)
+            assert prefix_cfg.contains(word)
+        for prefix in [
+            "aaa",
+            "aaac",
+            "aaacb"
+        ]:
+            assert not cfg.contains(prefix)
+            assert prefix_cfg.contains(prefix)
+        for invalid in [
+            "abb",
+            "aba",
+            "aaaba",
+            "bbb",
+        ]:
+            assert not cfg.contains(invalid)
+            assert not prefix_cfg.contains(invalid)
+
+    def test_suffix_lang(self):
+        cfg = CFG.from_text("S -> a S b | a b | c")
+        suffix_cfg = cfg.get_suffix_language()
+        assert suffix_cfg.contains("")
+        for word in [
+            "ab",
+            "aabb",
+        ]:
+            assert cfg.contains(word)
+            assert suffix_cfg.contains(word)
+        for suffix in [
+            "bbb",
+            "cbbb",
+            "acbbb"
+        ]:
+            assert not cfg.contains(suffix)
+            assert suffix_cfg.contains(suffix)
+        for invalid in [
+            "aab",
+            "aba",
+            "aaaba",
+            "abbbba",
+            "bbbbab",
+            "aaa",
+        ]:
+            assert not cfg.contains(invalid)
+            assert not suffix_cfg.contains(invalid)
 
 
 def get_example_text_duplicate():
