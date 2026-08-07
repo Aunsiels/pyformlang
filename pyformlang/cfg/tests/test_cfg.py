@@ -814,6 +814,18 @@ class TestCFG:
                         """
         cfg = CFG.from_text(text, start_symbol="E")
         assert cfg.is_normal_form()
+        
+    def test_error_cfg_epsilon(self):
+        grammar = """
+        S -> epsilon | ( S ) | S S
+        """
+        cfg = CFG.from_text(grammar)
+
+        assert len(cfg.variables) == 1
+        assert len(cfg.terminals) == 2
+        assert len(cfg.productions) == 3
+        words = list(cfg.get_words(max_length=6))
+        assert(len(words) == 9)
 
     def test_to_text(self):
         text = """E  -> T E’
