@@ -302,6 +302,36 @@ class TestDeterministicFiniteAutomaton:
         accepted_words = list(dfa.get_accepted_words())
         assert not accepted_words
 
+    def test_get_prefix_language(self):
+        dfa = DeterministicFiniteAutomaton()
+        dfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3), (1, "d", 3), (0, "e", 4)])
+        dfa.add_start_state(0)
+        dfa.add_final_state(3)
+        dfa_prefix = dfa.get_prefix_language()
+        assert dfa_prefix.accepts(["a"])
+        assert dfa_prefix.accepts(["a", "b"])
+        assert not dfa_prefix.accepts(["c"])
+        assert dfa_prefix.accepts(["a", "d"])
+        assert not dfa_prefix.accepts(["d"])
+        assert dfa_prefix.accepts([])
+        assert not dfa_prefix.accepts(["e"])
+
+    def test_get_suffix_language(self):
+        dfa = DeterministicFiniteAutomaton()
+        dfa.add_transitions([(0, "a", 1), (1, "b", 2), (2, "c", 3), (1, "d", 3), (4, "e", 4)])
+        dfa.add_start_state(0)
+        dfa.add_final_state(3)
+        dfa.add_final_state(4)
+        dfa_suffix = dfa.get_suffix_language()
+        assert dfa_suffix.accepts(["c"])
+        assert dfa_suffix.accepts(["b", "c"])
+        assert not dfa_suffix.accepts(["a"])
+        assert dfa_suffix.accepts(["a", "d"])
+        assert dfa_suffix.accepts(["d"])
+        assert not dfa_suffix.accepts(["a", "b"])
+        assert dfa_suffix.accepts([])
+        assert not dfa_suffix.accepts(["e"])
+
 
 def get_example0():
     """ Gives a dfa """
