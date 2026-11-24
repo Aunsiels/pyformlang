@@ -349,6 +349,33 @@ class TestEpsilonNFA:
         assert not enfa.accepts([symb_b])
         assert not enfa.accepts([symb_c])
 
+    def test_complement_non_deterministic(self):
+        """ Tests the complement when a word has several paths """
+        # a*, where "a" can also be read into a non-final state
+        enfa = EpsilonNFA()
+        enfa.add_start_state(0)
+        enfa.add_final_state(0)
+        enfa.add_transitions([(0, "a", 0), (0, "a", 1)])
+        complement = enfa.get_complement()
+        assert not complement.accepts([])
+        assert not complement.accepts(["a"])
+        assert not complement.accepts(["a", "a"])
+        # (a b)|epsilon, with an epsilon transition to the final state
+        enfa = EpsilonNFA()
+        enfa.add_start_state(0)
+        enfa.add_final_state(2)
+        enfa.add_transitions([(0, "epsilon", 2), (0, "a", 1), (1, "b", 2)])
+        complement = enfa.get_complement()
+        assert not complement.accepts([])
+        assert not complement.accepts(["a", "b"])
+        assert complement.accepts(["a"])
+        assert complement.accepts(["b"])
+        assert complement.accepts(["a", "b", "a"])
+        assert (enfa - enfa).is_empty()
+        # Epsilon symbols in the word are still ignored
+        assert complement.accepts(["epsilon", "a"])
+        assert not complement.accepts(["epsilon"])
+
     def test_reverse(self):
         """ Test the reversal of a language """
         enfa0 = get_enfa_example0()
