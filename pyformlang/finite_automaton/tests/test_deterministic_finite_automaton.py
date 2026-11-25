@@ -143,6 +143,15 @@ class TestDeterministicFiniteAutomaton:
         assert dfa_comp.accepts([symb_b, symb_a])
         assert dfa_comp.accepts([])
         assert not dfa_comp.accepts([symb_a, symb_b])
+        # The original automaton is not modified
+        assert dfa.accepts([symb_a, symb_b])
+        assert not dfa.accepts([symb_a])
+        # The complement of the complement is the original language
+        dfa = dfa_comp.get_complement()
+        assert dfa.accepts([symb_a, symb_b])
+        assert not dfa.accepts([symb_a])
+        assert not dfa.accepts([symb_b, symb_a])
+        assert not dfa.accepts([])
 
     def test_big_minimize(self):
         dfa = DeterministicFiniteAutomaton()

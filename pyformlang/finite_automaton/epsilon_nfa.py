@@ -530,22 +530,22 @@ nfa, with no epsilon transition
         False
 
         """
-        enfa = self.copy()
+        # Final and non-final states can only be swapped in a deterministic
+        # automaton with a transition for every symbol
+        dfa = self.to_deterministic()
         trash = State("TrashNode")
-        enfa.add_final_state(trash)
-        for state in self._states:
-            if state in self._final_states:
-                enfa.remove_final_state(state)
-            else:
+        while trash in dfa.states:
+            trash = State(trash.value + "_")
+        enfa = type(self)()
+        for state in dfa.start_states:
+            enfa.add_start_state(state)
+        for state in dfa.states:
+            if not dfa.is_final_state(state):
                 enfa.add_final_state(state)
-        for state in self._states:
             for symbol in self._input_symbols:
-                state_to = []
-                eclose = self.eclose(state)
-                for state0 in eclose:
-                    state_to += self._transition_function(state0, symbol)
-                if not state_to:
-                    enfa.add_transition(state, symbol, trash)
+                for state_to in dfa(state, symbol) or [trash]:
+                    enfa.add_transition(state, symbol, state_to)
+        enfa.add_final_state(trash)
         for symbol in self._input_symbols:
             enfa.add_transition(trash, symbol, trash)
         return enfa
